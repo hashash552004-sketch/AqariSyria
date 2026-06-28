@@ -20,13 +20,21 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -f "$SDKMANAGER" ]; then
+            SDKMANAGER="$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
+          fi
+          echo "Using sdkmanager: $SDKMANAGER"
+          yes | $SDKMANAGER "platforms;android-34" "build-tools;34.0.0" || true
+          yes | $SDKMANAGER --licenses || true
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Build APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
