@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors -->
+    <color name="primary">#1A7A6E</color>
+    <color name="primary_dark">#145F55</color>
+    <color name="primary_light">#E8F5F3</color>
+    <color name="accent">#26A69A</color>
+
+    <!-- Background -->
+    <color name="background">#F8F9FA</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="card_background">#FFFFFF</color>
+
+    <!-- Text -->
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_hint">#9CA3AF</color>
+    <color name="text_white">#FFFFFF</color>
+
+    <!-- Status -->
+    <color name="error">#EF4444</color>
+    <color name="success">#10B981</color>
+    <color name="warning">#F59E0B</color>
+
+    <!-- Border -->
+    <color name="border">#E5E7EB</color>
+    <color name="divider">#F3F4F6</color>
+
+    <!-- Overlay -->
+    <color name="overlay">#80000000</color>
+
+    <!-- Tags -->
+    <color name="tag_sell">#E8F5F3</color>
+    <color name="tag_rent">#EFF6FF</color>
+    <color name="tag_invest">#FEF3C7</color>
+
+    <!-- WhatsApp -->
+    <color name="whatsapp">#25D366</color>
+</resources>

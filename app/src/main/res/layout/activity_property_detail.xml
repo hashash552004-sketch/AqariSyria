@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:layoutDirection="rtl">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="80dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Image Slider -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="280dp">
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/viewPagerImages"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+                <!-- Top Bar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:paddingTop="40dp"
+                    android:gravity="center_vertical">
+
+                    <ImageButton
+                        android:id="@+id/btnBack"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_arrow_back"
+                        android:background="@drawable/bg_white_circle"
+                        android:padding="8dp"/>
+
+                    <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
+
+                    <ImageButton
+                        android:id="@+id/btnFavorite"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_favorite_border"
+                        android:background="@drawable/bg_white_circle"
+                        android:padding="8dp"
+                        android:layout_marginEnd="8dp"/>
+
+                    <ImageButton
+                        android:id="@+id/btnShare"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_share"
+                        android:background="@drawable/bg_white_circle"
+                        android:padding="8dp"/>
+                </LinearLayout>
+
+                <!-- Dots -->
+                <com.tbuonomo.viewpagerdotsindicator.DotsIndicator
+                    android:id="@+id/dotsIndicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:layout_marginBottom="12dp"
+                    app:dotsColor="@color/text_white"
+                    app:selectedDotColor="@color/primary"/>
+
+            </FrameLayout>
+
+            <!-- Content Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="-16dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <!-- Operation Badge + Title -->
+                    <TextView
+                        android:id="@+id/tvOperationType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="4dp"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_tag_sell"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/tvTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"/>
+
+                    <TextView
+                        android:id="@+id/tvLocation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="4dp"/>
+
+                    <TextView
+                        android:id="@+id/tvPrice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="26sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary"
+                        android:layout_marginTop="12dp"/>
+
+                    <!-- Stats Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                            <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                                android:src="@drawable/ic_bedroom"/>
+                            <TextView android:id="@+id/tvRooms" android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" android:textSize="12sp"
+                                android:textColor="@color/text_secondary" android:layout_marginTop="4dp"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                            <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                                android:src="@drawable/ic_bathroom"/>
+                            <TextView android:id="@+id/tvBathrooms" android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" android:textSize="12sp"
+                                android:textColor="@color/text_secondary" android:layout_marginTop="4dp"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                            <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                                android:src="@drawable/ic_area"/>
+                            <TextView android:id="@+id/tvArea" android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" android:textSize="12sp"
+                                android:textColor="@color/text_secondary" android:layout_marginTop="4dp"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                            <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                                android:src="@drawable/ic_floor"/>
+                            <TextView android:id="@+id/tvFloor" android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" android:textSize="12sp"
+                                android:textColor="@color/text_secondary" android:layout_marginTop="4dp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Description -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="الوصف"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/tvDescription"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_secondary"
+                        android:lineSpacingExtra="4dp"
+                        android:layout_marginBottom="16dp"/>
+
+                    <!-- Features -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="المميزات"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="8dp"/>
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipElevator"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="مصعد" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipParking"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="موقف" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipAC"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="تكييف" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipHeating"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="تدفئة" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipGarden"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="حديقة" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipPool"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="مسبح" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipBalcony"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="شرفة" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipInternet"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="إنترنت" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipGas"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="غاز" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chipFurnished"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="مفروش" app:chipBackgroundColor="@color/primary_light"
+                            app:chipStrokeColor="@color/primary" app:chipStrokeWidth="1dp"
+                            android:textColor="@color/primary"/>
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <!-- Owner Info -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="المالك"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/tvOwnerName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_secondary"/>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/surface"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:elevation="8dp">
+
+        <Button
+            android:id="@+id/btnWhatsapp"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="واتساب"
+            android:backgroundTint="@color/whatsapp"
+            android:textColor="@color/text_white"
+            android:textSize="15sp"
+            app:cornerRadius="12dp"/>
+
+        <Button
+            android:id="@+id/btnContact"
+            style="@style/Button.Primary"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:text="اتصال"/>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

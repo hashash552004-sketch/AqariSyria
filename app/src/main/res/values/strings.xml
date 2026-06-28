@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">عقاري سوريا</string>
+    <string name="app_tagline">بيع - شراء - إيجار</string>
+    <string name="app_description">منصة عقارية موثوقة في سوريا</string>
+
+    <!-- Auth -->
+    <string name="start_now">إبدأ الآن</string>
+    <string name="login">تسجيل الدخول</string>
+    <string name="register">إنشاء حساب</string>
+    <string name="guest">تصفح كزائر</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="password">كلمة المرور</string>
+    <string name="confirm_password">تأكيد كلمة المرور</string>
+    <string name="full_name">الاسم الكامل</string>
+    <string name="phone">رقم الهاتف</string>
+    <string name="forgot_password">نسيت كلمة المرور؟</string>
+    <string name="no_account">ليس لديك حساب؟</string>
+    <string name="have_account">لديك حساب؟</string>
+
+    <!-- Navigation -->
+    <string name="home">الرئيسية</string>
+    <string name="search">بحث</string>
+    <string name="favorites">المفضلة</string>
+    <string name="messages">رسائل</string>
+    <string name="profile">حسابي</string>
+
+    <!-- Home -->
+    <string name="featured_properties">عقارات مميزة</string>
+    <string name="show_all">عرض الكل</string>
+    <string name="search_hint">ابحث عن عقار، منطقة، أو مشروع</string>
+    <string name="for_sale">للبيع</string>
+    <string name="for_rent">للإيجار</string>
+    <string name="for_invest">استثمار</string>
+
+    <!-- Categories -->
+    <string name="apartments">شقق</string>
+    <string name="lands">الأراضي</string>
+    <string name="villas">فيلات</string>
+    <string name="offices">مكاتب</string>
+    <string name="shops">محلات</string>
+    <string name="farms">أراضي زراعية</string>
+    <string name="more">المزيد</string>
+
+    <!-- Property -->
+    <string name="rooms">غرف</string>
+    <string name="bathrooms">حمام</string>
+    <string name="area">م²</string>
+    <string name="floor">طابق</string>
+    <string name="description">الوصف</string>
+    <string name="features">المميزات</string>
+    <string name="contact">اتصال</string>
+    <string name="whatsapp">واتساب</string>
+    <string name="add_to_favorites">إضافة للمفضلة</string>
+    <string name="share">مشاركة</string>
+
+    <!-- Features -->
+    <string name="elevator">مصعد</string>
+    <string name="parking">موقف</string>
+    <string name="ac">تكييف</string>
+    <string name="heating">تدفئة</string>
+    <string name="garden">حديقة</string>
+    <string name="pool">مسبح</string>
+    <string name="balcony">شرفة</string>
+    <string name="internet">إنترنت</string>
+    <string name="gas">غاز</string>
+    <string name="furnished">مفروش</string>
+
+    <!-- Add Property -->
+    <string name="add_property">إضافة عقار</string>
+    <string name="operation_type">اختر نوع العملية</string>
+    <string name="basic_info">معلومات أساسية</string>
+    <string name="property_details">تفاصيل المقار</string>
+    <string name="property_features">المميزات</string>
+    <string name="property_images">صور المقار</string>
+    <string name="review_ad">مراجعة الإعلان</string>
+    <string name="next">التالي</string>
+    <string name="back">رجوع</string>
+    <string name="publish">إرسال الإعلان</string>
+    <string name="save_draft">حفظ كمسودة</string>
+    <string name="add_images">إضافة صور</string>
+
+    <!-- Search -->
+    <string name="advanced_search">بحث متقدم</string>
+    <string name="governorate">المحافظة</string>
+    <string name="region">المنطقة</string>
+    <string name="neighborhood">الحي</string>
+    <string name="property_type">نوع العقار</string>
+    <string name="price">السعر</string>
+    <string name="area_range">المساحة (م²)</string>
+    <string name="rooms_count">عدد الغرف</string>
+    <string name="show_results">عرض النتائج</string>
+    <string name="reset_filters">إعادة ضبط الفلاتر</string>
+
+    <!-- Governorates -->
+    <string name="damascus">دمشق</string>
+    <string name="aleppo">حلب</string>
+    <string name="homs">حمص</string>
+    <string name="hama">حماه</string>
+    <string name="latakia">اللاذقية</string>
+    <string name="tartus">طرطوس</string>
+    <string name="deir_ezzor">دير الزور</string>
+    <string name="daraa">درعا</string>
+    <string name="idlib">إدلب</string>
+    <string name="raqqa">الرقة</string>
+    <string name="hasaka">الحسكة</string>
+    <string name="quneitra">القنيطرة</string>
+    <string name="suwayda">السويداء</string>
+    <string name="rif_dimashq">ريف دمشق</string>
+</resources>

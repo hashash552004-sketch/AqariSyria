@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background"
+    android:layoutDirection="rtl">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/primary"
+        android:padding="20dp"
+        android:paddingTop="48dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/advanced_search"
+            android:textColor="@color/text_white"
+            android:textSize="22sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <!-- Filters Panel -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Operation Type -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="نوع العملية"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="8dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <Button android:id="@+id/btnOpSell"
+                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_weight="1" android:layout_marginEnd="6dp"
+                    android:text="للبيع" android:textSize="13sp"/>
+
+                <Button android:id="@+id/btnOpRent"
+                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_weight="1" android:layout_marginHorizontal="3dp"
+                    android:text="للإيجار" android:textSize="13sp"/>
+
+                <Button android:id="@+id/btnOpInvest"
+                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_weight="1" android:layout_marginStart="6dp"
+                    android:text="استثمار" android:textSize="13sp"/>
+            </LinearLayout>
+
+            <!-- Governorate -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/governorate"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="8dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerGovernorate"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@drawable/bg_spinner"
+                android:padding="8dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Property Type -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/property_type"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="8dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerPropertyType"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@drawable/bg_spinner"
+                android:padding="8dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Price Range -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="السعر"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"/>
+                <TextView
+                    android:id="@+id/tvPriceRange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="200,000 $ - 50,000 $"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary"/>
+            </LinearLayout>
+
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/sliderPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:values="@array/price_range_values"
+                android:valueFrom="0"
+                android:valueTo="1000"
+                app:thumbColor="@color/primary"
+                app:trackColorActive="@color/primary"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Area Range -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="المساحة (م²)"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"/>
+                <TextView
+                    android:id="@+id/tvAreaRange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="80 - 200 م²"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary"/>
+            </LinearLayout>
+
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/sliderArea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:values="@array/area_range_values"
+                android:valueFrom="0"
+                android:valueTo="1000"
+                app:thumbColor="@color/primary"
+                app:trackColorActive="@color/primary"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Rooms Count -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="عدد الغرف"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="8dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="24dp">
+
+                <Button android:id="@+id/btnRoom1" android:layout_width="0dp"
+                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp" android:text="1"/>
+                <Button android:id="@+id/btnRoom2" android:layout_width="0dp"
+                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp" android:text="2"/>
+                <Button android:id="@+id/btnRoom3" android:layout_width="0dp"
+                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp" android:text="3"/>
+                <Button android:id="@+id/btnRoom4" android:layout_width="0dp"
+                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp" android:text="4"/>
+                <Button android:id="@+id/btnRoomPlus" android:layout_width="0dp"
+                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp" android:text="+4"/>
+            </LinearLayout>
+
+            <!-- Buttons -->
+            <Button
+                android:id="@+id/btnSearch"
+                style="@style/Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="@string/show_results"
+                android:layout_marginBottom="12dp"/>
+
+            <Button
+                android:id="@+id/btnReset"
+                style="@style/Button.Outline"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/reset_filters"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Results -->
+    <TextView
+        android:id="@+id/tvResultCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="عرض النتائج"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:background="@color/divider"/>
+
+    <ProgressBar
+        android:id="@+id/progressSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tvEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="لا توجد نتائج"
+        android:gravity="center"
+        android:padding="32dp"
+        android:textColor="@color/text_secondary"
+        android:visibility="gone"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvResults"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:paddingBottom="8dp"/>
+
+</LinearLayout>

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "364648375638",
+    "firebase_url": "https://aqari-syria-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "aqari-syria",
+    "storage_bucket": "aqari-syria.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364648375638:android:30028f2c3189f345cbe2f7",
+        "android_client_info": {
+          "package_name": "com.aqarisyria.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "364648375638-n11avn5uh2e5aumjiu1327mticu0t18k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNhS_SYfRpRxqqxG70hqO-GIOcG7zeNt0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "364648375638-n11avn5uh2e5aumjiu1327mticu0t18k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
