@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.aqarisyria.app.R;
-
 public class SplashActivity extends AppCompatActivity {
 
     private static final int SPLASH_DELAY = 2000;

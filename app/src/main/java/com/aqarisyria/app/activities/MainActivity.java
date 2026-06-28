@@ -14,6 +14,7 @@ import com.aqarisyria.app.fragments.SearchFragment;
 import com.aqarisyria.app.fragments.FavoritesFragment;
 import com.aqarisyria.app.fragments.MessagesFragment;
 import com.aqarisyria.app.fragments.ProfileFragment;
+import com.aqarisyria.app.utils.UpdateChecker;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,6 +24,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
+
+        UpdateChecker.check(this, false);
         setContentView(binding.getRoot());
 
         setupBottomNavigation();

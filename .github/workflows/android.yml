@@ -42,3 +42,18 @@ jobs:
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ vars.APP_VERSION || '2.0' }}
+          name: Aqari Syria v${{ vars.APP_VERSION || '2.0' }}
+          body: |
+            آخر تحديث للتطبيق
+            
+            تم البناء بتاریخ: ${{ github.event.head_commit.timestamp || 'الآن' }}
+          files: app/build/outputs/apk/debug/app-debug.apk
+          generate_release_notes: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
