@@ -44,7 +44,16 @@ public class HomeFragment extends Fragment {
         binding.tvShowAll.setOnClickListener(v ->
             startActivity(new Intent(getActivity(), SearchActivity.class)));
 
+        binding.btnRefresh.setOnClickListener(v -> refreshData());
+
         return binding.getRoot();
+    }
+
+    private void refreshData() {
+        binding.progressFeatured.setVisibility(View.VISIBLE);
+        binding.progressRecent.setVisibility(View.VISIBLE);
+        loadFeaturedProperties();
+        loadRecentProperties();
     }
 
     private void setupRecyclerViews() {
