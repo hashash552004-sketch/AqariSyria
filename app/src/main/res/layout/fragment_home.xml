@@ -141,11 +141,11 @@
 
         <!-- Categories Grid -->
         <androidx.gridlayout.widget.GridLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            app:columnCount="4"
-            app:rowCount="2">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:columnCount="4"
+        android:rowCount="2">
 
             <!-- Category items will be inflated programmatically -->
         </androidx.gridlayout.widget.GridLayout>
