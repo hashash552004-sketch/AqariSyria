@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +52,7 @@ jobs:
           echo "Version: $VERSION"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.APP_VERSION }}-build-${{ github.run_number }}
           name: Aqari Syria v${{ env.APP_VERSION }}
