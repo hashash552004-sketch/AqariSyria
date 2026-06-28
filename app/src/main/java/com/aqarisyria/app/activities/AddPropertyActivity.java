@@ -266,6 +266,7 @@ public class AddPropertyActivity extends AppCompatActivity {
 
     private void uploadImages() {
         uploadedImageUrls.clear();
+        int[] failedCount = {0};
         for (Uri uri : selectedImages) {
             String fileName = UUID.randomUUID() + ".jpg";
             StorageReference ref = storage.getReference()
@@ -274,44 +275,68 @@ public class AddPropertyActivity extends AppCompatActivity {
                 .continueWithTask(task -> ref.getDownloadUrl())
                 .addOnSuccessListener(downloadUri -> {
                     uploadedImageUrls.add(downloadUri.toString());
-                    if (uploadedImageUrls.size() == selectedImages.size())
-                        savePropertyToFirestore(uploadedImageUrls);
+                    if (uploadedImageUrls.size() + failedCount[0] == selectedImages.size()) {
+                        if (uploadedImageUrls.isEmpty()) {
+                            Toast.makeText(this, "فشل رفع جميع الصور", Toast.LENGTH_SHORT).show();
+                            resetLoadingState();
+                        } else {
+                            savePropertyToFirestore(uploadedImageUrls);
+                        }
+                    }
                 })
-                .addOnFailureListener(e ->
-                    Toast.makeText(this, "فشل رفع الصور", Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    failedCount[0]++;
+                    if (uploadedImageUrls.size() + failedCount[0] == selectedImages.size()) {
+                        if (uploadedImageUrls.isEmpty()) {
+                            Toast.makeText(this, "فشل رفع الصور، تحقق من اتصالك", Toast.LENGTH_SHORT).show();
+                            resetLoadingState();
+                        } else {
+                            savePropertyToFirestore(uploadedImageUrls);
+                        }
+                    }
+                });
         }
+    }
+
+    private void resetLoadingState() {
+        binding.btnNext.setEnabled(true);
+        binding.loadingContainer.setVisibility(View.GONE);
     }
 
     private void savePropertyToFirestore(List<String> imageUrls) {
         String uid = mAuth.getCurrentUser().getUid();
-        db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
-            String ownerName = doc.exists() ? doc.getString("fullName") : "مجهول";
-            String ownerPhone = doc.exists() ? doc.getString("phone") : "";
-            String title = getTypeLabel() + " - " + governorate + " - " + region;
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener(doc -> {
+                String ownerName = doc.exists() ? doc.getString("fullName") : "مجهول";
+                String ownerPhone = doc.exists() ? doc.getString("phone") : "";
+                String title = getTypeLabel() + " - " + governorate + " - " + region;
 
-            Property prop = new Property(title, description, propertyType, operationType,
-                price, area, rooms, bathrooms, floor,
-                governorate, region, neighborhood, detailedAddress,
-                uid, ownerName, ownerPhone);
+                Property prop = new Property(title, description, propertyType, operationType,
+                    price, area, rooms, bathrooms, floor,
+                    governorate, region, neighborhood, detailedAddress,
+                    uid, ownerName, ownerPhone);
 
-            prop.setImages(imageUrls);
-            prop.setHasElevator(hasElevator); prop.setHasParking(hasParking);
-            prop.setHasAC(hasAC); prop.setHasHeating(hasHeating);
-            prop.setHasGarden(hasGarden); prop.setHasPool(hasPool);
-            prop.setHasBalcony(hasBalcony); prop.setHasInternet(hasInternet);
-            prop.setHasGas(hasGas); prop.setFurnished(isFurnished);
+                prop.setImages(imageUrls);
+                prop.setHasElevator(hasElevator); prop.setHasParking(hasParking);
+                prop.setHasAC(hasAC); prop.setHasHeating(hasHeating);
+                prop.setHasGarden(hasGarden); prop.setHasPool(hasPool);
+                prop.setHasBalcony(hasBalcony); prop.setHasInternet(hasInternet);
+                prop.setHasGas(hasGas); prop.setFurnished(isFurnished);
 
-            db.collection("properties").add(prop)
-                .addOnSuccessListener(ref -> {
-                    Toast.makeText(this, "تم نشر الإعلان بنجاح!", Toast.LENGTH_LONG).show();
-                    finish();
-                })
-                .addOnFailureListener(e -> {
-                    binding.btnNext.setEnabled(true);
-                    binding.loadingContainer.setVisibility(View.GONE);
-                    Toast.makeText(this, "حدث خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-        });
+                db.collection("properties").add(prop)
+                    .addOnSuccessListener(ref -> {
+                        Toast.makeText(this, "تم نشر الإعلان بنجاح!", Toast.LENGTH_LONG).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        resetLoadingState();
+                        Toast.makeText(this, "حدث خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+            })
+            .addOnFailureListener(e -> {
+                resetLoadingState();
+                Toast.makeText(this, "فشل تحميل بيانات المستخدم", Toast.LENGTH_SHORT).show();
+            });
     }
 
     private String getTypeLabel() {
