@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Price range default values for RangeSlider (in thousands) -->
-    <array name="price_range_values">
+    <integer-array name="price_range_values">
         <item>50</item>
         <item>200</item>
-    </array>
+    </integer-array>
 
     <!-- Area range default values -->
-    <array name="area_range_values">
+    <integer-array name="area_range_values">
         <item>80</item>
         <item>200</item>
-    </array>
+    </integer-array>
 
     <!-- Property Types -->
     <string-array name="property_types">
