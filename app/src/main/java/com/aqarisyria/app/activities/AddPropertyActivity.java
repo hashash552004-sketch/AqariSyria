@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.aqarisyria.app.R;
 import com.aqarisyria.app.databinding.ActivityAddPropertyBinding;
 import com.aqarisyria.app.models.Property;
 import java.util.ArrayList;
