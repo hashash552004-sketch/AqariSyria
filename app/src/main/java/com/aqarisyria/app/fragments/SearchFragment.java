@@ -105,20 +105,20 @@ public class SearchFragment extends Fragment {
 
     private void setupSliders() {
         binding.sliderPrice.addOnChangeListener((slider, value, fromUser) -> {
-            float[] values = slider.getValues().stream().mapToFloat(Float::floatValue).toArray();
-            if (values.length >= 2) {
-                minPrice = values[0] * 1000;
-                maxPrice = values[1] * 1000;
-                binding.tvPriceRange.setText(String.format("%.0f,000 $ - %.0f,000 $", values[0], values[1]));
+            List<Float> values = slider.getValues();
+            if (values.size() >= 2) {
+                minPrice = values.get(0) * 1000;
+                maxPrice = values.get(1) * 1000;
+                binding.tvPriceRange.setText(String.format("%.0f,000 $ - %.0f,000 $", values.get(0), values.get(1)));
             }
         });
 
         binding.sliderArea.addOnChangeListener((slider, value, fromUser) -> {
-            float[] values = slider.getValues().stream().mapToFloat(Float::floatValue).toArray();
-            if (values.length >= 2) {
-                minArea = values[0];
-                maxArea = values[1];
-                binding.tvAreaRange.setText(String.format("%.0f - %.0f م²", values[0], values[1]));
+            List<Float> values = slider.getValues();
+            if (values.size() >= 2) {
+                minArea = values.get(0);
+                maxArea = values.get(1);
+                binding.tvAreaRange.setText(String.format("%.0f - %.0f م²", values.get(0), values.get(1)));
             }
         });
     }
