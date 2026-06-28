@@ -305,37 +305,39 @@ public class AddPropertyActivity extends AppCompatActivity {
 
     private void savePropertyToFirestore(List<String> imageUrls) {
         String uid = mAuth.getCurrentUser().getUid();
+        String email = mAuth.getCurrentUser().getEmail() != null ? mAuth.getCurrentUser().getEmail() : "مجهول";
+
         db.collection("users").document(uid).get()
-            .addOnSuccessListener(doc -> {
-                String ownerName = doc.exists() ? doc.getString("fullName") : "مجهول";
-                String ownerPhone = doc.exists() ? doc.getString("phone") : "";
-                String title = getTypeLabel() + " - " + governorate + " - " + region;
+            .addOnSuccessListener(doc -> saveProperty(imageUrls, uid, doc.exists() ? doc.getString("fullName") : email, doc.exists() ? doc.getString("phone") : ""))
+            .addOnFailureListener(e -> {
+                db.collection("users").document(uid).set(new com.aqarisyria.app.models.User(uid, email, email, ""))
+                    .addOnSuccessListener(unused -> saveProperty(imageUrls, uid, email, ""))
+                    .addOnFailureListener(f -> saveProperty(imageUrls, uid, email, ""));
+            });
+    }
 
-                Property prop = new Property(title, description, propertyType, operationType,
-                    price, area, rooms, bathrooms, floor,
-                    governorate, region, neighborhood, detailedAddress,
-                    uid, ownerName, ownerPhone);
+    private void saveProperty(List<String> imageUrls, String uid, String ownerName, String ownerPhone) {
+        String title = getTypeLabel() + " - " + governorate + " - " + region;
+        Property prop = new Property(title, description, propertyType, operationType,
+            price, area, rooms, bathrooms, floor,
+            governorate, region, neighborhood, detailedAddress,
+            uid, ownerName, ownerPhone);
 
-                prop.setImages(imageUrls);
-                prop.setHasElevator(hasElevator); prop.setHasParking(hasParking);
-                prop.setHasAC(hasAC); prop.setHasHeating(hasHeating);
-                prop.setHasGarden(hasGarden); prop.setHasPool(hasPool);
-                prop.setHasBalcony(hasBalcony); prop.setHasInternet(hasInternet);
-                prop.setHasGas(hasGas); prop.setFurnished(isFurnished);
+        prop.setImages(imageUrls);
+        prop.setHasElevator(hasElevator); prop.setHasParking(hasParking);
+        prop.setHasAC(hasAC); prop.setHasHeating(hasHeating);
+        prop.setHasGarden(hasGarden); prop.setHasPool(hasPool);
+        prop.setHasBalcony(hasBalcony); prop.setHasInternet(hasInternet);
+        prop.setHasGas(hasGas); prop.setFurnished(isFurnished);
 
-                db.collection("properties").add(prop)
-                    .addOnSuccessListener(ref -> {
-                        Toast.makeText(this, "تم نشر الإعلان بنجاح!", Toast.LENGTH_LONG).show();
-                        finish();
-                    })
-                    .addOnFailureListener(e -> {
-                        resetLoadingState();
-                        Toast.makeText(this, "حدث خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
+        db.collection("properties").add(prop)
+            .addOnSuccessListener(ref -> {
+                Toast.makeText(this, "تم نشر الإعلان بنجاح!", Toast.LENGTH_LONG).show();
+                finish();
             })
             .addOnFailureListener(e -> {
                 resetLoadingState();
-                Toast.makeText(this, "فشل تحميل بيانات المستخدم", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "حدث خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
     }
 
