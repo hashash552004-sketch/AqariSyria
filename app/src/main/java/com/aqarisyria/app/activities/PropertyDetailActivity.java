@@ -14,6 +14,7 @@ import com.aqarisyria.app.R;
 import com.aqarisyria.app.adapters.ImageSliderAdapter;
 import com.aqarisyria.app.databinding.ActivityPropertyDetailBinding;
 import com.aqarisyria.app.models.Property;
+import com.aqarisyria.app.utils.AdminUtil;
 
 public class PropertyDetailActivity extends AppCompatActivity {
 
@@ -41,6 +42,11 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.btnFavorite.setOnClickListener(v -> toggleFavorite());
         binding.btnContact.setOnClickListener(v -> callOwner());
         binding.btnWhatsapp.setOnClickListener(v -> openWhatsApp());
+
+        if (AdminUtil.isAdmin()) {
+            binding.btnDelete.setVisibility(View.VISIBLE);
+            binding.btnDelete.setOnClickListener(v -> deleteProperty());
+        }
     }
 
     private void loadProperty(String propertyId) {
@@ -157,5 +163,26 @@ public class PropertyDetailActivity extends AppCompatActivity {
     private void incrementViews(String propertyId) {
         db.collection("properties").document(propertyId)
             .update("viewsCount", FieldValue.increment(1));
+    }
+
+    private void deleteProperty() {
+        if (property == null) return;
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("حذف العقار")
+            .setMessage("هل أنت متأكد من حذف هذا العقار؟")
+            .setPositiveButton("حذف", (d, w) -> {
+                binding.btnDelete.setEnabled(false);
+                db.collection("properties").document(property.getId()).delete()
+                    .addOnSuccessListener(u -> {
+                        Toast.makeText(this, "تم حذف العقار", Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        binding.btnDelete.setEnabled(true);
+                        Toast.makeText(this, "فشل الحذف: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+            })
+            .setNegativeButton("إلغاء", null)
+            .show();
     }
 }
