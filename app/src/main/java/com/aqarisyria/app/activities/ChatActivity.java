@@ -89,6 +89,10 @@ public class ChatActivity extends AppCompatActivity {
 
         messageList = new ArrayList<>();
         adapter = new MessageAdapter();
+        LinearLayoutManager lm = new LinearLayoutManager(this);
+        lm.setReverseLayout(false);
+        lm.setStackFromBottom(true);
+        binding.rvMessages.setLayoutManager(lm);
         binding.rvMessages.setAdapter(adapter);
 
         setupToolbar();

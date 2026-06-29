@@ -93,9 +93,7 @@
         app:layout_constraintBottom_toTopOf="@id/layoutBottomBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layoutManager="LinearLayoutManager"
-        app:reverseLayout="false"
-        app:stackFromBottom="true"/>
+        />
 
     <!-- Empty State -->
     <LinearLayout
