@@ -162,7 +162,6 @@
             app:boxStrokeWidth="1dp"
             app:boxStrokeWidthFocused="1.5dp"
             app:boxStrokeColor="@color/border"
-            app:boxStrokeColor="@color/primary"
             app:hintEnabled="false">
 
             <com.google.android.material.textfield.TextInputEditText
