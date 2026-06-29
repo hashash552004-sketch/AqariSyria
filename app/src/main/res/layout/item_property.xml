@@ -8,7 +8,7 @@
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="6dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
+    app:cardElevation="6dp"
     app:cardBackgroundColor="@color/surface">
 
     <LinearLayout
@@ -20,7 +20,7 @@
         <!-- Image -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="180dp">
+            android:layout_height="200dp">
 
             <ImageView
                 android:id="@+id/ivPropertyImage"
@@ -29,6 +29,13 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/placeholder_property"/>
 
+            <!-- Gradient Overlay -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_image_gradient"/>
+
             <!-- Operation Type Badge -->
             <TextView
                 android:id="@+id/tvOperationType"
@@ -36,11 +43,26 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|start"
                 android:layout_margin="12dp"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="6dp"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:background="@drawable/bg_tag_sell"/>
+
+            <!-- Price on image -->
+            <TextView
+                android:id="@+id/tvPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:layout_margin="14dp"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_white"
+                android:shadowRadius="4"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:shadowColor="#80000000"/>
 
         </FrameLayout>
 
@@ -68,13 +90,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="6dp">
+                android:layout_marginTop="4dp">
 
                 <ImageView
                     android:layout_width="14dp"
                     android:layout_height="14dp"
                     android:src="@drawable/ic_location"
-                    app:tint="@color/text_secondary"/>
+                    app:tint="@color/accent"/>
 
                 <TextView
                     android:id="@+id/tvLocation"
@@ -85,24 +107,28 @@
                     android:layout_marginStart="4dp"/>
             </LinearLayout>
 
-            <!-- Details Row -->
-            <TextView
-                android:id="@+id/tvDetails"
+            <!-- Divider -->
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginTop="6dp"/>
+                android:layout_height="1dp"
+                android:background="@color/divider"
+                android:layout_marginVertical="10dp"/>
 
-            <!-- Price -->
-            <TextView
-                android:id="@+id/tvPrice"
+            <!-- Details Row with icons -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/primary"
-                android:layout_marginTop="8dp"/>
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvDetails"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_secondary"/>
+
+            </LinearLayout>
 
         </LinearLayout>
     </LinearLayout>

@@ -10,6 +10,7 @@ import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.adapters.ImageSliderAdapter;
 import com.aqarisyria.app.databinding.ActivityPropertyDetailBinding;
@@ -24,6 +25,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private Property property;
     private boolean isFavorite = false;
+    private ListenerRegistration propertyListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,25 +45,36 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.btnContact.setOnClickListener(v -> callOwner());
         binding.btnWhatsapp.setOnClickListener(v -> openWhatsApp());
 
-        if (AdminUtil.isAdmin()) {
-            binding.btnDelete.setVisibility(View.VISIBLE);
-            binding.btnDelete.setOnClickListener(v -> deleteProperty());
-        }
+        AdminUtil.isAdmin(isAdminUser -> {
+            if (isAdminUser) {
+                binding.btnDelete.setVisibility(View.VISIBLE);
+                binding.btnDelete.setOnClickListener(v -> deleteProperty());
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (propertyListener != null) propertyListener.remove();
+        super.onDestroy();
     }
 
     private void loadProperty(String propertyId) {
-        db.collection("properties").document(propertyId).get()
-            .addOnSuccessListener(doc -> {
-                if (doc.exists()) {
-                    property = doc.toObject(Property.class);
-                    if (property != null) {
-                        property.setId(doc.getId());
-                        displayProperty();
-                        checkFavorite();
-                        incrementViews(propertyId);
-                    }
+        propertyListener = db.collection("properties").document(propertyId)
+            .addSnapshotListener((doc, error) -> {
+                if (error != null) return;
+                if (doc == null || !doc.exists()) {
+                    finish();
+                    return;
+                }
+                property = doc.toObject(Property.class);
+                if (property != null) {
+                    property.setId(doc.getId());
+                    displayProperty();
+                    if (!isFavorite) checkFavorite();
                 }
             });
+        incrementViews(propertyId);
     }
 
     private void displayProperty() {

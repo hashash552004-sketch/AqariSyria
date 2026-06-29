@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primary Colors -->
-    <color name="primary">#1A7A6E</color>
-    <color name="primary_dark">#145F55</color>
-    <color name="primary_light">#E8F5F3</color>
-    <color name="accent">#26A69A</color>
+    <!-- Primary Colors: Green -->
+    <color name="primary">#2E7D32</color>
+    <color name="primary_dark">#1B5E20</color>
+    <color name="primary_light">#E8F5E9</color>
+    <color name="accent">#7B1FA2</color>
 
     <!-- Background -->
-    <color name="background">#F8F9FA</color>
+    <color name="background">#F5F5F5</color>
     <color name="surface">#FFFFFF</color>
     <color name="card_background">#FFFFFF</color>
 
@@ -30,10 +30,16 @@
     <color name="overlay">#80000000</color>
 
     <!-- Tags -->
-    <color name="tag_sell">#E8F5F3</color>
-    <color name="tag_rent">#EFF6FF</color>
-    <color name="tag_invest">#FEF3C7</color>
+    <color name="tag_sell">#E8F5E9</color>
+    <color name="tag_rent">#F3E5F5</color>
+    <color name="tag_invest">#FFF3E0</color>
 
     <!-- WhatsApp -->
     <color name="whatsapp">#25D366</color>
+
+    <!-- Dark Mode Surfaces -->
+    <color name="dark_background">#121212</color>
+    <color name="dark_surface">#1E1E1E</color>
+    <color name="dark_card">#2D2D2D</color>
+    <color name="dark_text">#E0E0E0</color>
 </resources>

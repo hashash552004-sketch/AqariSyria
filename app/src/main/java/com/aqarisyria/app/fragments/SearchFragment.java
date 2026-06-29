@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.adapters.PropertyAdapter;
@@ -33,6 +34,7 @@ public class SearchFragment extends Fragment {
     private double minArea = 0;
     private double maxArea = Double.MAX_VALUE;
     private int selectedRooms = 0;
+    private ListenerRegistration searchListener;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -143,15 +145,18 @@ public class SearchFragment extends Fragment {
         binding.progressSearch.setVisibility(View.VISIBLE);
         binding.rvResults.setVisibility(View.GONE);
 
+        if (searchListener != null) searchListener.remove();
+
         Query query = db.collection("properties").whereEqualTo("active", true);
 
         if (!selectedOperation.isEmpty()) query = query.whereEqualTo("operationType", selectedOperation);
         if (!selectedGovernorate.isEmpty()) query = query.whereEqualTo("governorate", selectedGovernorate);
         if (!selectedType.isEmpty()) query = query.whereEqualTo("type", selectedType);
 
-        query.orderBy("createdAt", Query.Direction.DESCENDING).limit(50)
-            .get()
-            .addOnSuccessListener(snapshot -> {
+        searchListener = query.orderBy("createdAt", Query.Direction.DESCENDING).limit(50)
+            .addSnapshotListener((snapshot, error) -> {
+                if (error != null) return;
+                if (snapshot == null) return;
                 resultList.clear();
                 for (var doc : snapshot.getDocuments()) {
                     Property p = doc.toObject(Property.class);
@@ -197,6 +202,7 @@ public class SearchFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if (searchListener != null) searchListener.remove();
         super.onDestroyView();
         binding = null;
     }

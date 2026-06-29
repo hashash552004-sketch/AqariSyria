@@ -69,6 +69,7 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(context)
                 .load(imageUrl)
+                .override(600, 400)
                 .placeholder(R.drawable.placeholder_property)
                 .centerCrop()
                 .into(holder.ivPropertyImage);

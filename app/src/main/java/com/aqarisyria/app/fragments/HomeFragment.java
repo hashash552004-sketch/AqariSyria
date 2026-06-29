@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.activities.SearchActivity;
@@ -29,6 +30,8 @@ public class HomeFragment extends Fragment {
     private List<Property> featuredList = new ArrayList<>();
     private List<Property> recentList = new ArrayList<>();
     private String currentFilter = "all";
+    private ListenerRegistration featuredListener;
+    private ListenerRegistration recentListener;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -92,12 +95,14 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadFeaturedProperties() {
-        db.collection("properties")
+        if (featuredListener != null) featuredListener.remove();
+        featuredListener = db.collection("properties")
             .whereEqualTo("active", true)
             .orderBy("viewsCount", Query.Direction.DESCENDING)
             .limit(10)
-            .get()
-            .addOnSuccessListener(snapshot -> {
+            .addSnapshotListener((snapshot, error) -> {
+                if (error != null) return;
+                if (snapshot == null) return;
                 featuredList.clear();
                 for (var doc : snapshot.getDocuments()) {
                     Property p = doc.toObject(Property.class);
@@ -112,16 +117,18 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadRecentProperties() {
+        if (recentListener != null) recentListener.remove();
         Query query = db.collection("properties").whereEqualTo("active", true);
 
         if (!currentFilter.equals("all")) {
             query = query.whereEqualTo("operationType", currentFilter);
         }
 
-        query.orderBy("createdAt", Query.Direction.DESCENDING)
+        recentListener = query.orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(20)
-            .get()
-            .addOnSuccessListener(snapshot -> {
+            .addSnapshotListener((snapshot, error) -> {
+                if (error != null) return;
+                if (snapshot == null) return;
                 recentList.clear();
                 for (var doc : snapshot.getDocuments()) {
                     Property p = doc.toObject(Property.class);
@@ -139,6 +146,8 @@ public class HomeFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if (featuredListener != null) featuredListener.remove();
+        if (recentListener != null) recentListener.remove();
         super.onDestroyView();
         binding = null;
     }

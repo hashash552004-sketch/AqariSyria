@@ -32,6 +32,7 @@ public class ImageSliderAdapter extends RecyclerView.Adapter<ImageSliderAdapter.
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         Glide.with(context)
             .load(images.get(position))
+            .override(800, 500)
             .placeholder(R.drawable.placeholder_property)
             .centerCrop()
             .into(holder.imageView);

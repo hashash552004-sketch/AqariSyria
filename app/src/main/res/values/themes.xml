@@ -5,8 +5,9 @@
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
+        <item name="colorOnPrimary">@color/text_white</item>
         <item name="android:windowBackground">@color/background</item>
-        <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
         <item name="android:navigationBarColor">@color/surface</item>
     </style>
 
@@ -24,6 +25,16 @@
         <item name="android:paddingBottom">14dp</item>
         <item name="cornerRadius">12dp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Button Accent (Purple) -->
+    <style name="Button.Accent" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/accent</item>
+        <item name="android:textColor">@color/text_white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="cornerRadius">12dp</item>
     </style>
 
     <!-- Button Outline -->
@@ -47,11 +58,11 @@
     </style>
 
     <style name="TextStyle.Price" parent="TextAppearance.MaterialComponents.Headline6">
-        <item name="android:textColor">@color/primary</item>
+        <item name="android:textColor">@color/accent</item>
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- Input Fields -->
+    <!-- Input Fields - Black text for user input -->
     <style name="InputField" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <item name="boxStrokeColor">@color/border</item>
         <item name="boxStrokeWidth">1dp</item>
@@ -65,7 +76,7 @@
     </style>
 
     <style name="InputEditText" parent="Widget.MaterialComponents.TextInputEditText.OutlinedBox">
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">#FF000000</item>
         <item name="android:textColorHint">@color/text_primary</item>
     </style>
 

@@ -117,8 +117,9 @@
                 android:layout_marginHorizontal="4dp"
                 android:text="الكل"
                 android:textSize="13sp"
-                android:backgroundTint="@color/primary"
-                android:textColor="@color/text_white"/>
+                android:backgroundTint="@color/btn_filter_bg"
+                android:textColor="@color/btn_filter_color"
+                app:cornerRadius="20dp"/>
 
             <Button
                 android:id="@+id/btnFilterSell"
@@ -127,7 +128,10 @@
                 android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:text="للبيع"
-                android:textSize="13sp"/>
+                android:textSize="13sp"
+                android:backgroundTint="@color/btn_filter_bg"
+                android:textColor="@color/btn_filter_color"
+                app:cornerRadius="20dp"/>
 
             <Button
                 android:id="@+id/btnFilterRent"
@@ -136,7 +140,10 @@
                 android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:text="للإيجار"
-                android:textSize="13sp"/>
+                android:textSize="13sp"
+                android:backgroundTint="@color/btn_filter_bg"
+                android:textColor="@color/btn_filter_color"
+                app:cornerRadius="20dp"/>
 
             <Button
                 android:id="@+id/btnFilterInvest"
@@ -145,7 +152,10 @@
                 android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:text="استثمار"
-                android:textSize="13sp"/>
+                android:textSize="13sp"
+                android:backgroundTint="@color/btn_filter_bg"
+                android:textColor="@color/btn_filter_color"
+                app:cornerRadius="20dp"/>
         </LinearLayout>
 
         <!-- Categories Grid -->
