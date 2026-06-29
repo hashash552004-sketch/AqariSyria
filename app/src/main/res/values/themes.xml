@@ -45,7 +45,7 @@
         <item name="android:textSize">22sp</item>
     </style>
 
-    <style name="TextStyle.SectionTitle" parent="TextAppearance.MaterialComponents.TitleLarge">
+    <style name="TextStyle.SectionTitle" parent="TextAppearance.MaterialComponents.Headline6">
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:fontFamily">sans-serif-medium</item>
