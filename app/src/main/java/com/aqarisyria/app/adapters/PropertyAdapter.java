@@ -35,7 +35,9 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
 
     @Override
     public void onBindViewHolder(@NonNull PropertyViewHolder holder, int position) {
+        if (position >= properties.size()) return;
         Property property = properties.get(position);
+        if (property == null) return;
 
         holder.tvTitle.setText(property.getTitle());
         holder.tvPrice.setText(property.getFormattedPrice());
@@ -48,7 +50,6 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         if (property.getArea() > 0) details += property.getArea() + " م²";
         holder.tvDetails.setText(details.trim());
 
-        // Set operation type color
         switch (property.getOperationType()) {
             case "sell":
                 holder.tvOperationType.setBackgroundResource(R.drawable.bg_tag_sell);
@@ -64,7 +65,6 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
                 break;
         }
 
-        // Load image
         String imageUrl = property.getFirstImage();
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(context)
@@ -78,6 +78,7 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         }
 
         holder.cardView.setOnClickListener(v -> {
+            if (context == null) return;
             Intent intent = new Intent(context, PropertyDetailActivity.class);
             intent.putExtra(PropertyDetailActivity.EXTRA_PROPERTY_ID, property.getId());
             context.startActivity(intent);

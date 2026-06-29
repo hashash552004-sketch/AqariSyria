@@ -1,5 +1,6 @@
 package com.aqarisyria.app.activities;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -58,22 +59,31 @@ public class LoginActivity extends AppCompatActivity {
                 finish();
             })
             .addOnFailureListener(e -> {
+                if (isFinishing() || isDestroyed()) return;
                 binding.btnLogin.setEnabled(true);
                 binding.progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, "البريد الإلكتروني أو كلمة المرور غير صحيحة", Toast.LENGTH_SHORT).show();
+                showErrorDialog("البريد الإلكتروني أو كلمة المرور غير صحيحة");
             });
     }
 
     private void showForgotPassword() {
         String email = binding.etEmail.getText().toString().trim();
         if (TextUtils.isEmpty(email)) {
-            Toast.makeText(this, "أدخل بريدك الإلكتروني أولاً", Toast.LENGTH_SHORT).show();
+            showErrorDialog("أدخل بريدك الإلكتروني أولاً");
             return;
         }
         mAuth.sendPasswordResetEmail(email)
             .addOnSuccessListener(unused ->
-                Toast.makeText(this, "تم إرسال رابط إعادة تعيين كلمة المرور", Toast.LENGTH_LONG).show())
+                showErrorDialog("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك"))
             .addOnFailureListener(e ->
-                Toast.makeText(this, "حدث خطأ، تحقق من البريد الإلكتروني", Toast.LENGTH_SHORT).show());
+                showErrorDialog("حدث خطأ، تحقق من البريد الإلكتروني"));
+    }
+
+    private void showErrorDialog(String message) {
+        if (isFinishing() || isDestroyed()) return;
+        new AlertDialog.Builder(this)
+            .setMessage(message)
+            .setPositiveButton("حسناً", null)
+            .show();
     }
 }

@@ -12,30 +12,45 @@
         android:padding="24dp"
         android:layoutDirection="rtl">
 
-        <!-- Header -->
-        <LinearLayout
+        <!-- Header with Background Image -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:background="@color/primary"
+            android:layout_height="220dp"
             android:layout_marginBottom="32dp">
 
             <ImageView
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:src="@drawable/ic_house_logo"
-                android:tint="@color/text_white"/>
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:src="@drawable/login_bg"
+                android:scaleType="centerCrop"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/app_name"
-                android:textSize="26sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_white"
-                android:layout_marginTop="8dp"/>
-        </LinearLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:background="#80000000"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:src="@drawable/ic_house_logo"
+                    android:tint="@color/text_white"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_name"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_white"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+        </FrameLayout>
 
         <TextView
             android:layout_width="wrap_content"

@@ -1,10 +1,10 @@
 package com.aqarisyria.app.activities;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -57,15 +57,25 @@ public class RegisterActivity extends AppCompatActivity {
                         finish();
                     })
                     .addOnFailureListener(e -> {
+                        if (isFinishing() || isDestroyed()) return;
                         binding.btnRegister.setEnabled(true);
                         binding.progressBar.setVisibility(View.GONE);
-                        Toast.makeText(this, "حدث خطأ في حفظ البيانات", Toast.LENGTH_SHORT).show();
+                        showDialog("حدث خطأ في حفظ البيانات");
                     });
             })
             .addOnFailureListener(e -> {
+                if (isFinishing() || isDestroyed()) return;
                 binding.btnRegister.setEnabled(true);
                 binding.progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, "حدث خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                showDialog("حدث خطأ: " + e.getMessage());
             });
+    }
+
+    private void showDialog(String message) {
+        if (isFinishing() || isDestroyed()) return;
+        new AlertDialog.Builder(this)
+            .setMessage(message)
+            .setPositiveButton("حسناً", null)
+            .show();
     }
 }

@@ -1,5 +1,6 @@
 package com.aqarisyria.app.activities;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -30,7 +31,6 @@ public class AddPropertyActivity extends AppCompatActivity {
     private int currentStep = 1;
     private static final int TOTAL_STEPS = 5;
 
-    // Property data
     private String operationType = "";
     private String propertyType = "";
     private String governorate = "";
@@ -59,7 +59,7 @@ public class AddPropertyActivity extends AppCompatActivity {
         storage = FirebaseStorage.getInstance();
 
         if (mAuth.getCurrentUser() == null) {
-            Toast.makeText(this, "يجب تسجيل الدخول لإضافة عقار", Toast.LENGTH_SHORT).show();
+            showCenterDialog("يجب تسجيل الدخول لإضافة عقار");
             finish();
             return;
         }
@@ -71,6 +71,14 @@ public class AddPropertyActivity extends AppCompatActivity {
         binding.btnBack.setOnClickListener(v -> handleBack());
         binding.btnNext.setOnClickListener(v -> handleNext());
         updateStepUI();
+    }
+
+    private void showCenterDialog(String message) {
+        if (isFinishing() || isDestroyed()) return;
+        new AlertDialog.Builder(this)
+            .setMessage(message)
+            .setPositiveButton("حسناً", null)
+            .show();
     }
 
     private void setupStep1() {
@@ -94,7 +102,6 @@ public class AddPropertyActivity extends AppCompatActivity {
     }
 
     private void setupStep3Counters() {
-        // Rooms
         binding.btnRoomsMinus.setOnClickListener(v -> {
             if (rooms > 1) { rooms--; binding.tvRoomsCount.setText(String.valueOf(rooms)); }
         });
@@ -102,7 +109,6 @@ public class AddPropertyActivity extends AppCompatActivity {
             rooms++; binding.tvRoomsCount.setText(String.valueOf(rooms));
         });
 
-        // Bathrooms
         binding.btnBathroomsMinus.setOnClickListener(v -> {
             if (bathrooms > 1) { bathrooms--; binding.tvBathroomsCount.setText(String.valueOf(bathrooms)); }
         });
@@ -110,7 +116,6 @@ public class AddPropertyActivity extends AppCompatActivity {
             bathrooms++; binding.tvBathroomsCount.setText(String.valueOf(bathrooms));
         });
 
-        // Floor
         binding.btnFloorMinus.setOnClickListener(v -> {
             if (floor > 1) { floor--; binding.tvFloorCount.setText(String.valueOf(floor)); }
         });
@@ -152,17 +157,17 @@ public class AddPropertyActivity extends AppCompatActivity {
         switch (currentStep) {
             case 1:
                 if (operationType.isEmpty()) {
-                    Toast.makeText(this, "اختر نوع العملية", Toast.LENGTH_SHORT).show();
+                    showCenterDialog("اختر نوع العملية");
                     return false;
                 }
                 return true;
             case 2:
                 if (binding.spinnerPropertyType.getSelectedItemPosition() == 0) {
-                    Toast.makeText(this, "اختر نوع العقار", Toast.LENGTH_SHORT).show();
+                    showCenterDialog("اختر نوع العقار");
                     return false;
                 }
                 if (binding.spinnerGovernorate.getSelectedItemPosition() == 0) {
-                    Toast.makeText(this, "اختر المحافظة", Toast.LENGTH_SHORT).show();
+                    showCenterDialog("اختر المحافظة");
                     return false;
                 }
                 return true;
@@ -277,7 +282,7 @@ public class AddPropertyActivity extends AppCompatActivity {
                     uploadedImageUrls.add(downloadUri.toString());
                     if (uploadedImageUrls.size() + failedCount[0] == selectedImages.size()) {
                         if (uploadedImageUrls.isEmpty()) {
-                            Toast.makeText(this, "فشل رفع جميع الصور", Toast.LENGTH_SHORT).show();
+                            showCenterDialog("فشل رفع جميع الصور");
                             resetLoadingState();
                         } else {
                             savePropertyToFirestore(uploadedImageUrls);
@@ -288,7 +293,7 @@ public class AddPropertyActivity extends AppCompatActivity {
                     failedCount[0]++;
                     if (uploadedImageUrls.size() + failedCount[0] == selectedImages.size()) {
                         if (uploadedImageUrls.isEmpty()) {
-                            Toast.makeText(this, "فشل رفع الصور، تحقق من اتصالك", Toast.LENGTH_SHORT).show();
+                            showCenterDialog("فشل رفع الصور، تحقق من اتصالك");
                             resetLoadingState();
                         } else {
                             savePropertyToFirestore(uploadedImageUrls);
@@ -299,6 +304,7 @@ public class AddPropertyActivity extends AppCompatActivity {
     }
 
     private void resetLoadingState() {
+        if (isFinishing() || isDestroyed()) return;
         binding.btnNext.setEnabled(true);
         binding.loadingContainer.setVisibility(View.GONE);
     }
@@ -332,12 +338,21 @@ public class AddPropertyActivity extends AppCompatActivity {
 
         db.collection("properties").add(prop)
             .addOnSuccessListener(ref -> {
-                Toast.makeText(this, "تم نشر الإعلان بنجاح!", Toast.LENGTH_LONG).show();
-                finish();
+                if (isFinishing() || isDestroyed()) return;
+                new AlertDialog.Builder(this)
+                    .setTitle("تم النشر!")
+                    .setMessage("تم نشر إعلانك بنجاح")
+                    .setCancelable(false)
+                    .setPositiveButton("العودة للرئيسية", (dialog, which) -> {
+                        startActivity(new Intent(this, MainActivity.class));
+                        finish();
+                    })
+                    .show();
             })
             .addOnFailureListener(e -> {
+                if (isFinishing() || isDestroyed()) return;
                 resetLoadingState();
-                Toast.makeText(this, "حدث خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                showCenterDialog("حدث خطأ: " + e.getMessage());
             });
     }
 

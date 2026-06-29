@@ -1,10 +1,10 @@
 package com.aqarisyria.app.activities;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
@@ -46,6 +46,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.btnWhatsapp.setOnClickListener(v -> openWhatsApp());
 
         AdminUtil.isAdmin(isAdminUser -> {
+            if (isFinishing() || isDestroyed()) return;
             if (isAdminUser) {
                 binding.btnDelete.setVisibility(View.VISIBLE);
                 binding.btnDelete.setOnClickListener(v -> deleteProperty());
@@ -63,6 +64,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         propertyListener = db.collection("properties").document(propertyId)
             .addSnapshotListener((doc, error) -> {
                 if (error != null) return;
+                if (isFinishing() || isDestroyed()) return;
                 if (doc == null || !doc.exists()) {
                     finish();
                     return;
@@ -89,14 +91,12 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.tvOperationType.setText(property.getOperationTypeLabel());
         binding.tvOwnerName.setText(property.getOwnerName());
 
-        // Setup image slider
         if (property.getImages() != null && !property.getImages().isEmpty()) {
             ImageSliderAdapter adapter = new ImageSliderAdapter(this, property.getImages());
             binding.viewPagerImages.setAdapter(adapter);
             binding.dotsIndicator.attachTo(binding.viewPagerImages);
         }
 
-        // Show features
         binding.chipElevator.setVisibility(property.isHasElevator() ? View.VISIBLE : View.GONE);
         binding.chipParking.setVisibility(property.isHasParking() ? View.VISIBLE : View.GONE);
         binding.chipAC.setVisibility(property.isHasAC() ? View.VISIBLE : View.GONE);
@@ -111,8 +111,10 @@ public class PropertyDetailActivity extends AppCompatActivity {
 
     private void checkFavorite() {
         if (mAuth.getCurrentUser() == null) return;
-        db.collection("users").document(mAuth.getCurrentUser().getUid()).get()
+        String uid = mAuth.getCurrentUser().getUid();
+        db.collection("users").document(uid).get()
             .addOnSuccessListener(doc -> {
+                if (isFinishing() || isDestroyed()) return;
                 if (doc.exists()) {
                     java.util.List<String> favs = (java.util.List<String>) doc.get("favorites");
                     isFavorite = favs != null && favs.contains(property.getId());
@@ -123,9 +125,10 @@ public class PropertyDetailActivity extends AppCompatActivity {
 
     private void toggleFavorite() {
         if (mAuth.getCurrentUser() == null) {
-            Toast.makeText(this, "يجب تسجيل الدخول أولاً", Toast.LENGTH_SHORT).show();
+            showDialog("يجب تسجيل الدخول أولاً");
             return;
         }
+        if (property == null) return;
         String uid = mAuth.getCurrentUser().getUid();
         if (isFavorite) {
             db.collection("users").document(uid)
@@ -159,7 +162,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
                 Uri.parse("https://wa.me/963" + phone + "?text=" + Uri.encode(msg)));
             startActivity(intent);
         } catch (Exception e) {
-            Toast.makeText(this, "لا يوجد تطبيق واتساب", Toast.LENGTH_SHORT).show();
+            showDialog("لا يوجد تطبيق واتساب");
         }
     }
 
@@ -169,7 +172,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT,
             property.getTitle() + "\n" + property.getFormattedPrice() +
-            "\n" + property.getLocationString() + "\nعبر تطبيق عقاري سوريا");
+            "\n" + property.getLocationString() + "\nعبر تطبيق بيت العمر");
         startActivity(Intent.createChooser(intent, "مشاركة العقار"));
     }
 
@@ -180,22 +183,33 @@ public class PropertyDetailActivity extends AppCompatActivity {
 
     private void deleteProperty() {
         if (property == null) return;
-        new android.app.AlertDialog.Builder(this)
+        new AlertDialog.Builder(this)
             .setTitle("حذف العقار")
             .setMessage("هل أنت متأكد من حذف هذا العقار؟")
             .setPositiveButton("حذف", (d, w) -> {
+                if (isFinishing() || isDestroyed()) return;
                 binding.btnDelete.setEnabled(false);
                 db.collection("properties").document(property.getId()).delete()
                     .addOnSuccessListener(u -> {
-                        Toast.makeText(this, "تم حذف العقار", Toast.LENGTH_SHORT).show();
+                        if (isFinishing() || isDestroyed()) return;
+                        showDialog("تم حذف العقار");
                         finish();
                     })
                     .addOnFailureListener(e -> {
+                        if (isFinishing() || isDestroyed()) return;
                         binding.btnDelete.setEnabled(true);
-                        Toast.makeText(this, "فشل الحذف: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        showDialog("فشل الحذف: " + e.getMessage());
                     });
             })
             .setNegativeButton("إلغاء", null)
+            .show();
+    }
+
+    private void showDialog(String message) {
+        if (isFinishing() || isDestroyed()) return;
+        new AlertDialog.Builder(this)
+            .setMessage(message)
+            .setPositiveButton("حسناً", null)
             .show();
     }
 }

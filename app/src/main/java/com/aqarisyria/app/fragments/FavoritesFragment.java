@@ -38,8 +38,9 @@ public class FavoritesFragment extends Fragment {
         if (mAuth.getCurrentUser() == null) {
             binding.layoutLoggedOut.setVisibility(View.VISIBLE);
             binding.rvFavorites.setVisibility(View.GONE);
-            binding.btnLogin.setOnClickListener(v ->
-                startActivity(new Intent(getActivity(), LoginActivity.class)));
+            binding.btnLogin.setOnClickListener(v -> {
+                if (isAdded()) startActivity(new Intent(getActivity(), LoginActivity.class));
+            });
             return binding.getRoot();
         }
 
@@ -55,11 +56,13 @@ public class FavoritesFragment extends Fragment {
     }
 
     private void listenFavorites() {
+        if (!isAdded() || binding == null) return;
         binding.progressBar.setVisibility(View.VISIBLE);
         String uid = mAuth.getCurrentUser().getUid();
         userListener = db.collection("users").document(uid)
             .addSnapshotListener((userDoc, error) -> {
                 if (error != null) return;
+                if (!isAdded() || binding == null) return;
                 if (userDoc == null || !userDoc.exists()) {
                     binding.progressBar.setVisibility(View.GONE);
                     binding.tvEmpty.setVisibility(View.VISIBLE);
@@ -93,6 +96,7 @@ public class FavoritesFragment extends Fragment {
                 .whereIn(FieldPath.documentId(), batch)
                 .addSnapshotListener((snapshot, error) -> {
                     if (error != null || snapshot == null) return;
+                    if (!isAdded() || binding == null) return;
                     favoritesList.removeIf(p -> batch.contains(p.getId()));
                     for (var doc : snapshot.getDocuments()) {
                         if (doc.exists()) {

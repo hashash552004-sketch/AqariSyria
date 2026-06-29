@@ -44,12 +44,17 @@ public class HomeFragment extends Fragment {
         loadFeaturedProperties();
         loadRecentProperties();
 
-        binding.tvShowAll.setOnClickListener(v ->
-            startActivity(new Intent(getActivity(), SearchActivity.class)));
+        binding.tvShowAll.setOnClickListener(v -> {
+            if (isAdded()) startActivity(new Intent(getActivity(), SearchActivity.class));
+        });
 
         binding.btnRefresh.setOnClickListener(v -> refreshData());
 
         return binding.getRoot();
+    }
+
+    private boolean isActive() {
+        return isAdded() && binding != null;
     }
 
     private void refreshData() {
@@ -71,10 +76,10 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupFilterButtons() {
-        binding.btnFilterAll.setOnClickListener(v -> { currentFilter = "all"; applyFilter(); });
-        binding.btnFilterSell.setOnClickListener(v -> { currentFilter = "sell"; applyFilter(); });
-        binding.btnFilterRent.setOnClickListener(v -> { currentFilter = "rent"; applyFilter(); });
-        binding.btnFilterInvest.setOnClickListener(v -> { currentFilter = "invest"; applyFilter(); });
+        binding.btnFilterAll.setOnClickListener(v -> { if (isActive()) { currentFilter = "all"; applyFilter(); } });
+        binding.btnFilterSell.setOnClickListener(v -> { if (isActive()) { currentFilter = "sell"; applyFilter(); } });
+        binding.btnFilterRent.setOnClickListener(v -> { if (isActive()) { currentFilter = "rent"; applyFilter(); } });
+        binding.btnFilterInvest.setOnClickListener(v -> { if (isActive()) { currentFilter = "invest"; applyFilter(); } });
     }
 
     private void applyFilter() {
@@ -103,6 +108,7 @@ public class HomeFragment extends Fragment {
             .addSnapshotListener((snapshot, error) -> {
                 if (error != null) return;
                 if (snapshot == null) return;
+                if (!isActive()) return;
                 featuredList.clear();
                 for (var doc : snapshot.getDocuments()) {
                     Property p = doc.toObject(Property.class);
@@ -129,6 +135,7 @@ public class HomeFragment extends Fragment {
             .addSnapshotListener((snapshot, error) -> {
                 if (error != null) return;
                 if (snapshot == null) return;
+                if (!isActive()) return;
                 recentList.clear();
                 for (var doc : snapshot.getDocuments()) {
                     Property p = doc.toObject(Property.class);

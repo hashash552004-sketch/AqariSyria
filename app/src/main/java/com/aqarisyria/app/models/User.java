@@ -9,6 +9,7 @@ import java.util.List;
 public class User {
     @DocumentId
     private String uid;
+    private String uniqueUserId;
     private String fullName;
     private String email;
     private String phone;
@@ -27,12 +28,25 @@ public class User {
         this.fullName = fullName;
         this.email = email;
         this.phone = phone;
+        this.uniqueUserId = generateUniqueId();
         this.favorites = new ArrayList<>();
         this.isVerified = false;
     }
 
+    private String generateUniqueId() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 16; i++) {
+            sb.append(chars.charAt((int)(Math.random() * chars.length())));
+        }
+        return sb.toString();
+    }
+
     public String getUid() { return uid; }
     public void setUid(String uid) { this.uid = uid; }
+
+    public String getUniqueUserId() { return uniqueUserId; }
+    public void setUniqueUserId(String uniqueUserId) { this.uniqueUserId = uniqueUserId; }
 
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
