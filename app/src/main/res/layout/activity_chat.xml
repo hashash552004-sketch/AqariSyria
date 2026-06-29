@@ -94,8 +94,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layoutManager="LinearLayoutManager"
-        android:reverseLayout="false"
-        android:stackFromBottom="true"/>
+        app:reverseLayout="false"
+        app:stackFromBottom="true"/>
 
     <!-- Empty State -->
     <LinearLayout

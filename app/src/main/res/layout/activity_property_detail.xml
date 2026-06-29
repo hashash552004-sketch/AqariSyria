@@ -485,7 +485,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipElevator"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/elevator"
@@ -502,7 +502,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipParking"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/parking"
@@ -516,7 +516,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipAC"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/ac"
@@ -530,7 +530,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipHeating"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/heating"
@@ -544,7 +544,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipGarden"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/garden"
@@ -558,7 +558,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipPool"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/pool"
@@ -572,7 +572,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipBalcony"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/balcony"
@@ -586,7 +586,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipInternet"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/internet"
@@ -600,7 +600,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipGas"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/gas"
@@ -614,7 +614,7 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipFurnished"
-                            style="@style/Widget.MaterialComponents.Chip.Assist"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/furnished"
@@ -843,9 +843,9 @@
                             android:layout_width="56dp"
                             android:layout_height="56dp"
                             android:src="@drawable/ic_person"
-                            app:civ_borderWidth="2dp"
-                            app:civ_borderColor="@color/primary"
-                            app:civ_circleBackgroundColor="@color/primary_light" />
+                            app:civ_border_width="2dp"
+                            app:civ_border_color="@color/primary"
+                            app:civ_circle_background_color="@color/primary_light" />
 
                         <LinearLayout
                             android:layout_width="0dp"
