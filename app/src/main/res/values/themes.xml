@@ -22,17 +22,17 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.AqariSyria.Large</item>
     </style>
 
-    <style name="ShapeAppearance.AqariSyria.Small" parent="ShapeAppearance.MaterialComponents.Small">
+    <style name="ShapeAppearance.AqariSyria.Small">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">8dp</item>
     </style>
 
-    <style name="ShapeAppearance.AqariSyria.Medium" parent="ShapeAppearance.MaterialComponents.Medium">
+    <style name="ShapeAppearance.AqariSyria.Medium">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item>
     </style>
 
-    <style name="ShapeAppearance.AqariSyria.Large" parent="ShapeAppearance.MaterialComponents.Large">
+    <style name="ShapeAppearance.AqariSyria.Large">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">28dp</item>
     </style>
