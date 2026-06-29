@@ -8,7 +8,7 @@
     <string name="default_web_client_id" translatable="false">364648375638-n11avn5uh2e5aumjiu1327mticu0t18k.apps.googleusercontent.com</string>
 
     <!-- ImgBB API for image upload (sign up at https://imgbb.com to get a key) -->
-    <string name="imgbb_api_key" translatable="false">YOUR_IMGBB_API_KEY_HERE</string>
+    <string name="imgbb_api_key" translatable="false">2a239b91838d335275e14115a6e2aa24</string>
 
     <!-- Auth -->
     <string name="start_now">إبدأ الآن</string>
