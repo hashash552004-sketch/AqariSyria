@@ -52,28 +52,31 @@
                 android:layout_marginBottom="16dp">
 
                 <Button android:id="@+id/btnOpSell"
-                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_width="0dp" android:layout_height="48dp"
                     android:layout_weight="1" android:layout_marginEnd="6dp"
-                    android:text="للبيع" android:textSize="13sp"
+                    android:text="للبيع" android:textSize="14sp"
+                    android:gravity="center"
                     android:backgroundTint="@color/btn_filter_bg"
                     android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="20dp"/>
+                    app:cornerRadius="24dp"/>
 
                 <Button android:id="@+id/btnOpRent"
-                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_width="0dp" android:layout_height="48dp"
                     android:layout_weight="1" android:layout_marginHorizontal="3dp"
-                    android:text="للإيجار" android:textSize="13sp"
+                    android:text="للإيجار" android:textSize="14sp"
+                    android:gravity="center"
                     android:backgroundTint="@color/btn_filter_bg"
                     android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="20dp"/>
+                    app:cornerRadius="24dp"/>
 
                 <Button android:id="@+id/btnOpInvest"
-                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_width="0dp" android:layout_height="48dp"
                     android:layout_weight="1" android:layout_marginStart="6dp"
-                    android:text="استثمار" android:textSize="13sp"
+                    android:text="استثمار" android:textSize="14sp"
+                    android:gravity="center"
                     android:backgroundTint="@color/btn_filter_bg"
                     android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="20dp"/>
+                    app:cornerRadius="24dp"/>
             </LinearLayout>
 
             <!-- Governorate -->
@@ -192,35 +195,40 @@
                 android:layout_marginBottom="24dp">
 
                 <Button android:id="@+id/btnRoom1" android:layout_width="0dp"
-                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_height="48dp" android:layout_weight="1"
                     android:layout_marginHorizontal="2dp" android:text="1"
+                    android:gravity="center" android:textSize="14sp"
                     android:backgroundTint="@color/btn_filter_bg"
                     android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="20dp"/>
+                    app:cornerRadius="24dp"/>
                 <Button android:id="@+id/btnRoom2" android:layout_width="0dp"
-                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_height="48dp" android:layout_weight="1"
                     android:layout_marginHorizontal="2dp" android:text="2"
+                    android:gravity="center" android:textSize="14sp"
                     android:backgroundTint="@color/btn_filter_bg"
                     android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="20dp"/>
+                    app:cornerRadius="24dp"/>
                 <Button android:id="@+id/btnRoom3" android:layout_width="0dp"
-                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_height="48dp" android:layout_weight="1"
                     android:layout_marginHorizontal="2dp" android:text="3"
+                    android:gravity="center" android:textSize="14sp"
                     android:backgroundTint="@color/btn_filter_bg"
                     android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="20dp"/>
+                    app:cornerRadius="24dp"/>
                 <Button android:id="@+id/btnRoom4" android:layout_width="0dp"
-                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_height="48dp" android:layout_weight="1"
                     android:layout_marginHorizontal="2dp" android:text="4"
+                    android:gravity="center" android:textSize="14sp"
                     android:backgroundTint="@color/btn_filter_bg"
                     android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="20dp"/>
+                    app:cornerRadius="24dp"/>
                 <Button android:id="@+id/btnRoomPlus" android:layout_width="0dp"
-                    android:layout_height="40dp" android:layout_weight="1"
+                    android:layout_height="48dp" android:layout_weight="1"
                     android:layout_marginHorizontal="2dp" android:text="+4"
+                    android:gravity="center" android:textSize="14sp"
                     android:backgroundTint="@color/btn_filter_bg"
                     android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="20dp"/>
+                    app:cornerRadius="24dp"/>
             </LinearLayout>
 
             <!-- Buttons -->
@@ -236,7 +244,7 @@
                 android:id="@+id/btnReset"
                 style="@style/Button.Outline"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:text="@string/reset_filters"/>
 
         </LinearLayout>

@@ -303,33 +303,35 @@
         <Button
             android:id="@+id/btnWhatsapp"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="56dp"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:text="واتساب"
+            android:textSize="16sp"
+            android:gravity="center"
             android:backgroundTint="@color/whatsapp"
             android:textColor="@color/text_white"
-            android:textSize="15sp"
             app:cornerRadius="12dp"/>
 
         <Button
             android:id="@+id/btnContact"
             style="@style/Button.Primary"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="56dp"
             android:layout_weight="1"
             android:text="اتصال"/>
 
         <Button
             android:id="@+id/btnDelete"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="56dp"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:text="حذف"
+            android:textSize="16sp"
+            android:gravity="center"
             android:backgroundTint="#EF4444"
             android:textColor="@color/text_white"
-            android:textSize="15sp"
             app:cornerRadius="12dp"
             android:visibility="gone"/>
 

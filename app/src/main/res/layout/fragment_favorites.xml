@@ -51,9 +51,10 @@
         <Button
             android:id="@+id/btnLogin"
             style="@style/Button.Primary"
-            android:layout_width="200dp"
-            android:layout_height="48dp"
-            android:text="@string/login"/>
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/login"
+            android:maxWidth="300dp"/>
     </LinearLayout>
 
     <ProgressBar

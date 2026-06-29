@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "364648375638-khbqvonhqn01b5f6ci2o2fokca35t420.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aqarisyria.app",
+            "certificate_hash": "7704c848a8ff105e0e3afb8efef6265fc6801378"
+          }
+        },
+        {
           "client_id": "364648375638-n11avn5uh2e5aumjiu1327mticu0t18k.apps.googleusercontent.com",
           "client_type": 3
         }

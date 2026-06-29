@@ -258,13 +258,13 @@
                             android:inputType="textEmailAddress"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <Button
-                        android:id="@+id/btnAddAdmin"
-                        style="@style/Button.Primary"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:text="إضافة مشرف"
-                        android:layout_marginBottom="12dp"/>
+                <Button
+                    android:id="@+id/btnAddAdmin"
+                    style="@style/Button.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="إضافة مشرف"
+                    android:layout_marginBottom="12dp"/>
 
                     <TextView
                         android:id="@+id/tvAdminList"

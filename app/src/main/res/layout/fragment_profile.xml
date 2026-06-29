@@ -284,7 +284,7 @@
                 android:id="@+id/btnLogout"
                 style="@style/Button.Outline"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:text="تسجيل الخروج"
                 android:layout_marginBottom="24dp"/>
 

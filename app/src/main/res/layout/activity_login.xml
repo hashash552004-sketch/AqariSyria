@@ -140,7 +140,8 @@
             android:layout_height="56dp"
             android:text="تسجيل الدخول عبر Google"
             android:textColor="@color/text_primary"
-            android:textSize="15sp"
+            android:textSize="16sp"
+            android:gravity="center"
             android:backgroundTint="@color/surface"
             app:strokeColor="@color/border"
             app:strokeWidth="1dp"
@@ -158,6 +159,9 @@
             android:layout_height="wrap_content"
             android:text="@string/guest"
             android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:minHeight="44dp"
             android:background="@android:color/transparent"/>
 
     </LinearLayout>
