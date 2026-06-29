@@ -85,7 +85,6 @@
     <string name="bathrooms_count_value">%d</string>
     <string name="floor_value">%d</string>
     <string name="description">الوصف</string>
-    <string name="features">المميزات</string>
     <string name="contact">اتصال</string>
     <string name="whatsapp">واتساب</string>
     <string name="add_to_favorites">إضافة للمفضلة</string>
@@ -108,7 +107,6 @@
     <string name="operation_type">اختر نوع العملية</string>
     <string name="basic_info">معلومات أساسية</string>
     <string name="property_details">تفاصيل المقار</string>
-    <string name="property_features">المميزات</string>
     <string name="property_images">صور المقار</string>
     <string name="review_ad">مراجعة الإعلان</string>
     <string name="next">التالي</string>
