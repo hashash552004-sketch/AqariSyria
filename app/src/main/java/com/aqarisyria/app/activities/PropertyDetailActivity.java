@@ -298,7 +298,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         if (property == null || property.getGovernorate() == null) return;
         db.collection("properties")
             .whereEqualTo("governorate", property.getGovernorate())
-            .whereEqualTo("isActive", true)
+            .whereEqualTo("active", true)
             .limit(5)
             .get()
             .addOnSuccessListener(querySnapshots -> {
