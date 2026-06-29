@@ -20,8 +20,6 @@ import androidx.fragment.app.Fragment;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.bumptech.glide.Glide;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.activities.FavoritesActivity;
@@ -30,16 +28,15 @@ import com.aqarisyria.app.activities.NotificationsActivity;
 import com.aqarisyria.app.activities.SettingsActivity;
 import com.aqarisyria.app.databinding.FragmentProfileBinding;
 import com.aqarisyria.app.utils.DialogUtil;
+import com.aqarisyria.app.utils.ImageUploader;
 
 import java.util.Locale;
-import java.util.UUID;
 
 public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
-    private FirebaseStorage storage;
     private ActivityResultLauncher<String> imagePickerLauncher;
 
     @Override
@@ -47,7 +44,6 @@ public class ProfileFragment extends Fragment {
         binding = FragmentProfileBinding.inflate(inflater, container, false);
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        storage = FirebaseStorage.getInstance();
 
         imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
@@ -215,22 +211,19 @@ public class ProfileFragment extends Fragment {
     }
 
     private void uploadProfileImage(Uri imageUri) {
-        if (!isAdded() || binding == null) return;
+        if (!isAdded() || getActivity() == null || binding == null) return;
         binding.loadingProfile.setVisibility(View.VISIBLE);
         String uid = mAuth.getCurrentUser().getUid();
-        String fileName = "profile_" + UUID.randomUUID() + ".jpg";
-        StorageReference ref = storage.getReference().child("profiles").child(uid).child(fileName);
 
-        ref.putFile(imageUri)
-            .continueWithTask(task -> ref.getDownloadUrl())
-            .addOnSuccessListener(downloadUri -> {
+        ImageUploader.upload(getActivity(), imageUri, new ImageUploader.UploadCallback() {
+            @Override
+            public void onSuccess(String imageUrl) {
                 if (!isAdded() || binding == null) return;
-                String url = downloadUri.toString();
                 db.collection("users").document(uid)
-                    .update("profileImage", url)
+                    .update("profileImage", imageUrl)
                     .addOnSuccessListener(unused -> {
                         if (!isAdded() || binding == null) return;
-                        if (isAdded()) Glide.with(this).load(url).into(binding.civProfileImage);
+                        if (isAdded()) Glide.with(ProfileFragment.this).load(imageUrl).into(binding.civProfileImage);
                         binding.loadingProfile.setVisibility(View.GONE);
                     })
                     .addOnFailureListener(e -> {
@@ -239,13 +232,16 @@ public class ProfileFragment extends Fragment {
                         DialogUtil.showErrorWithDetails(getActivity(),
                             getString(R.string.error_image_upload), e.getLocalizedMessage());
                     });
-            })
-            .addOnFailureListener(e -> {
+            }
+
+            @Override
+            public void onFailure(String error) {
                 if (!isAdded() || getActivity() == null) return;
                 binding.loadingProfile.setVisibility(View.GONE);
                 DialogUtil.showErrorWithDetails(getActivity(),
-                    getString(R.string.error_image_upload), e.getLocalizedMessage());
-            });
+                    getString(R.string.error_image_upload), error);
+            }
+        });
     }
 
     private void showLogoutDialog() {

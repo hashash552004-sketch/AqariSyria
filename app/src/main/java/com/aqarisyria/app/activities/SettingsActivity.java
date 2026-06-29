@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.databinding.ActivitySettingsBinding;
 import com.aqarisyria.app.utils.DialogUtil;
+import com.aqarisyria.app.utils.ImageUploader;
 import com.bumptech.glide.Glide;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.AuthCredential;
@@ -25,18 +26,14 @@ import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import java.util.Locale;
-import java.util.UUID;
 
 public class SettingsActivity extends AppCompatActivity {
 
     private ActivitySettingsBinding binding;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
-    private FirebaseStorage storage;
     private SharedPreferences prefs;
     private ActivityResultLauncher<String> imagePickerLauncher;
     private Uri selectedImageUri;
@@ -49,7 +46,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        storage = FirebaseStorage.getInstance();
         prefs = getSharedPreferences("settings", 0);
 
         imagePickerLauncher = registerForActivityResult(
@@ -162,30 +158,30 @@ public class SettingsActivity extends AppCompatActivity {
     private void uploadProfileImage(Uri imageUri) {
         binding.progressBar.setVisibility(View.VISIBLE);
         String uid = mAuth.getCurrentUser().getUid();
-        String fileName = "profile_" + UUID.randomUUID() + ".jpg";
-        StorageReference ref = storage.getReference().child("profiles").child(uid).child(fileName);
 
-        ref.putFile(imageUri)
-            .continueWithTask(task -> ref.getDownloadUrl())
-            .addOnSuccessListener(downloadUri -> {
-                String url = downloadUri.toString();
+        ImageUploader.upload(this, imageUri, new ImageUploader.UploadCallback() {
+            @Override
+            public void onSuccess(String imageUrl) {
                 db.collection("users").document(uid)
-                    .update("profileImage", url)
+                    .update("profileImage", imageUrl)
                     .addOnSuccessListener(unused -> {
                         binding.progressBar.setVisibility(View.GONE);
-                        DialogUtil.showSuccess(this, R.string.changes_saved);
+                        DialogUtil.showSuccess(SettingsActivity.this, R.string.changes_saved);
                     })
                     .addOnFailureListener(e -> {
                         binding.progressBar.setVisibility(View.GONE);
-                        DialogUtil.showErrorWithDetails(this,
+                        DialogUtil.showErrorWithDetails(SettingsActivity.this,
                             getString(R.string.error_image_upload), e.getLocalizedMessage());
                     });
-            })
-            .addOnFailureListener(e -> {
+            }
+
+            @Override
+            public void onFailure(String error) {
                 binding.progressBar.setVisibility(View.GONE);
-                DialogUtil.showErrorWithDetails(this,
-                    getString(R.string.error_image_upload), e.getLocalizedMessage());
-            });
+                DialogUtil.showErrorWithDetails(SettingsActivity.this,
+                    getString(R.string.error_image_upload), error);
+            }
+        });
     }
 
     private void saveProfile() {

@@ -22,27 +22,23 @@ import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.databinding.ActivityAddPropertyBinding;
 import com.aqarisyria.app.models.Property;
 import com.aqarisyria.app.utils.DialogUtil;
+import com.aqarisyria.app.utils.ImageUploader;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class AddPropertyActivity extends AppCompatActivity {
 
     private ActivityAddPropertyBinding binding;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
-    private FirebaseStorage storage;
 
     private int currentStep = 1;
     private static final int TOTAL_STEPS = 3;
@@ -74,7 +70,6 @@ public class AddPropertyActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
-        storage = FirebaseStorage.getInstance();
 
         if (mAuth.getCurrentUser() == null) {
             showDialog(getString(R.string.error_enter_email_first));
@@ -511,44 +506,36 @@ public class AddPropertyActivity extends AppCompatActivity {
 
     private void uploadImages() {
         uploadedImageUrls.clear();
-        String uid = mAuth.getCurrentUser().getUid();
-        String propertyFolder = "properties/" + uid + "/" + UUID.randomUUID();
         int[] completedCount = {0};
+        int total = selectedImages.size();
 
         for (Uri uri : selectedImages) {
-            String fileName = UUID.randomUUID() + ".jpg";
-            StorageReference ref = storage.getReference()
-                .child(propertyFolder)
-                .child(fileName);
-
-            ref.putFile(uri)
-                .continueWithTask(task -> {
-                    if (!task.isSuccessful()) {
-                        throw task.getException();
-                    }
-                    return ref.getDownloadUrl();
-                })
-                .addOnSuccessListener(downloadUri -> {
-                    uploadedImageUrls.add(downloadUri.toString());
+            ImageUploader.upload(this, uri, new ImageUploader.UploadCallback() {
+                @Override
+                public void onSuccess(String imageUrl) {
+                    uploadedImageUrls.add(imageUrl);
                     completedCount[0]++;
-                    if (completedCount[0] == selectedImages.size()) {
+                    if (completedCount[0] == total) {
                         savePropertyToFirestore(uploadedImageUrls);
                     }
-                })
-                .addOnFailureListener(e -> {
+                }
+
+                @Override
+                public void onFailure(String error) {
                     completedCount[0]++;
-                    if (completedCount[0] == selectedImages.size()) {
+                    if (completedCount[0] == total) {
                         if (uploadedImageUrls.isEmpty()) {
                             if (!isFinishing() && !isDestroyed()) {
-                                DialogUtil.showErrorWithDetails(this,
-                                    getString(R.string.error_image_upload), e.getLocalizedMessage());
+                                DialogUtil.showErrorWithDetails(AddPropertyActivity.this,
+                                    getString(R.string.error_image_upload), error);
                             }
                             resetLoadingState();
                         } else {
                             savePropertyToFirestore(uploadedImageUrls);
                         }
                     }
-                });
+                }
+            });
         }
     }
 
