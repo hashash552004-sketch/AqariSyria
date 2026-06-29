@@ -1,21 +1,37 @@
 package com.aqarisyria.app.activities;
 
-import android.app.AlertDialog;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.ListenerRegistration;
+
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.adapters.ImageSliderAdapter;
 import com.aqarisyria.app.databinding.ActivityPropertyDetailBinding;
 import com.aqarisyria.app.models.Property;
-import com.aqarisyria.app.utils.AdminUtil;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PropertyDetailActivity extends AppCompatActivity {
 
@@ -25,7 +41,9 @@ public class PropertyDetailActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private Property property;
     private boolean isFavorite = false;
-    private ListenerRegistration propertyListener;
+    private boolean isDescriptionExpanded = false;
+    private List<Property> similarProperties = new ArrayList<>();
+    private SimilarPropertiesAdapter similarAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,34 +54,36 @@ public class PropertyDetailActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
-        String propertyId = getIntent().getStringExtra(EXTRA_PROPERTY_ID);
-        if (propertyId != null) loadProperty(propertyId);
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setTitle("");
+        }
 
-        binding.btnBack.setOnClickListener(v -> finish());
+        binding.toolbar.setNavigationOnClickListener(v -> finish());
+
+        String propertyId = getIntent().getStringExtra(EXTRA_PROPERTY_ID);
+        if (propertyId != null) {
+            loadProperty(propertyId);
+        } else {
+            finish();
+        }
+
         binding.btnShare.setOnClickListener(v -> shareProperty());
         binding.btnFavorite.setOnClickListener(v -> toggleFavorite());
         binding.btnContact.setOnClickListener(v -> callOwner());
         binding.btnWhatsapp.setOnClickListener(v -> openWhatsApp());
-
-        AdminUtil.isAdmin(isAdminUser -> {
-            if (isFinishing() || isDestroyed()) return;
-            if (isAdminUser) {
-                binding.btnDelete.setVisibility(View.VISIBLE);
-                binding.btnDelete.setOnClickListener(v -> deleteProperty());
-            }
-        });
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (propertyListener != null) propertyListener.remove();
-        super.onDestroy();
+        binding.btnCallOwner.setOnClickListener(v -> callOwner());
+        binding.btnWhatsappOwner.setOnClickListener(v -> openWhatsApp());
+        binding.btnOpenMap.setOnClickListener(v -> openMap());
+        binding.btnOpenMapFull.setOnClickListener(v -> openMap());
+        binding.tvToggleDescription.setOnClickListener(v -> toggleDescription());
+        binding.btnCalculateMortgage.setOnClickListener(v -> calculateMortgage());
     }
 
     private void loadProperty(String propertyId) {
-        propertyListener = db.collection("properties").document(propertyId)
-            .addSnapshotListener((doc, error) -> {
-                if (error != null) return;
+        db.collection("properties").document(propertyId).get()
+            .addOnSuccessListener(doc -> {
                 if (isFinishing() || isDestroyed()) return;
                 if (doc == null || !doc.exists()) {
                     finish();
@@ -73,23 +93,48 @@ public class PropertyDetailActivity extends AppCompatActivity {
                 if (property != null) {
                     property.setId(doc.getId());
                     displayProperty();
-                    if (!isFavorite) checkFavorite();
+                    checkFavorite();
+                    loadSimilarProperties();
+                    incrementViews(propertyId);
                 }
+            })
+            .addOnFailureListener(e -> {
+                if (isFinishing() || isDestroyed()) return;
+                Snackbar.make(binding.getRoot(), getString(R.string.error_general), Snackbar.LENGTH_SHORT).show();
+                finish();
             });
-        incrementViews(propertyId);
     }
 
     private void displayProperty() {
         binding.tvTitle.setText(property.getTitle());
         binding.tvPrice.setText(property.getFormattedPrice());
+        binding.tvBottomPrice.setText(property.getFormattedPrice());
         binding.tvLocation.setText(property.getLocationString());
         binding.tvDescription.setText(property.getDescription());
-        binding.tvRooms.setText(property.getRooms() + " غرف");
-        binding.tvBathrooms.setText(property.getBathrooms() + " حمام");
-        binding.tvArea.setText(property.getArea() + " م²");
-        binding.tvFloor.setText("طابق " + property.getFloor());
-        binding.tvOperationType.setText(property.getOperationTypeLabel());
         binding.tvOwnerName.setText(property.getOwnerName());
+        binding.tvOwnerPhone.setText(property.getOwnerPhone());
+
+        String areaText = new DecimalFormat("#.#").format(property.getArea()) + " " + getString(R.string.area);
+        binding.tvArea.setText(areaText);
+        binding.tvRooms.setText(getString(R.string.rooms_count_value, property.getRooms()) + " " + getString(R.string.rooms_label));
+        binding.tvBathrooms.setText(getString(R.string.bathrooms_count_value, property.getBathrooms()) + " " + getString(R.string.bathrooms_label));
+        binding.tvFloor.setText(getString(R.string.floor_value, property.getFloor()) + " " + getString(R.string.floor_label));
+
+        String opLabel = property.getOperationTypeLabel();
+        binding.tvOperationType.setText(opLabel);
+        if ("للبيع".equals(opLabel)) {
+            binding.tvOperationType.setBackgroundResource(R.drawable.bg_tag_sell);
+            binding.tvOperationType.setTextColor(ContextCompat.getColor(this, R.color.tag_sell_text));
+        } else if ("للإيجار".equals(opLabel)) {
+            binding.tvOperationType.setBackgroundResource(R.drawable.bg_tag_rent);
+            binding.tvOperationType.setTextColor(ContextCompat.getColor(this, R.color.tag_rent_text));
+        } else {
+            binding.tvOperationType.setBackgroundResource(R.drawable.bg_tag_invest);
+            binding.tvOperationType.setTextColor(ContextCompat.getColor(this, R.color.tag_invest_text));
+        }
+
+        binding.tvPropertyType.setText(property.getTypeLabel());
+        binding.tvPropertyType.setVisibility(View.VISIBLE);
 
         if (property.getImages() != null && !property.getImages().isEmpty()) {
             ImageSliderAdapter adapter = new ImageSliderAdapter(this, property.getImages());
@@ -97,26 +142,57 @@ public class PropertyDetailActivity extends AppCompatActivity {
             binding.dotsIndicator.attachTo(binding.viewPagerImages);
         }
 
-        binding.chipElevator.setVisibility(property.isHasElevator() ? View.VISIBLE : View.GONE);
-        binding.chipParking.setVisibility(property.isHasParking() ? View.VISIBLE : View.GONE);
-        binding.chipAC.setVisibility(property.isHasAC() ? View.VISIBLE : View.GONE);
-        binding.chipHeating.setVisibility(property.isHasHeating() ? View.VISIBLE : View.GONE);
-        binding.chipGarden.setVisibility(property.isHasGarden() ? View.VISIBLE : View.GONE);
-        binding.chipPool.setVisibility(property.isHasPool() ? View.VISIBLE : View.GONE);
-        binding.chipBalcony.setVisibility(property.isHasBalcony() ? View.VISIBLE : View.GONE);
-        binding.chipInternet.setVisibility(property.isHasInternet() ? View.VISIBLE : View.GONE);
-        binding.chipGas.setVisibility(property.isHasGas() ? View.VISIBLE : View.GONE);
-        binding.chipFurnished.setVisibility(property.isFurnished() ? View.VISIBLE : View.GONE);
+        setupAmenities();
+
+        if (property.getDescription() != null && property.getDescription().length() > 100) {
+            binding.tvToggleDescription.setVisibility(View.VISIBLE);
+        }
+
+        Glide.with(this)
+            .load(R.drawable.ic_person)
+            .transform(new CircleCrop())
+            .into(binding.ivOwnerAvatar);
+    }
+
+    private void setupAmenities() {
+        boolean hasAny = false;
+
+        if (property.isHasElevator()) { binding.chipElevator.setVisibility(View.VISIBLE); hasAny = true; }
+        if (property.isHasParking()) { binding.chipParking.setVisibility(View.VISIBLE); hasAny = true; }
+        if (property.isHasAC()) { binding.chipAC.setVisibility(View.VISIBLE); hasAny = true; }
+        if (property.isHasHeating()) { binding.chipHeating.setVisibility(View.VISIBLE); hasAny = true; }
+        if (property.isHasGarden()) { binding.chipGarden.setVisibility(View.VISIBLE); hasAny = true; }
+        if (property.isHasPool()) { binding.chipPool.setVisibility(View.VISIBLE); hasAny = true; }
+        if (property.isHasBalcony()) { binding.chipBalcony.setVisibility(View.VISIBLE); hasAny = true; }
+        if (property.isHasInternet()) { binding.chipInternet.setVisibility(View.VISIBLE); hasAny = true; }
+        if (property.isHasGas()) { binding.chipGas.setVisibility(View.VISIBLE); hasAny = true; }
+        if (property.isFurnished()) { binding.chipFurnished.setVisibility(View.VISIBLE); hasAny = true; }
+
+        binding.tvNoAmenities.setVisibility(hasAny ? View.GONE : View.VISIBLE);
+    }
+
+    private void toggleDescription() {
+        if (isDescriptionExpanded) {
+            binding.tvDescription.setMaxLines(3);
+            binding.tvDescription.setEllipsize(TextUtils.TruncateAt.END);
+            binding.tvToggleDescription.setText(R.string.more);
+            isDescriptionExpanded = false;
+        } else {
+            binding.tvDescription.setMaxLines(Integer.MAX_VALUE);
+            binding.tvDescription.setEllipsize(null);
+            binding.tvToggleDescription.setText(R.string.show_less);
+            isDescriptionExpanded = true;
+        }
     }
 
     private void checkFavorite() {
-        if (mAuth.getCurrentUser() == null) return;
+        if (mAuth.getCurrentUser() == null || property == null) return;
         String uid = mAuth.getCurrentUser().getUid();
         db.collection("users").document(uid).get()
             .addOnSuccessListener(doc -> {
-                if (isFinishing() || isDestroyed()) return;
+                if (isFinishing() || isDestroyed() || property == null) return;
                 if (doc.exists()) {
-                    java.util.List<String> favs = (java.util.List<String>) doc.get("favorites");
+                    List<String> favs = (List<String>) doc.get("favorites");
                     isFavorite = favs != null && favs.contains(property.getId());
                     updateFavoriteButton();
                 }
@@ -125,20 +201,48 @@ public class PropertyDetailActivity extends AppCompatActivity {
 
     private void toggleFavorite() {
         if (mAuth.getCurrentUser() == null) {
-            showDialog("يجب تسجيل الدخول أولاً");
+            Snackbar.make(binding.getRoot(), R.string.error_enter_email_first, Snackbar.LENGTH_SHORT).show();
             return;
         }
         if (property == null) return;
         String uid = mAuth.getCurrentUser().getUid();
+
+        animateFavoriteButton();
+
         if (isFavorite) {
             db.collection("users").document(uid)
                 .update("favorites", FieldValue.arrayRemove(property.getId()))
-                .addOnSuccessListener(u -> { isFavorite = false; updateFavoriteButton(); });
+                .addOnSuccessListener(u -> {
+                    isFavorite = false;
+                    updateFavoriteButton();
+                })
+                .addOnFailureListener(e -> {
+                    isFavorite = true;
+                    updateFavoriteButton();
+                });
         } else {
             db.collection("users").document(uid)
                 .update("favorites", FieldValue.arrayUnion(property.getId()))
-                .addOnSuccessListener(u -> { isFavorite = true; updateFavoriteButton(); });
+                .addOnSuccessListener(u -> {
+                    isFavorite = true;
+                    updateFavoriteButton();
+                })
+                .addOnFailureListener(e -> {
+                    isFavorite = false;
+                    updateFavoriteButton();
+                });
         }
+    }
+
+    private void animateFavoriteButton() {
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(binding.btnFavorite, View.SCALE_X, 1f, 1.3f, 1f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(binding.btnFavorite, View.SCALE_Y, 1f, 1.3f, 1f);
+        scaleX.setDuration(300);
+        scaleY.setDuration(300);
+        scaleX.setInterpolator(new AccelerateDecelerateInterpolator());
+        scaleY.setInterpolator(new AccelerateDecelerateInterpolator());
+        scaleX.start();
+        scaleY.start();
     }
 
     private void updateFavoriteButton() {
@@ -147,22 +251,22 @@ public class PropertyDetailActivity extends AppCompatActivity {
     }
 
     private void callOwner() {
-        if (property == null) return;
+        if (property == null || property.getOwnerPhone() == null) return;
         Intent intent = new Intent(Intent.ACTION_DIAL,
             Uri.parse("tel:" + property.getOwnerPhone()));
         startActivity(intent);
     }
 
     private void openWhatsApp() {
-        if (property == null) return;
+        if (property == null || property.getOwnerPhone() == null) return;
         String phone = property.getOwnerPhone().replaceAll("[^0-9]", "");
-        String msg = "مرحباً، أنا مهتم بعقارك: " + property.getTitle();
+        String msg = getString(R.string.app_name) + ": " + property.getTitle();
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("https://wa.me/963" + phone + "?text=" + Uri.encode(msg)));
+                Uri.parse("https://wa.me/" + phone + "?text=" + Uri.encode(msg)));
             startActivity(intent);
         } catch (Exception e) {
-            showDialog("لا يوجد تطبيق واتساب");
+            Snackbar.make(binding.getRoot(), R.string.error_general, Snackbar.LENGTH_SHORT).show();
         }
     }
 
@@ -171,9 +275,18 @@ public class PropertyDetailActivity extends AppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT,
-            property.getTitle() + "\n" + property.getFormattedPrice() +
-            "\n" + property.getLocationString() + "\nعبر تطبيق بيت العمر");
-        startActivity(Intent.createChooser(intent, "مشاركة العقار"));
+            property.getTitle() + "\n" +
+            property.getFormattedPrice() + "\n" +
+            property.getLocationString() + "\n" +
+            getString(R.string.app_description));
+        startActivity(Intent.createChooser(intent, getString(R.string.share)));
+    }
+
+    private void openMap() {
+        if (property == null) return;
+        String uri = "geo:0,0?q=" + Uri.encode(property.getLocationString());
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        startActivity(Intent.createChooser(intent, getString(R.string.open_map)));
     }
 
     private void incrementViews(String propertyId) {
@@ -181,35 +294,118 @@ public class PropertyDetailActivity extends AppCompatActivity {
             .update("viewsCount", FieldValue.increment(1));
     }
 
-    private void deleteProperty() {
-        if (property == null) return;
-        new AlertDialog.Builder(this)
-            .setTitle("حذف العقار")
-            .setMessage("هل أنت متأكد من حذف هذا العقار؟")
-            .setPositiveButton("حذف", (d, w) -> {
+    private void loadSimilarProperties() {
+        if (property == null || property.getGovernorate() == null) return;
+        db.collection("properties")
+            .whereEqualTo("governorate", property.getGovernorate())
+            .whereEqualTo("isActive", true)
+            .limit(5)
+            .get()
+            .addOnSuccessListener(querySnapshots -> {
                 if (isFinishing() || isDestroyed()) return;
-                binding.btnDelete.setEnabled(false);
-                db.collection("properties").document(property.getId()).delete()
-                    .addOnSuccessListener(u -> {
-                        if (isFinishing() || isDestroyed()) return;
-                        showDialog("تم حذف العقار");
-                        finish();
-                    })
-                    .addOnFailureListener(e -> {
-                        if (isFinishing() || isDestroyed()) return;
-                        binding.btnDelete.setEnabled(true);
-                        showDialog("فشل الحذف: " + e.getMessage());
-                    });
-            })
-            .setNegativeButton("إلغاء", null)
-            .show();
+                similarProperties.clear();
+                for (DocumentSnapshot doc : querySnapshots) {
+                    Property p = doc.toObject(Property.class);
+                    if (p != null) {
+                        p.setId(doc.getId());
+                        if (!doc.getId().equals(property.getId())) {
+                            similarProperties.add(p);
+                        }
+                    }
+                }
+                if (similarAdapter == null) {
+                    similarAdapter = new SimilarPropertiesAdapter();
+                    binding.rvSimilarProperties.setAdapter(similarAdapter);
+                } else {
+                    similarAdapter.notifyDataSetChanged();
+                }
+            });
     }
 
-    private void showDialog(String message) {
-        if (isFinishing() || isDestroyed()) return;
-        new AlertDialog.Builder(this)
-            .setMessage(message)
-            .setPositiveButton("حسناً", null)
-            .show();
+    private void calculateMortgage() {
+        String priceStr = binding.etMortgagePrice.getText().toString().trim();
+        String downStr = binding.etDownPayment.getText().toString().trim();
+        String rateStr = binding.etInterestRate.getText().toString().trim();
+        String yearsStr = binding.etLoanYears.getText().toString().trim();
+
+        if (priceStr.isEmpty()) {
+            binding.tilMortgagePrice.setError(getString(R.string.required_field));
+            return;
+        }
+        binding.tilMortgagePrice.setError(null);
+
+        double price = Double.parseDouble(priceStr);
+        double downPercent = downStr.isEmpty() ? 20 : Double.parseDouble(downStr);
+        double annualRate = rateStr.isEmpty() ? 8 : Double.parseDouble(rateStr);
+        int years = yearsStr.isEmpty() ? 15 : Integer.parseInt(yearsStr);
+
+        double downAmount = price * (downPercent / 100.0);
+        double principal = price - downAmount;
+        double monthlyRate = annualRate / 100.0 / 12.0;
+        int months = years * 12;
+
+        double monthlyPayment;
+        if (monthlyRate == 0) {
+            monthlyPayment = principal / months;
+        } else {
+            double factor = Math.pow(1 + monthlyRate, months);
+            monthlyPayment = principal * (monthlyRate * factor) / (factor - 1);
+        }
+
+        DecimalFormat df = new DecimalFormat("#,##0");
+        binding.tvMonthlyPayment.setText(df.format(monthlyPayment) + " $");
+        binding.layoutMortgageResult.setVisibility(View.VISIBLE);
+    }
+
+    private class SimilarPropertiesAdapter extends RecyclerView.Adapter<SimilarPropertiesAdapter.ViewHolder> {
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = getLayoutInflater().inflate(R.layout.item_similar_property, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            Property p = similarProperties.get(position);
+            holder.title.setText(p.getTitle());
+            holder.price.setText(p.getFormattedPrice());
+            holder.location.setText(p.getLocationString());
+
+            if (p.getFirstImage() != null) {
+                Glide.with(PropertyDetailActivity.this)
+                    .load(p.getFirstImage())
+                    .placeholder(R.drawable.placeholder_property)
+                    .centerCrop()
+                    .into(holder.image);
+            } else {
+                holder.image.setImageResource(R.drawable.placeholder_property);
+            }
+
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(PropertyDetailActivity.this, PropertyDetailActivity.class);
+                intent.putExtra(EXTRA_PROPERTY_ID, p.getId());
+                startActivity(intent);
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return similarProperties.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            ImageView image;
+            TextView title, price, location;
+
+            ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                image = itemView.findViewById(R.id.ivSimilarImage);
+                title = itemView.findViewById(R.id.tvSimilarTitle);
+                price = itemView.findViewById(R.id.tvSimilarPrice);
+                location = itemView.findViewById(R.id.tvSimilarLocation);
+            }
+        }
     }
 }

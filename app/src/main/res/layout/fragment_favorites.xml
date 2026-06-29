@@ -41,7 +41,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="يجب تسجيل الدخول لعرض المفضلة"
+            android:text="@string/favorites_login_required"
             android:textSize="16sp"
             android:textColor="@color/text_secondary"
             android:gravity="center"
@@ -68,7 +68,7 @@
         android:id="@+id/tvEmpty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="لا توجد عقارات في المفضلة"
+            android:text="@string/favorites_empty"
         android:gravity="center"
         android:padding="32dp"
         android:textColor="@color/text_secondary"

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,14 +8,14 @@
     android:background="@color/background"
     android:layoutDirection="rtl">
 
-    <!-- Toolbar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:paddingTop="44dp">
+        android:paddingHorizontal="20dp"
+        android:paddingTop="40dp"
+        android:paddingBottom="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -28,421 +29,922 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_arrow_back"
                 android:background="@android:color/transparent"
-                android:tint="@color/text_white"
-                android:visibility="gone"/>
+                app:tint="@color/text_white"
+                android:contentDescription="@string/back" />
 
             <TextView
                 android:id="@+id/tvStepTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="إضافة عقار"
+                android:layout_marginStart="8dp"
+                android:text="@string/add_property"
                 android:textColor="@color/text_white"
                 android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
 
             <TextView
                 android:id="@+id/tvStepCounter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="1/5"
                 android:textColor="#CCffffff"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium" />
+
         </LinearLayout>
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="@android:style/Widget.ProgressBar.Horizontal"
+        <LinearLayout
+            android:id="@+id/layoutStepIndicator"
             android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:layout_marginTop="12dp"
-            android:progress="20"
-            android:progressTint="@color/text_white"
-            android:progressBackgroundTint="#66ffffff"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/stepDot1"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:text="1"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/text_white"
+                    android:background="@drawable/bg_step_active" />
+
+                <TextView
+                    android:id="@+id/tvStepLabel1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/basic_info"
+                    android:textSize="11sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/text_white" />
+
+            </LinearLayout>
+
+            <View
+                android:id="@+id/stepLine1"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginBottom="20dp"
+                android:background="#66ffffff" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/stepDot2"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:text="2"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/text_hint"
+                    android:background="@drawable/bg_step_inactive" />
+
+                <TextView
+                    android:id="@+id/tvStepLabel2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/details_and_location_step"
+                    android:textSize="11sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="#99ffffff" />
+
+            </LinearLayout>
+
+            <View
+                android:id="@+id/stepLine2"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginBottom="20dp"
+                android:background="#66ffffff" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/stepDot3"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:text="3"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/text_hint"
+                    android:background="@drawable/bg_step_inactive" />
+
+                <TextView
+                    android:id="@+id/tvStepLabel3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/images_and_review_step"
+                    android:textSize="11sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="#99ffffff" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
     </LinearLayout>
 
-    <!-- Step Content -->
-    <androidx.core.widget.NestedScrollView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollContent"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_height="match_parent">
 
-            <!-- STEP 1: Operation Type -->
             <LinearLayout
-                android:id="@+id/step1Container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- STEP 1: Basic Info -->
+                <LinearLayout
+                    android:id="@+id/step1Container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilTitle"
+                        style="@style/InputField"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/property_title_hint"
+                        app:endIconMode="none">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilDescription"
+                        style="@style/InputField"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/description"
+                        app:endIconMode="none">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etDescription"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textMultiLine"
+                            android:minLines="5"
+                            android:gravity="top|start"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/property_type"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chipGroupPropertyType"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true"
+                        app:chipSpacingHorizontal="8dp"
+                        app:chipSpacingVertical="4dp">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipTypeApartment"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/category_apartment"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipTypeVilla"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/category_villa"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipTypeHouse"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/category_house"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipTypeLand"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/category_land"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipTypeShop"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/category_shop"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipTypeWarehouse"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/category_warehouse"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/operation_type"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chipGroupOperationType"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true"
+                        app:chipSpacingHorizontal="8dp">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOpSell"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/for_sale"
+                            android:fontFamily="sans-serif-medium"
+                            app:chipBackgroundColor="@color/tag_sell"
+                            app:chipStrokeColor="@color/primary"
+                            app:checkedIconVisible="true" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOpRent"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/for_rent"
+                            android:fontFamily="sans-serif-medium"
+                            app:chipBackgroundColor="@color/tag_rent"
+                            app:chipStrokeColor="@color/accent"
+                            app:checkedIconVisible="true" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOpInvest"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/for_invest"
+                            android:fontFamily="sans-serif-medium"
+                            app:chipBackgroundColor="@color/tag_invest"
+                            app:chipStrokeColor="@color/warning"
+                            app:checkedIconVisible="true" />
+
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilPrice"
+                        style="@style/InputField"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:hint="@string/price"
+                        app:suffixText="$"
+                        app:endIconMode="none">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etPrice"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+                <!-- STEP 2: Details & Location -->
+                <LinearLayout
+                    android:id="@+id/step2Container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilArea"
+                            style="@style/InputField"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="@string/area_label"
+                            app:suffixText="@string/area"
+                            app:endIconMode="none">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etArea"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="numberDecimal"
+                                android:fontFamily="sans-serif-medium" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilFloor"
+                            style="@style/InputField"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:hint="@string/floor_label"
+                            app:endIconMode="none"
+                            app:helperText="@string/floor_label">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etFloor"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:text="1"
+                                android:fontFamily="sans-serif-medium" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/rooms_label"
+                                android:textSize="14sp"
+                                android:fontFamily="sans-serif-medium"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginBottom="8dp" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <ImageButton
+                                    android:id="@+id/btnRoomsMinus"
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:src="@drawable/ic_minus"
+                                    android:background="@drawable/bg_counter_btn"
+                                    android:contentDescription="@string/rooms_label" />
+
+                                <TextView
+                                    android:id="@+id/tvRoomsCount"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="center"
+                                    android:text="1"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textColor="@color/text_primary" />
+
+                                <ImageButton
+                                    android:id="@+id/btnRoomsPlus"
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:src="@drawable/ic_plus"
+                                    android:background="@drawable/bg_counter_btn"
+                                    android:contentDescription="@string/rooms_label" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/bathrooms_label"
+                                android:textSize="14sp"
+                                android:fontFamily="sans-serif-medium"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginBottom="8dp" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <ImageButton
+                                    android:id="@+id/btnBathroomsMinus"
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:src="@drawable/ic_minus"
+                                    android:background="@drawable/bg_counter_btn"
+                                    android:contentDescription="@string/bathrooms_label" />
+
+                                <TextView
+                                    android:id="@+id/tvBathroomsCount"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="center"
+                                    android:text="1"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textColor="@color/text_primary" />
+
+                                <ImageButton
+                                    android:id="@+id/btnBathroomsPlus"
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:src="@drawable/ic_plus"
+                                    android:background="@drawable/bg_counter_btn"
+                                    android:contentDescription="@string/bathrooms_label" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="@string/property_features"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chipGroupAmenities"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:singleLine="false"
+                        app:chipSpacingHorizontal="8dp"
+                        app:chipSpacingVertical="4dp">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipElevator"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/elevator"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipParking"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/parking"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipAC"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/ac"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipHeating"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/heating"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipGarden"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/garden"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipPool"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pool"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipBalcony"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/balcony"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipInternet"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/internet"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipFurnished"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/furnished"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipGas"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/gas"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilAddress"
+                        style="@style/InputField"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/address_label"
+                        app:endIconMode="none">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etAddress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilCity"
+                        style="@style/InputField"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/governorate"
+                        app:endIconMode="none">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etCity"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="140dp"
+                        android:layout_marginTop="12dp"
+                        style="@style/CardStyle"
+                        app:cardElevation="1dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_map_placeholder">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                                <ImageView
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:src="@drawable/ic_location"
+                                    app:tint="@color/accent" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="@string/choose_map_location"
+                                    android:textSize="13sp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textColor="@color/text_hint" />
+
+                            </LinearLayout>
+
+                        </FrameLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+                <!-- STEP 3: Images & Review -->
+                <LinearLayout
+                    android:id="@+id/step3Container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/add_images"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/text_primary" />
+
+                    <GridLayout
+                        android:id="@+id/gridImages"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:columnCount="3"
+                        android:rowCount="4"
+                        android:alignmentMode="alignMargins"
+                        android:columnOrderPreserved="false">
+
+                        <FrameLayout
+                            android:id="@+id/btnAddImage"
+                            android:layout_width="0dp"
+                            android:layout_height="100dp"
+                            android:layout_columnWeight="1"
+                            android:layout_rowWeight="1"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/bg_map_placeholder"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackground"
+                            android:gravity="center">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                                <ImageView
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:src="@drawable/ic_add"
+                                    app:tint="@color/primary" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="@string/add_image"
+                                    android:textSize="11sp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textColor="@color/primary" />
+
+                            </LinearLayout>
+
+                        </FrameLayout>
+
+                    </GridLayout>
+
+                    <TextView
+                        android:id="@+id/tvImageCount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="0 / 10"
+                        android:textSize="13sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/text_secondary"
+                        android:gravity="center" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/CardStyle"
+                        android:layout_marginTop="20dp"
+                        app:cardElevation="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/review_summary"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-medium"
+                                android:textColor="@color/text_primary" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tvReviewTitle"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textColor="@color/text_primary" />
+
+                                <TextView
+                                    android:id="@+id/tvReviewType"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:textSize="13sp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textColor="@color/text_secondary" />
+
+                                <TextView
+                                    android:id="@+id/tvReviewPrice"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textColor="@color/primary" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+        <FrameLayout
+            android:id="@+id/loadingOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:background="@color/overlay">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
                 android:orientation="vertical">
 
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    app:indicatorColor="@color/text_white"
+                    app:trackColor="@android:color/transparent"
+                    android:indeterminate="true" />
+
                 <TextView
+                    android:id="@+id/tvUploadProgress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="اختر نوع العملية"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="24dp"/>
-
-                <Button
-                    android:id="@+id/btnOperationSell"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="للبيع"
-                    android:textSize="16sp"
-                    android:gravity="center"
-                    android:layout_marginBottom="12dp"
-                    app:cornerRadius="12dp"/>
-
-                <Button
-                    android:id="@+id/btnOperationRent"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="للإيجار"
-                    android:textSize="16sp"
-                    android:gravity="center"
-                    android:layout_marginBottom="12dp"
-                    app:cornerRadius="12dp"/>
-
-                <Button
-                    android:id="@+id/btnOperationInvest"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="استثمار"
-                    android:textSize="16sp"
-                    android:gravity="center"
-                    app:cornerRadius="12dp"/>
-            </LinearLayout>
-
-            <!-- STEP 2: Basic Info -->
-            <LinearLayout
-                android:id="@+id/step2Container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="معلومات أساسية"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="20dp"/>
-
-                <!-- Property Type -->
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="نوع العقار" android:textSize="14sp" android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="6dp"/>
-                <Spinner android:id="@+id/spinnerPropertyType"
-                    android:layout_width="match_parent" android:layout_height="52dp"
-                    android:background="@drawable/bg_spinner" android:layout_marginBottom="16dp"/>
-
-                <!-- Governorate -->
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="المحافظة" android:textSize="14sp" android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="6dp"/>
-                <Spinner android:id="@+id/spinnerGovernorate"
-                    android:layout_width="match_parent" android:layout_height="52dp"
-                    android:background="@drawable/bg_spinner" android:layout_marginBottom="16dp"/>
-
-                <!-- Region -->
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/InputField"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="المنطقة" android:layout_marginBottom="16dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etRegion"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"/>
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Neighborhood -->
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/InputField"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="الحي" android:layout_marginBottom="16dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etNeighborhood"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"/>
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Detailed Address -->
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/InputField"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="العنوان التفصيلي" android:layout_marginBottom="16dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etDetailedAddress"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:hint="أدخل العنوان بالتفصيل"/>
-                </com.google.android.material.textfield.TextInputLayout>
-            </LinearLayout>
-
-            <!-- STEP 3: Property Details -->
-            <LinearLayout
-                android:id="@+id/step3Container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="تفاصيل المقار"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="20dp"/>
-
-                <!-- Price -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilPrice"
-                    style="@style/InputField"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="السعر $" android:layout_marginBottom="16dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etPrice"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"/>
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Area -->
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/InputField"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="المساحة (م²)" android:layout_marginBottom="16dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etArea"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"/>
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Rooms Counter -->
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="عدد الغرف" android:textSize="14sp" android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="8dp"/>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="horizontal" android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
-                    <ImageButton android:id="@+id/btnRoomsMinus"
-                        android:layout_width="36dp" android:layout_height="36dp"
-                        android:src="@drawable/ic_minus" android:background="@drawable/bg_counter_btn"/>
-                    <TextView android:id="@+id/tvRoomsCount"
-                        android:layout_width="48dp" android:layout_height="wrap_content"
-                        android:text="1" android:textSize="18sp" android:textStyle="bold"
-                        android:gravity="center" android:textColor="@color/text_primary"/>
-                    <ImageButton android:id="@+id/btnRoomsPlus"
-                        android:layout_width="36dp" android:layout_height="36dp"
-                        android:src="@drawable/ic_plus" android:background="@drawable/bg_counter_btn"/>
-                </LinearLayout>
-
-                <!-- Bathrooms Counter -->
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="عدد الحمامات" android:textSize="14sp" android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="8dp"/>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="horizontal" android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
-                    <ImageButton android:id="@+id/btnBathroomsMinus"
-                        android:layout_width="36dp" android:layout_height="36dp"
-                        android:src="@drawable/ic_minus" android:background="@drawable/bg_counter_btn"/>
-                    <TextView android:id="@+id/tvBathroomsCount"
-                        android:layout_width="48dp" android:layout_height="wrap_content"
-                        android:text="1" android:textSize="18sp" android:textStyle="bold"
-                        android:gravity="center" android:textColor="@color/text_primary"/>
-                    <ImageButton android:id="@+id/btnBathroomsPlus"
-                        android:layout_width="36dp" android:layout_height="36dp"
-                        android:src="@drawable/ic_plus" android:background="@drawable/bg_counter_btn"/>
-                </LinearLayout>
-
-                <!-- Floor Counter -->
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="الطابق" android:textSize="14sp" android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="8dp"/>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="horizontal" android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
-                    <ImageButton android:id="@+id/btnFloorMinus"
-                        android:layout_width="36dp" android:layout_height="36dp"
-                        android:src="@drawable/ic_minus" android:background="@drawable/bg_counter_btn"/>
-                    <TextView android:id="@+id/tvFloorCount"
-                        android:layout_width="48dp" android:layout_height="wrap_content"
-                        android:text="1" android:textSize="18sp" android:textStyle="bold"
-                        android:gravity="center" android:textColor="@color/text_primary"/>
-                    <ImageButton android:id="@+id/btnFloorPlus"
-                        android:layout_width="36dp" android:layout_height="36dp"
-                        android:src="@drawable/ic_plus" android:background="@drawable/bg_counter_btn"/>
-                </LinearLayout>
-
-                <!-- Description -->
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/InputField"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="وصف العقار" android:layout_marginBottom="8dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etDescription"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:minLines="4" android:gravity="top|start"
-                        android:inputType="textMultiLine"/>
-                </com.google.android.material.textfield.TextInputLayout>
-            </LinearLayout>
-
-            <!-- STEP 4: Features -->
-            <LinearLayout
-                android:id="@+id/step4Container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="المميزات"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="20dp"/>
-
-                <com.google.android.material.chip.ChipGroup
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:singleLine="false">
-
-                    <com.google.android.material.chip.Chip android:id="@+id/chipElevator"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="مصعد" app:chipBackgroundColor="@color/primary_light"
-                        app:checkedIconVisible="true"/>
-                    <com.google.android.material.chip.Chip android:id="@+id/chipParking"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="موقف سيارة"/>
-                    <com.google.android.material.chip.Chip android:id="@+id/chipAC"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="تكييف"/>
-                    <com.google.android.material.chip.Chip android:id="@+id/chipHeating"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="تدفئة"/>
-                    <com.google.android.material.chip.Chip android:id="@+id/chipGarden"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="حديقة"/>
-                    <com.google.android.material.chip.Chip android:id="@+id/chipPool"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="مسبح"/>
-                    <com.google.android.material.chip.Chip android:id="@+id/chipBalcony"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="شرفة"/>
-                    <com.google.android.material.chip.Chip android:id="@+id/chipInternet"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="إنترنت"/>
-                    <com.google.android.material.chip.Chip android:id="@+id/chipGas"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="غاز"/>
-                    <com.google.android.material.chip.Chip android:id="@+id/chipFurnished"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="مفروش"/>
-                </com.google.android.material.chip.ChipGroup>
-            </LinearLayout>
-
-            <!-- STEP 5: Images -->
-            <LinearLayout
-                android:id="@+id/step5Container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="صور المقار"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="20dp"/>
-
-                <Button
-                    android:id="@+id/btnAddImages"
-                    style="@style/Button.Outline"
-                    android:layout_width="match_parent"
-                    android:layout_height="120dp"
-                    android:text="+ إضافة صور"
-                    android:textSize="16sp"
-                    android:layout_marginBottom="12dp"/>
-
-                <TextView
-                    android:id="@+id/tvImageCount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="لم يتم اختيار صور"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/publish"
                     android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    android:gravity="center"/>
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/text_white" />
+
             </LinearLayout>
 
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+        </FrameLayout>
 
-    <!-- Loading Overlay -->
-    <FrameLayout
-        android:id="@+id/loadingContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:padding="16dp">
-        <ProgressBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"/>
     </FrameLayout>
 
-    <!-- Bottom Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="20dp"
         android:paddingTop="12dp"
-        android:paddingBottom="8dp"
+        android:paddingBottom="16dp"
         android:background="@color/surface"
-        android:elevation="4dp">
+        android:elevation="8dp">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBackStep"
             style="@style/Button.Outline"
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:layout_weight="1"
-            android:text="رجوع"
-            android:layout_marginEnd="8dp"
-            android:visibility="gone"/>
+            android:text="@string/back"
+            android:layout_marginEnd="12dp"
+            android:visibility="gone" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNext"
             style="@style/Button.Primary"
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:layout_weight="1"
-            android:text="التالي"/>
+            android:text="@string/next" />
+
     </LinearLayout>
 
 </LinearLayout>

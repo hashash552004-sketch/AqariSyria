@@ -5,11 +5,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
+
+import com.aqarisyria.app.R;
 import com.aqarisyria.app.databinding.ActivityRegisterBinding;
 import com.aqarisyria.app.models.User;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -28,6 +31,10 @@ public class RegisterActivity extends AppCompatActivity {
 
         binding.btnRegister.setOnClickListener(v -> registerUser());
         binding.btnBack.setOnClickListener(v -> finish());
+        binding.tvLogin.setOnClickListener(v -> {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+        });
     }
 
     private void registerUser() {
@@ -37,12 +44,34 @@ public class RegisterActivity extends AppCompatActivity {
         String password = binding.etPassword.getText().toString().trim();
         String confirmPassword = binding.etConfirmPassword.getText().toString().trim();
 
-        if (TextUtils.isEmpty(name)) { binding.tilFullName.setError("أدخل اسمك الكامل"); return; }
-        if (TextUtils.isEmpty(email)) { binding.tilEmail.setError("أدخل البريد الإلكتروني"); return; }
-        if (TextUtils.isEmpty(phone)) { binding.tilPhone.setError("أدخل رقم الهاتف"); return; }
-        if (TextUtils.isEmpty(password)) { binding.tilPassword.setError("أدخل كلمة المرور"); return; }
-        if (password.length() < 6) { binding.tilPassword.setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
-        if (!password.equals(confirmPassword)) { binding.tilConfirmPassword.setError("كلمات المرور غير متطابقة"); return; }
+        if (TextUtils.isEmpty(name)) {
+            binding.tilFullName.setError(getString(R.string.error_enter_name));
+            return;
+        }
+        if (TextUtils.isEmpty(email)) {
+            binding.tilEmail.setError(getString(R.string.error_enter_email));
+            return;
+        }
+        if (TextUtils.isEmpty(phone)) {
+            binding.tilPhone.setError(getString(R.string.error_enter_phone));
+            return;
+        }
+        if (TextUtils.isEmpty(password)) {
+            binding.tilPassword.setError(getString(R.string.error_enter_password));
+            return;
+        }
+        if (password.length() < 6) {
+            binding.tilPassword.setError(getString(R.string.error_password_length));
+            return;
+        }
+        if (!password.equals(confirmPassword)) {
+            binding.tilConfirmPassword.setError(getString(R.string.error_password_mismatch));
+            return;
+        }
+        if (!binding.cbTerms.isChecked()) {
+            showDialog(getString(R.string.error_agree_terms));
+            return;
+        }
 
         binding.btnRegister.setEnabled(false);
         binding.progressBar.setVisibility(View.VISIBLE);
@@ -60,14 +89,14 @@ public class RegisterActivity extends AppCompatActivity {
                         if (isFinishing() || isDestroyed()) return;
                         binding.btnRegister.setEnabled(true);
                         binding.progressBar.setVisibility(View.GONE);
-                        showDialog("حدث خطأ في حفظ البيانات");
+                        showDialog(getString(R.string.error_save_data));
                     });
             })
             .addOnFailureListener(e -> {
                 if (isFinishing() || isDestroyed()) return;
                 binding.btnRegister.setEnabled(true);
                 binding.progressBar.setVisibility(View.GONE);
-                showDialog("حدث خطأ: " + e.getMessage());
+                showDialog(getString(R.string.error_general) + " " + e.getLocalizedMessage());
             });
     }
 
@@ -75,7 +104,7 @@ public class RegisterActivity extends AppCompatActivity {
         if (isFinishing() || isDestroyed()) return;
         new AlertDialog.Builder(this)
             .setMessage(message)
-            .setPositiveButton("حسناً", null)
+            .setPositiveButton(getString(R.string.ok), null)
             .show();
     }
 }

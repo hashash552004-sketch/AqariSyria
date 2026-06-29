@@ -3,41 +3,43 @@ package com.aqarisyria.app.fragments;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 
-import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.bumptech.glide.Glide;
 import com.aqarisyria.app.R;
-import com.aqarisyria.app.activities.AddPropertyActivity;
-import com.aqarisyria.app.activities.AdminActivity;
+import com.aqarisyria.app.activities.FavoritesActivity;
 import com.aqarisyria.app.activities.LoginActivity;
+import com.aqarisyria.app.activities.NotificationsActivity;
+import com.aqarisyria.app.activities.SettingsActivity;
 import com.aqarisyria.app.databinding.FragmentProfileBinding;
-import com.aqarisyria.app.utils.AdminUtil;
 
+import java.util.Locale;
 import java.util.UUID;
 
 public class ProfileFragment extends Fragment {
 
-    private static final int PICK_IMAGE_REQUEST = 200;
     private FragmentProfileBinding binding;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
     private FirebaseStorage storage;
+    private ActivityResultLauncher<String> imagePickerLauncher;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -45,6 +47,15 @@ public class ProfileFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
+
+        imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    uploadProfileImage(uri);
+                }
+            }
+        );
 
         if (mAuth.getCurrentUser() == null) {
             binding.layoutLoggedOut.setVisibility(View.VISIBLE);
@@ -55,25 +66,35 @@ public class ProfileFragment extends Fragment {
             return binding.getRoot();
         }
 
+        binding.layoutLoggedIn.setVisibility(View.VISIBLE);
+        binding.layoutLoggedOut.setVisibility(View.GONE);
         loadUserData();
-        setupButtons();
+        setupClickListeners();
         setupDarkMode();
-        setupProfileImageClick();
+        setupVersionInfo();
         return binding.getRoot();
     }
 
     private void loadUserData() {
         if (!isAdded() || mAuth.getCurrentUser() == null) return;
         String uid = mAuth.getCurrentUser().getUid();
+
         db.collection("users").document(uid).get()
             .addOnSuccessListener(doc -> {
                 if (!isAdded() || binding == null) return;
                 if (doc.exists()) {
                     binding.tvUserName.setText(doc.getString("fullName"));
-                    binding.tvUserEmail.setText(doc.getString("email"));
-                    binding.tvUserPhone.setText(doc.getString("phone"));
-                    if (binding.tvUserUniqueId != null) {
-                        binding.tvUserUniqueId.setText("رقم العضوية: " + (doc.getString("uniqueUserId") != null ? doc.getString("uniqueUserId") : "---"));
+                    String email = doc.getString("email");
+                    if (email != null && !email.isEmpty()) {
+                        binding.tvUserEmail.setText(email);
+                    } else {
+                        binding.tvUserEmail.setVisibility(View.GONE);
+                    }
+                    String uniqueId = doc.getString("uniqueUserId");
+                    if (uniqueId != null && !uniqueId.isEmpty()) {
+                        binding.tvUserUniqueId.setText("رقم العضوية: " + uniqueId);
+                    } else {
+                        binding.tvUserUniqueId.setVisibility(View.GONE);
                     }
                     String imgUrl = doc.getString("profileImage");
                     if (imgUrl != null && !imgUrl.isEmpty()) {
@@ -87,35 +108,66 @@ public class ProfileFragment extends Fragment {
             .whereEqualTo("active", true)
             .get()
             .addOnSuccessListener(snap -> {
-                if (isAdded() && binding != null)
-                    binding.tvMyAdsCount.setText(String.valueOf(snap.size()));
+                if (isAdded() && binding != null) {
+                    binding.tvPropertiesCount.setText(String.valueOf(snap.size()));
+                    int totalViews = 0;
+                    for (int i = 0; i < snap.getDocuments().size(); i++) {
+                        Long views = snap.getDocuments().get(i).getLong("views");
+                        if (views != null) totalViews += views;
+                    }
+                    binding.tvViewsCount.setText(String.valueOf(totalViews));
+                }
+            });
+
+        db.collection("users").document(uid)
+            .get()
+            .addOnSuccessListener(doc -> {
+                if (isAdded() && binding != null && doc.exists()) {
+                    java.util.List<String> favs = (java.util.List<String>) doc.get("favorites");
+                    int count = (favs != null) ? favs.size() : 0;
+                    binding.tvFavoritesCount.setText(String.valueOf(count));
+                }
             });
     }
 
-    private void setupButtons() {
-        binding.btnAddProperty.setOnClickListener(v -> {
-            if (isAdded()) startActivity(new Intent(getActivity(), AddPropertyActivity.class));
+    private void setupClickListeners() {
+        binding.btnSettings.setOnClickListener(v -> {
+            if (isAdded()) startActivity(new Intent(getActivity(), SettingsActivity.class));
         });
 
-        binding.btnLogout.setOnClickListener(v -> {
-            mAuth.signOut();
-            if (isAdded()) {
-                startActivity(new Intent(getActivity(), LoginActivity.class));
-                if (getActivity() != null) getActivity().finish();
+        binding.btnNotifications.setOnClickListener(v -> {
+            if (isAdded()) startActivity(new Intent(getActivity(), NotificationsActivity.class));
+        });
+
+        binding.btnMessages.setOnClickListener(v -> {
+            if (isAdded() && getActivity() != null) {
+                com.google.android.material.bottomnavigation.BottomNavigationView nav =
+                    getActivity().findViewById(R.id.bottomNavigation);
+                if (nav != null) {
+                    nav.setSelectedItemId(R.id.nav_messages);
+                }
             }
         });
 
-        binding.btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
-
-        AdminUtil.isAdmin(isAdmin -> {
-            if (!isAdded() || binding == null) return;
-            if (isAdmin) {
-                binding.cardAdminPanel.setVisibility(View.VISIBLE);
-                binding.btnAdminPanel.setOnClickListener(v -> {
-                    if (isAdded()) startActivity(new Intent(getActivity(), AdminActivity.class));
-                });
-            }
+        binding.btnMyProperties.setOnClickListener(v -> {
+            Toast.makeText(getActivity(), R.string.profile_my_properties, Toast.LENGTH_SHORT).show();
         });
+
+        binding.btnFavorites.setOnClickListener(v -> {
+            if (isAdded()) startActivity(new Intent(getActivity(), FavoritesActivity.class));
+        });
+
+        binding.btnLanguage.setOnClickListener(v -> showLanguageDialog());
+
+        binding.btnShareApp.setOnClickListener(v -> shareApp());
+
+        binding.btnRateApp.setOnClickListener(v -> rateApp());
+
+        binding.btnPrivacyPolicy.setOnClickListener(v -> openPrivacyPolicy());
+
+        binding.btnLogout.setOnClickListener(v -> showLogoutDialog());
+
+        binding.btnCameraOverlay.setOnClickListener(v -> pickProfileImage());
     }
 
     private void setupDarkMode() {
@@ -126,28 +178,38 @@ public class ProfileFragment extends Fragment {
 
         binding.switchDarkMode.setOnCheckedChangeListener((button, isChecked) -> {
             prefs.edit().putBoolean("dark_mode", isChecked).apply();
-            AppCompatDelegate.setDefaultNightMode(isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+            AppCompatDelegate.setDefaultNightMode(
+                isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+            );
             if (isAdded() && getActivity() != null) getActivity().recreate();
         });
     }
 
-    private void setupProfileImageClick() {
-        binding.civProfileImage.setOnClickListener(v -> {
-            if (isAdded()) pickProfileImage();
-        });
+    private void setupVersionInfo() {
+        try {
+            String version = getContext().getPackageManager()
+                .getPackageInfo(getContext().getPackageName(), 0).versionName;
+            binding.tvVersion.setText(getString(R.string.profile_version, version));
+        } catch (Exception e) {
+            binding.tvVersion.setVisibility(View.GONE);
+        }
     }
 
     private void pickProfileImage() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/*");
-        startActivityForResult(Intent.createChooser(intent, "اختر صورة"), PICK_IMAGE_REQUEST);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == getActivity().RESULT_OK && data != null && data.getData() != null) {
-            uploadProfileImage(data.getData());
+        if (isAdded()) {
+            new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.profile_change_photo)
+                .setItems(new String[]{
+                    getString(R.string.profile_camera),
+                    getString(R.string.profile_gallery)
+                }, (dialog, which) -> {
+                    if (which == 0) {
+                        Toast.makeText(getActivity(), R.string.profile_camera, Toast.LENGTH_SHORT).show();
+                    } else {
+                        imagePickerLauncher.launch("image/*");
+                    }
+                })
+                .show();
         }
     }
 
@@ -163,88 +225,99 @@ public class ProfileFragment extends Fragment {
             .addOnSuccessListener(downloadUri -> {
                 if (!isAdded() || binding == null) return;
                 String url = downloadUri.toString();
-                db.collection("users").document(uid).update("profileImage", url)
+                db.collection("users").document(uid)
+                    .update("profileImage", url)
                     .addOnSuccessListener(unused -> {
                         if (!isAdded() || binding == null) return;
                         if (isAdded()) Glide.with(this).load(url).into(binding.civProfileImage);
                         binding.loadingProfile.setVisibility(View.GONE);
-                        showCenterDialog("تم تحديث الصورة الشخصية");
                     })
                     .addOnFailureListener(e -> {
                         if (!isAdded() || binding == null) return;
                         binding.loadingProfile.setVisibility(View.GONE);
-                        showCenterDialog("فشل حفظ الصورة");
+                        Toast.makeText(getActivity(), R.string.error_general, Toast.LENGTH_SHORT).show();
                     });
             })
             .addOnFailureListener(e -> {
                 if (!isAdded() || binding == null) return;
                 binding.loadingProfile.setVisibility(View.GONE);
-                showCenterDialog("فشل رفع الصورة");
+                Toast.makeText(getActivity(), R.string.error_general, Toast.LENGTH_SHORT).show();
             });
     }
 
-    private void showChangePasswordDialog() {
+    private void showLogoutDialog() {
         if (!isAdded() || getActivity() == null) return;
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        View view = getLayoutInflater().inflate(R.layout.dialog_change_password, null);
-        builder.setView(view);
-        builder.setTitle("تغيير كلمة المرور");
-        builder.setCancelable(true);
-
-        TextView etOldPassword = view.findViewById(R.id.etOldPassword);
-        TextView etNewPassword = view.findViewById(R.id.etNewPassword);
-        TextView etConfirmNewPassword = view.findViewById(R.id.etConfirmNewPassword);
-
-        AlertDialog dialog = builder.create();
-
-        view.findViewById(R.id.btnCancelChange).setOnClickListener(v -> dialog.dismiss());
-        view.findViewById(R.id.btnConfirmChange).setOnClickListener(v -> {
-            String oldPass = etOldPassword.getText().toString().trim();
-            String newPass = etNewPassword.getText().toString().trim();
-            String confirmPass = etConfirmNewPassword.getText().toString().trim();
-
-            if (oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-                showCenterDialog("يرجى ملء جميع الحقول");
-                return;
-            }
-            if (newPass.length() < 6) {
-                showCenterDialog("كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل");
-                return;
-            }
-            if (!newPass.equals(confirmPass)) {
-                showCenterDialog("كلمات المرور غير متطابقة");
-                return;
-            }
-
-            FirebaseUser user = mAuth.getCurrentUser();
-            if (user != null && user.getEmail() != null) {
-                user.reauthenticate(EmailAuthProvider.getCredential(user.getEmail(), oldPass))
-                    .addOnSuccessListener(unused -> user.updatePassword(newPass)
-                        .addOnSuccessListener(v2 -> {
-                            if (!isAdded()) return;
-                            showCenterDialog("تم تغيير كلمة المرور بنجاح");
-                            dialog.dismiss();
-                        })
-                        .addOnFailureListener(e -> {
-                            if (!isAdded()) return;
-                            showCenterDialog("فشل تغيير كلمة المرور");
-                        }))
-                    .addOnFailureListener(e -> {
-                        if (!isAdded()) return;
-                        showCenterDialog("كلمة المرور القديمة غير صحيحة");
-                    });
-            }
-        });
-
-        dialog.show();
+        new AlertDialog.Builder(getActivity())
+            .setTitle(R.string.profile_logout)
+            .setMessage(R.string.profile_logout_confirm)
+            .setPositiveButton(R.string.profile_confirm, (dialog, which) -> {
+                mAuth.signOut();
+                if (isAdded()) {
+                    startActivity(new Intent(getActivity(), LoginActivity.class));
+                    if (getActivity() != null) getActivity().finish();
+                }
+            })
+            .setNegativeButton(R.string.ok, null)
+            .show();
     }
 
-    private void showCenterDialog(String message) {
+    private void showLanguageDialog() {
         if (!isAdded() || getActivity() == null) return;
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(message)
-            .setPositiveButton("حسناً", null)
+        String[] languages = {getString(R.string.profile_arabic), getString(R.string.profile_english)};
+        new AlertDialog.Builder(getActivity())
+            .setTitle(R.string.profile_choose_language)
+            .setItems(languages, (dialog, which) -> {
+                String langCode = (which == 0) ? "ar" : "en";
+                setLocale(langCode);
+            })
             .show();
+    }
+
+    private void setLocale(String langCode) {
+        if (getActivity() == null) return;
+        Locale locale = new Locale(langCode);
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.setLocale(locale);
+        getActivity().getResources().updateConfiguration(config, getActivity().getResources().getDisplayMetrics());
+        SharedPreferences prefs = getActivity().getSharedPreferences("settings", 0);
+        prefs.edit().putString("language", langCode).apply();
+        if (isAdded() && getActivity() != null) getActivity().recreate();
+    }
+
+    private void shareApp() {
+        if (!isAdded() || getActivity() == null) return;
+        try {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT,
+                getString(R.string.app_name) + "\n" + getString(R.string.app_description));
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.profile_share_app)));
+        } catch (Exception e) {
+            Toast.makeText(getActivity(), R.string.error_general, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void rateApp() {
+        if (!isAdded() || getActivity() == null) return;
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=" + getActivity().getPackageName())));
+        } catch (Exception e) {
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://play.google.com/store/apps/details?id=" + getActivity().getPackageName())));
+        }
+    }
+
+    private void openPrivacyPolicy() {
+        if (!isAdded() || getActivity() == null) return;
+        try {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://aqarisyria.com/privacy"));
+            startActivity(browserIntent);
+        } catch (Exception e) {
+            Toast.makeText(getActivity(), R.string.error_general, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

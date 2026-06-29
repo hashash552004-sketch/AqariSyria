@@ -7,9 +7,13 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.aqarisyria.app.R;
+import com.aqarisyria.app.databinding.ActivityLoginBinding;
+import com.aqarisyria.app.models.User;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -20,9 +24,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.aqarisyria.app.R;
-import com.aqarisyria.app.databinding.ActivityLoginBinding;
-import com.aqarisyria.app.models.User;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -56,6 +57,32 @@ public class LoginActivity extends AppCompatActivity {
             finish();
         });
         binding.tvForgotPassword.setOnClickListener(v -> showForgotPassword());
+
+        enterAnimation();
+    }
+
+    private void enterAnimation() {
+        binding.ivLogo.setAlpha(0f);
+        binding.tvWelcome.setAlpha(0f);
+        binding.tilEmail.setAlpha(0f);
+        binding.tilPassword.setAlpha(0f);
+        binding.tvForgotPassword.setAlpha(0f);
+        binding.btnLogin.setAlpha(0f);
+        binding.dividerLayout.setAlpha(0f);
+        binding.btnGoogleSignIn.setAlpha(0f);
+        binding.registerContainer.setAlpha(0f);
+        binding.btnGuest.setAlpha(0f);
+
+        binding.ivLogo.animate().alpha(1f).setDuration(400).start();
+        binding.tvWelcome.animate().alpha(1f).setDuration(400).setStartDelay(100).start();
+        binding.tilEmail.animate().alpha(1f).setDuration(400).setStartDelay(200).start();
+        binding.tilPassword.animate().alpha(1f).setDuration(400).setStartDelay(300).start();
+        binding.tvForgotPassword.animate().alpha(1f).setDuration(400).setStartDelay(400).start();
+        binding.btnLogin.animate().alpha(1f).setDuration(400).setStartDelay(500).start();
+        binding.dividerLayout.animate().alpha(1f).setDuration(400).setStartDelay(600).start();
+        binding.btnGoogleSignIn.animate().alpha(1f).setDuration(400).setStartDelay(700).start();
+        binding.registerContainer.animate().alpha(1f).setDuration(400).setStartDelay(800).start();
+        binding.btnGuest.animate().alpha(1f).setDuration(400).setStartDelay(900).start();
     }
 
     private void signInWithGoogle() {
@@ -72,7 +99,7 @@ public class LoginActivity extends AppCompatActivity {
                     .getResult(ApiException.class);
                 if (account != null) firebaseAuthWithGoogle(account);
             } catch (ApiException e) {
-                showErrorDialog("فشل تسجيل الدخول عبر Google");
+                showErrorDialog(getString(R.string.error_google_signin));
             }
         }
     }
@@ -90,7 +117,7 @@ public class LoginActivity extends AppCompatActivity {
                 binding.progressBar.setVisibility(View.GONE);
                 binding.btnGoogleSignIn.setEnabled(true);
                 binding.btnLogin.setEnabled(true);
-                showErrorDialog("فشل تسجيل الدخول عبر Google");
+                showErrorDialog(getString(R.string.error_google_signin));
             });
     }
 
@@ -141,8 +168,8 @@ public class LoginActivity extends AppCompatActivity {
         view.findViewById(R.id.btnSave).setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             String phone = etPhone.getText().toString().trim();
-            if (name.isEmpty()) { etName.setError("أدخل اسمك"); return; }
-            if (phone.isEmpty()) { etPhone.setError("أدخل رقم الهاتف"); return; }
+            if (name.isEmpty()) { etName.setError(getString(R.string.error_enter_name)); return; }
+            if (phone.isEmpty()) { etPhone.setError(getString(R.string.error_enter_phone)); return; }
 
             String uid = firebaseUser.getUid();
             String email = firebaseUser.getEmail() != null ? firebaseUser.getEmail() : "";
@@ -154,7 +181,7 @@ public class LoginActivity extends AppCompatActivity {
                     startActivity(new Intent(this, MainActivity.class));
                     finish();
                 })
-                .addOnFailureListener(e -> showErrorDialog("فشل حفظ البيانات"));
+                .addOnFailureListener(e -> showErrorDialog(getString(R.string.error_save_data)));
         });
 
         dialog.show();
@@ -165,11 +192,11 @@ public class LoginActivity extends AppCompatActivity {
         String password = binding.etPassword.getText().toString().trim();
 
         if (TextUtils.isEmpty(email)) {
-            binding.tilEmail.setError("أدخل البريد الإلكتروني");
+            binding.tilEmail.setError(getString(R.string.error_enter_email));
             return;
         }
         if (TextUtils.isEmpty(password)) {
-            binding.tilPassword.setError("أدخل كلمة المرور");
+            binding.tilPassword.setError(getString(R.string.error_enter_password));
             return;
         }
 
@@ -185,28 +212,28 @@ public class LoginActivity extends AppCompatActivity {
                 if (isFinishing() || isDestroyed()) return;
                 binding.btnLogin.setEnabled(true);
                 binding.progressBar.setVisibility(View.GONE);
-                showErrorDialog("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+                showErrorDialog(getString(R.string.error_email_or_password));
             });
     }
 
     private void showForgotPassword() {
         String email = binding.etEmail.getText().toString().trim();
         if (TextUtils.isEmpty(email)) {
-            showErrorDialog("أدخل بريدك الإلكتروني أولاً");
+            showErrorDialog(getString(R.string.error_enter_email_first));
             return;
         }
         mAuth.sendPasswordResetEmail(email)
             .addOnSuccessListener(unused ->
-                showErrorDialog("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك"))
+                showErrorDialog(getString(R.string.success_reset_email)))
             .addOnFailureListener(e ->
-                showErrorDialog("حدث خطأ، تحقق من البريد الإلكتروني"));
+                showErrorDialog(getString(R.string.error_reset_password)));
     }
 
     private void showErrorDialog(String message) {
         if (isFinishing() || isDestroyed()) return;
         new AlertDialog.Builder(this)
             .setMessage(message)
-            .setPositiveButton("حسناً", null)
+            .setPositiveButton(getString(R.string.ok), null)
             .show();
     }
 }

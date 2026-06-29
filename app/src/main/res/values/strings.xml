@@ -17,6 +17,26 @@
     <string name="forgot_password">نسيت كلمة المرور؟</string>
     <string name="no_account">ليس لديك حساب؟</string>
     <string name="have_account">لديك حساب؟</string>
+    <string name="welcome_back">مرحباً بعودتك</string>
+    <string name="or_label">أو</string>
+    <string name="create_account">إنشاء حساب جديد</string>
+    <string name="agree_terms">أوافق على الشروط والأحكام</string>
+    <string name="sign_in_google">تسجيل الدخول عبر Google</string>
+    <string name="ok">حسناً</string>
+    <string name="error_enter_name">أدخل اسمك الكامل</string>
+    <string name="error_enter_email">أدخل البريد الإلكتروني</string>
+    <string name="error_enter_phone">أدخل رقم الهاتف</string>
+    <string name="error_enter_password">أدخل كلمة المرور</string>
+    <string name="error_password_length">كلمة المرور يجب أن تكون 6 أحرف على الأقل</string>
+    <string name="error_password_mismatch">كلمات المرور غير متطابقة</string>
+    <string name="error_agree_terms">يرجى الموافقة على الشروط والأحكام</string>
+    <string name="error_email_or_password">البريد الإلكتروني أو كلمة المرور غير صحيحة</string>
+    <string name="error_google_signin">فشل تسجيل الدخول عبر Google</string>
+    <string name="error_save_data">حدث خطأ في حفظ البيانات</string>
+    <string name="error_general">حدث خطأ</string>
+    <string name="error_enter_email_first">أدخل بريدك الإلكتروني أولاً</string>
+    <string name="success_reset_email">تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك</string>
+    <string name="error_reset_password">حدث خطأ، تحقق من البريد الإلكتروني</string>
 
     <!-- Navigation -->
     <string name="home">الرئيسية</string>
@@ -26,6 +46,19 @@
     <string name="profile">حسابي</string>
 
     <!-- Home -->
+    <string name="home_user_greeting">أهلاً بك</string>
+    <string name="browse_categories">تصفح حسب الفئة</string>
+    <string name="best_offers">أفضل العروض</string>
+    <string name="latest_properties">الأحدث</string>
+    <string name="category_apartment">شقة</string>
+    <string name="category_villa">فيلا</string>
+    <string name="category_house">منزل</string>
+    <string name="category_land">أرض</string>
+    <string name="category_shop">محل</string>
+    <string name="category_warehouse">مستودع</string>
+    <string name="notifications">الإشعارات</string>
+    <string name="search_hint_home">ابحث عن عقار...</string>
+    <string name="no_results">لا توجد نتائج</string>
     <string name="featured_properties">عقارات مميزة</string>
     <string name="show_all">عرض الكل</string>
     <string name="search_hint">ابحث عن عقار، منطقة، أو مشروع</string>
@@ -47,6 +80,10 @@
     <string name="bathrooms">حمام</string>
     <string name="area">م²</string>
     <string name="floor">طابق</string>
+    <string name="area_value">%.0f م²</string>
+    <string name="rooms_count_value">%d</string>
+    <string name="bathrooms_count_value">%d</string>
+    <string name="floor_value">%d</string>
     <string name="description">الوصف</string>
     <string name="features">المميزات</string>
     <string name="contact">اتصال</string>
@@ -79,8 +116,49 @@
     <string name="publish">إرسال الإعلان</string>
     <string name="save_draft">حفظ كمسودة</string>
     <string name="add_images">إضافة صور</string>
+    <string name="add_image">إضافة صورة</string>
+    <string name="publish_listing">نشر العقار</string>
+    <string name="review_summary">ملخص الإعلان</string>
+    <string name="details_and_location_step">التفاصيل والموقع</string>
+    <string name="images_and_review_step">الصور والمراجعة</string>
+    <string name="property_title_hint">عنوان العقار</string>
+    <string name="step_x_of_y">الخطوة %1$d من %2$d</string>
+    <string name="choose_map_location">اختر موقعاً على الخريطة</string>
+    <string name="required_field">حقل مطلوب</string>
+    <string name="error_price_positive">يجب أن يكون السعر أكبر من 0</string>
+    <string name="error_at_least_one_image">يجب إضافة صورة واحدة على الأقل</string>
+    <string name="error_title_required">يرجى إدخال عنوان العقار</string>
+    <string name="error_area_positive">يجب إدخال المساحة</string>
+    <string name="property_published">تم نشر الإعلان بنجاح</string>
+    <string name="address_label">العنوان بالتفصيل</string>
+
+    <!-- Property Detail -->
+    <string name="location_on_map">الموقع على الخريطة</string>
+    <string name="property_features">مميزات العقار</string>
+    <string name="mortgage_calculator">حاسبة التمويل العقاري</string>
+    <string name="property_owner">صاحب العقار</string>
+    <string name="similar_properties">عقارات مشابهة</string>
+    <string name="show_less">أقل</string>
+    <string name="call_owner">اتصل بالبائع</string>
+    <string name="down_payment">الدفعة الأولى</string>
+    <string name="interest_rate">معدل الفائدة</string>
+    <string name="loan_years">المدة (سنة)</string>
+    <string name="monthly_payment">الدفعة الشهرية</string>
+    <string name="calculate">احسب</string>
+    <string name="rooms_label">غرف</string>
+    <string name="bathrooms_label">حمامات</string>
+    <string name="area_label">المساحة</string>
+    <string name="floor_label">الطابق</string>
+    <string name="open_map">فتح الخريطة</string>
+    <string name="property_value">قيمة العقار</string>
+    <string name="send_message">إرسال رسالة</string>
 
     <!-- Search -->
+    <string name="search_title">بحث</string>
+    <string name="filter_all">الكل</string>
+    <string name="filter_for_invest">للاستثمار</string>
+    <string name="search_placeholder_state">ابحث عن العقارات المتاحة</string>
+    <string name="payment_monthly">شهرياً</string>
     <string name="advanced_search">بحث متقدم</string>
     <string name="governorate">المحافظة</string>
     <string name="region">المنطقة</string>
@@ -91,6 +169,91 @@
     <string name="rooms_count">عدد الغرف</string>
     <string name="show_results">عرض النتائج</string>
     <string name="reset_filters">إعادة ضبط الفلاتر</string>
+
+    <!-- Profile -->
+    <string name="profile_properties">العقارات</string>
+    <string name="profile_views">المشاهدات</string>
+    <string name="profile_favorites">المفضلة</string>
+    <string name="profile_settings">إعدادات الحساب</string>
+    <string name="profile_notifications">إشعاراتي</string>
+    <string name="profile_messages">الرسائل</string>
+    <string name="profile_my_properties">عقاراتي</string>
+    <string name="profile_language">اللغة</string>
+    <string name="profile_dark_mode">الوضع المظلم</string>
+    <string name="profile_share_app">مشاركة التطبيق</string>
+    <string name="profile_rate_app">تقييم التطبيق</string>
+    <string name="profile_privacy_policy">سياسة الخصوصية</string>
+    <string name="profile_logout">تسجيل الخروج</string>
+    <string name="profile_logout_confirm">هل أنت متأكد من تسجيل الخروج؟</string>
+    <string name="profile_choose_language">اختر اللغة</string>
+    <string name="profile_arabic">العربية</string>
+    <string name="profile_english">English</string>
+    <string name="profile_change_photo">تغيير الصورة الشخصية</string>
+    <string name="profile_camera">الكاميرا</string>
+    <string name="profile_gallery">المعرض</string>
+    <string name="profile_version">الإصدار %s</string>
+
+    <!-- Chat -->
+    <string name="chat_send">إرسال</string>
+    <string name="chat_message_hint">اكتب رسالة...</string>
+    <string name="chat_attach">إرفاق</string>
+    <string name="chat_typing">يكتب...</string>
+    <string name="chat_no_messages">لا توجد رسائل بعد</string>
+    <string name="chat_call">اتصال</string>
+    <string name="chat_attachment_soon">قريباً</string>
+
+    <!-- Messages -->
+    <string name="messages_search_hint">بحث في المحادثات...</string>
+    <string name="messages_no_conversations">لا توجد رسائل</string>
+    <string name="yesterday">أمس</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="edit_profile">تعديل الملف الشخصي</string>
+    <string name="change_image">تغيير الصورة</string>
+    <string name="save_changes">حفظ التغييرات</string>
+    <string name="preferences">التفضيلات</string>
+    <string name="enable_notifications">تفعيل الإشعارات</string>
+    <string name="about_app">حول التطبيق</string>
+    <string name="terms_and_conditions">الشروط والأحكام</string>
+    <string name="danger_zone">منطقة الخطر</string>
+    <string name="delete_account">حذف الحساب</string>
+    <string name="confirm_delete_account">تأكيد حذف الحساب</string>
+    <string name="warning_delete_account">تحذير! لا يمكن التراجع عن هذا الإجراء</string>
+    <string name="enter_password_to_delete">يرجى إدخال كلمة المرور لتأكيد الحذف</string>
+    <string name="changes_saved">تم حفظ التغييرات بنجاح</string>
+    <string name="account_deleted">تم حذف الحساب بنجاح</string>
+    <string name="error_delete_account">حدث خطأ أثناء حذف الحساب</string>
+    <string name="language_arabic">العربية</string>
+    <string name="language_english">English</string>
+    <string name="cancel">إلغاء</string>
+    <string name="confirm">تأكيد</string>
+    <string name="saving">جاري الحفظ...</string>
+    <string name="deleting">جاري الحذف...</string>
+
+    <!-- Notifications -->
+    <string name="notifications_title">الإشعارات</string>
+    <string name="mark_all_read">تحديد الكل كمقروء</string>
+    <string name="no_notifications">لا توجد إشعارات</string>
+    <string name="notifications_empty_hint">سيتم عرض الإشعارات هنا</string>
+    <string name="minutes_ago">منذ %d دقائق</string>
+    <string name="hour_ago">منذ ساعة</string>
+    <string name="hours_ago">منذ %d ساعات</string>
+    <string name="day_ago">منذ يوم</string>
+    <string name="days_ago">منذ %d أيام</string>
+    <string name="just_now">الآن</string>
+    <string name="notification_new_property">عقار جديد</string>
+    <string name="notification_new_property_body">تم إضافة عقار جديد قد يعجبك</string>
+    <string name="notification_message">رسالة جديدة</string>
+    <string name="notification_message_body">أرسل لك رسالة</string>
+    <string name="notification_favorite">مفضلة جديدة</string>
+    <string name="notification_favorite_body">أضاف إعلانك إلى المفضلة</string>
+    <string name="notification_review">تقييم جديد</string>
+    <string name="notification_review_body">نشر تقييماً جديداً</string>
+    <string name="notification_follow">متابعة جديدة</string>
+    <string name="notification_follow_body">بدأ بمتابعتك</string>
+    <string name="refreshed_success">تم التحديث</string>
+    <string name="loading_error">حدث خطأ أثناء التحميل</string>
 
     <!-- Governorates -->
     <string name="damascus">دمشق</string>
@@ -107,4 +270,8 @@
     <string name="quneitra">القنيطرة</string>
     <string name="suwayda">السويداء</string>
     <string name="rif_dimashq">ريف دمشق</string>
+
+    <!-- Favorites -->
+    <string name="favorites_login_required">يجب تسجيل الدخول لعرض المفضلة</string>
+    <string name="favorites_empty">لا توجد عقارات في المفضلة</string>
 </resources>

@@ -179,9 +179,11 @@ public class Property {
             case "apartment": return "شقة";
             case "land": return "أرض";
             case "villa": return "فيلا";
+            case "house": return "منزل";
             case "office": return "مكتب";
             case "shop": return "محل";
             case "farm": return "أرض زراعية";
+            case "warehouse": return "مستودع";
             default: return type;
         }
     }

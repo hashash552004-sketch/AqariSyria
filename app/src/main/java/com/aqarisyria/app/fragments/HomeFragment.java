@@ -2,18 +2,19 @@ package com.aqarisyria.app.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.aqarisyria.app.R;
+import com.aqarisyria.app.activities.PropertyDetailActivity;
 import com.aqarisyria.app.activities.SearchActivity;
 import com.aqarisyria.app.adapters.PropertyAdapter;
 import com.aqarisyria.app.databinding.FragmentHomeBinding;
@@ -25,30 +26,37 @@ public class HomeFragment extends Fragment {
 
     private FragmentHomeBinding binding;
     private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
     private PropertyAdapter featuredAdapter;
     private PropertyAdapter recentAdapter;
     private List<Property> featuredList = new ArrayList<>();
     private List<Property> recentList = new ArrayList<>();
-    private String currentFilter = "all";
     private ListenerRegistration featuredListener;
     private ListenerRegistration recentListener;
+    private String currentTypeFilter = "";
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
 
         setupRecyclerViews();
-        setupFilterButtons();
         setupSearchBar();
+        setupNotifications();
+        setupCategoryChips();
+        setupRefresh();
+        loadUserName();
         loadFeaturedProperties();
         loadRecentProperties();
 
-        binding.tvShowAll.setOnClickListener(v -> {
+        binding.tvShowAllFeatured.setOnClickListener(v -> {
             if (isAdded()) startActivity(new Intent(getActivity(), SearchActivity.class));
         });
 
-        binding.btnRefresh.setOnClickListener(v -> refreshData());
+        binding.tvShowAllLatest.setOnClickListener(v -> {
+            if (isAdded()) startActivity(new Intent(getActivity(), SearchActivity.class));
+        });
 
         return binding.getRoot();
     }
@@ -57,56 +65,93 @@ public class HomeFragment extends Fragment {
         return isAdded() && binding != null;
     }
 
-    private void refreshData() {
-        binding.progressFeatured.setVisibility(View.VISIBLE);
-        binding.progressRecent.setVisibility(View.VISIBLE);
-        loadFeaturedProperties();
-        loadRecentProperties();
+    private void setupRefresh() {
+        binding.swipeRefresh.setColorSchemeResources(
+            R.color.primary,
+            R.color.accent
+        );
+        binding.swipeRefresh.setOnRefreshListener(() -> {
+            loadFeaturedProperties();
+            loadRecentProperties();
+        });
     }
 
     private void setupRecyclerViews() {
-        featuredAdapter = new PropertyAdapter(featuredList, getActivity());
-        binding.rvFeatured.setLayoutManager(
-            new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
+        featuredAdapter = new PropertyAdapter(featuredList, getActivity(), true);
+        LinearLayoutManager horizontalLayout = new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
+        binding.rvFeatured.setLayoutManager(horizontalLayout);
         binding.rvFeatured.setAdapter(featuredAdapter);
 
-        recentAdapter = new PropertyAdapter(recentList, getActivity());
+        recentAdapter = new PropertyAdapter(recentList, getActivity(), false);
         binding.rvRecent.setLayoutManager(new LinearLayoutManager(getActivity()));
         binding.rvRecent.setAdapter(recentAdapter);
     }
 
-    private void setupFilterButtons() {
-        binding.btnFilterAll.setOnClickListener(v -> { if (isActive()) { currentFilter = "all"; applyFilter(); } });
-        binding.btnFilterSell.setOnClickListener(v -> { if (isActive()) { currentFilter = "sell"; applyFilter(); } });
-        binding.btnFilterRent.setOnClickListener(v -> { if (isActive()) { currentFilter = "rent"; applyFilter(); } });
-        binding.btnFilterInvest.setOnClickListener(v -> { if (isActive()) { currentFilter = "invest"; applyFilter(); } });
-    }
-
-    private void applyFilter() {
-        updateFilterButtonsUI();
-        loadRecentProperties();
-    }
-
-    private void updateFilterButtonsUI() {
-        binding.btnFilterAll.setSelected(currentFilter.equals("all"));
-        binding.btnFilterSell.setSelected(currentFilter.equals("sell"));
-        binding.btnFilterRent.setSelected(currentFilter.equals("rent"));
-        binding.btnFilterInvest.setSelected(currentFilter.equals("invest"));
-    }
-
     private void setupSearchBar() {
-        binding.etSearch.setOnClickListener(v ->
-            startActivity(new Intent(getActivity(), SearchActivity.class)));
+        binding.searchCard.setOnClickListener(v -> {
+            if (isAdded()) startActivity(new Intent(getActivity(), SearchActivity.class));
+        });
+        binding.tvSearchHint.setOnClickListener(v -> {
+            if (isAdded()) startActivity(new Intent(getActivity(), SearchActivity.class));
+        });
+    }
+
+    private void setupNotifications() {
+        binding.btnNotifications.setOnClickListener(v -> {
+            if (isAdded()) {
+                Intent intent = new Intent(getActivity(), SearchActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void setupCategoryChips() {
+        View.OnClickListener chipListener = v -> {
+            int id = v.getId();
+            if (id == R.id.chipApartment) currentTypeFilter = "apartment";
+            else if (id == R.id.chipVilla) currentTypeFilter = "villa";
+            else if (id == R.id.chipHouse) currentTypeFilter = "house";
+            else if (id == R.id.chipLand) currentTypeFilter = "land";
+            else if (id == R.id.chipShop) currentTypeFilter = "shop";
+            else if (id == R.id.chipWarehouse) currentTypeFilter = "warehouse";
+
+            if (isAdded()) {
+                Intent intent = new Intent(getActivity(), SearchActivity.class);
+                intent.putExtra("type", currentTypeFilter);
+                startActivity(intent);
+            }
+        };
+
+        binding.chipApartment.setOnClickListener(chipListener);
+        binding.chipVilla.setOnClickListener(chipListener);
+        binding.chipHouse.setOnClickListener(chipListener);
+        binding.chipLand.setOnClickListener(chipListener);
+        binding.chipShop.setOnClickListener(chipListener);
+        binding.chipWarehouse.setOnClickListener(chipListener);
+    }
+
+    private void loadUserName() {
+        if (mAuth.getCurrentUser() != null) {
+            String name = mAuth.getCurrentUser().getDisplayName();
+            if (name != null && !name.isEmpty()) {
+                binding.tvUserName.setText(name);
+            }
+        }
     }
 
     private void loadFeaturedProperties() {
         if (featuredListener != null) featuredListener.remove();
+
+        binding.progressFeatured.setVisibility(View.VISIBLE);
         featuredListener = db.collection("properties")
             .whereEqualTo("active", true)
             .orderBy("viewsCount", Query.Direction.DESCENDING)
             .limit(10)
             .addSnapshotListener((snapshot, error) -> {
-                if (error != null) return;
+                if (error != null) {
+                    binding.progressFeatured.setVisibility(View.GONE);
+                    return;
+                }
                 if (snapshot == null) return;
                 if (!isActive()) return;
                 featuredList.clear();
@@ -119,21 +164,23 @@ public class HomeFragment extends Fragment {
                 }
                 featuredAdapter.notifyDataSetChanged();
                 binding.progressFeatured.setVisibility(View.GONE);
+                if (binding.swipeRefresh.isRefreshing()) binding.swipeRefresh.setRefreshing(false);
             });
     }
 
     private void loadRecentProperties() {
         if (recentListener != null) recentListener.remove();
-        Query query = db.collection("properties").whereEqualTo("active", true);
 
-        if (!currentFilter.equals("all")) {
-            query = query.whereEqualTo("operationType", currentFilter);
-        }
-
-        recentListener = query.orderBy("createdAt", Query.Direction.DESCENDING)
+        binding.progressRecent.setVisibility(View.VISIBLE);
+        recentListener = db.collection("properties")
+            .whereEqualTo("active", true)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(20)
             .addSnapshotListener((snapshot, error) -> {
-                if (error != null) return;
+                if (error != null) {
+                    binding.progressRecent.setVisibility(View.GONE);
+                    return;
+                }
                 if (snapshot == null) return;
                 if (!isActive()) return;
                 recentList.clear();
@@ -146,8 +193,8 @@ public class HomeFragment extends Fragment {
                 }
                 recentAdapter.notifyDataSetChanged();
                 binding.progressRecent.setVisibility(View.GONE);
-
                 binding.tvEmptyRecent.setVisibility(recentList.isEmpty() ? View.VISIBLE : View.GONE);
+                if (binding.swipeRefresh.isRefreshing()) binding.swipeRefresh.setRefreshing(false);
             });
     }
 

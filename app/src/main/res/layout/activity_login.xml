@@ -3,166 +3,231 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/background"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:layoutDirection="rtl">
+        android:layoutDirection="rtl"
+        android:orientation="vertical">
 
-        <!-- Header with Background Image -->
         <FrameLayout
+            android:id="@+id/headerLayout"
             android:layout_width="match_parent"
-            android:layout_height="220dp"
-            android:layout_marginBottom="32dp">
+            android:layout_height="240dp">
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:src="@drawable/login_bg"
-                android:scaleType="centerCrop"/>
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/login_bg" />
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:background="#80000000"/>
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_image_gradient" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:gravity="center"
                 android:orientation="vertical"
-                android:gravity="center">
+                android:padding="24dp">
 
                 <ImageView
+                    android:id="@+id/ivLogo"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
                     android:src="@drawable/ic_house_logo"
-                    android:tint="@color/text_white"/>
+                    android:tint="@color/text_white" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:text="@string/app_name"
-                    android:textSize="26sp"
-                    android:textStyle="bold"
                     android:textColor="@color/text_white"
-                    android:layout_marginTop="8dp"/>
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
             </LinearLayout>
+
         </FrameLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/login"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- Email -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilEmail"
-            style="@style/InputField"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/email"
-            android:layout_marginBottom="16dp">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etEmail"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                    android:id="@+id/tvWelcome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    android:text="@string/welcome_back"
+                    android:textColor="@color/text_primary"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilEmail"
+                style="@style/InputField"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textEmailAddress"
-                android:textAlignment="viewStart"/>
-        </com.google.android.material.textfield.TextInputLayout>
+                android:hint="@string/email"
+                android:layout_marginBottom="16dp">
 
-        <!-- Password -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilPassword"
-            style="@style/InputField"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/password"
-            app:passwordToggleEnabled="true"
-            android:layout_marginBottom="8dp">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPassword"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:textAlignment="viewStart" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPassword"
+                style="@style/InputField"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword"/>
-        </com.google.android.material.textfield.TextInputLayout>
+                android:hint="@string/password"
+                android:layout_marginBottom="8dp"
+                app:passwordToggleEnabled="true">
 
-        <!-- Forgot Password -->
-        <TextView
-            android:id="@+id/tvForgotPassword"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/forgot_password"
-            android:textColor="@color/primary"
-            android:textSize="14sp"
-            android:layout_gravity="end"
-            android:layout_marginBottom="24dp"
-            android:clickable="true"
-            android:focusable="true"/>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword" />
 
-        <!-- Progress -->
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            android:layout_marginBottom="8dp"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Login Button -->
-        <Button
-            android:id="@+id/btnLogin"
-            style="@style/Button.Primary"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="@string/login"
-            android:layout_marginBottom="12dp"/>
+            <TextView
+                android:id="@+id/tvForgotPassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginBottom="24dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="@string/forgot_password"
+                android:textColor="@color/primary"
+                android:textSize="14sp" />
 
-        <!-- Register Button -->
-        <Button
-            android:id="@+id/btnRegister"
-            style="@style/Button.Outline"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="@string/register"
-            android:layout_marginBottom="12dp"/>
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
 
-        <!-- Google Sign-In Button -->
-        <Button
-            android:id="@+id/btnGoogleSignIn"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="تسجيل الدخول عبر Google"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:backgroundTint="@color/surface"
-            app:strokeColor="@color/border"
-            app:strokeWidth="1dp"
-            app:cornerRadius="12dp"
-            android:drawableStart="@drawable/ic_google"
-            android:drawablePadding="8dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:layout_marginBottom="12dp"/>
+            <Button
+                android:id="@+id/btnLogin"
+                style="@style/Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/login" />
 
-        <!-- Guest Button -->
-        <Button
-            android:id="@+id/btnGuest"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/guest"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
-            android:gravity="center"
-            android:minHeight="44dp"
-            android:background="@android:color/transparent"/>
+            <LinearLayout
+                android:id="@+id/dividerLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/divider" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="@string/or_label"
+                    android:textColor="@color/text_hint"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/divider" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnGoogleSignIn"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="24dp"
+                android:drawableStart="@drawable/ic_google"
+                android:drawablePadding="8dp"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/sign_in_google"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:backgroundTint="@color/surface"
+                app:cornerRadius="16dp"
+                app:strokeColor="@color/border"
+                app:strokeWidth="1.5dp" />
+
+            <LinearLayout
+                android:id="@+id/registerContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/no_account"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/btnRegister"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingStart="4dp"
+                    android:text="@string/register"
+                    android:textColor="@color/primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnGuest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="8dp"
+                android:text="@string/guest"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+        </LinearLayout>
 
     </LinearLayout>
+
 </ScrollView>

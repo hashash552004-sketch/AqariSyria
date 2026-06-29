@@ -7,284 +7,213 @@
     android:background="@color/background"
     android:layoutDirection="rtl">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:background="@color/primary"
-        android:padding="20dp"
-        android:paddingTop="48dp">
+        android:paddingHorizontal="16dp"
+        android:paddingTop="48dp"
+        android:paddingBottom="16dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="@color/text_white"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/back"
+            android:rotation="180"/>
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/advanced_search"
+            android:text="@string/search_title"
             android:textColor="@color/text_white"
-            android:textSize="22sp"
-            android:textStyle="bold"/>
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginStart="8dp"/>
     </LinearLayout>
 
-    <!-- Filters Panel -->
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:paddingBottom="8dp"
+        android:background="@color/surface">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/searchInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            app:boxCornerRadiusTopStart="26dp"
+            app:boxCornerRadiusTopEnd="26dp"
+            app:boxCornerRadiusBottomStart="26dp"
+            app:boxCornerRadiusBottomEnd="26dp"
+            app:boxStrokeWidth="1.5dp"
+            app:boxStrokeColor="@color/border"
+            app:boxStrokeWidthFocused="2dp"
+            app:endIconMode="clear_text"
+            app:endIconDrawable="@drawable/ic_close"
+            app:endIconTint="@color/text_secondary"
+            app:hintEnabled="false">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etSearch"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="@string/search_hint_home"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium"
+                android:drawableStart="@drawable/ic_search"
+                android:drawablePadding="10dp"
+                android:drawableTint="@color/text_hint"
+                android:paddingStart="8dp"
+                android:background="@android:color/transparent"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/filterChipGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleSelection="true"
+                app:chipSpacing="6dp"
+                app:selectionRequired="false">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipAll"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_all"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"
+                    app:chipStrokeWidth="0dp"
+                    app:chipCornerRadius="20dp"
+                    app:checkedIconVisible="false"
+                    android:checked="true"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipForSale"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/for_sale"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"
+                    app:chipStrokeWidth="0dp"
+                    app:chipCornerRadius="20dp"
+                    app:checkedIconVisible="false"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipForRent"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/for_rent"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"
+                    app:chipStrokeWidth="0dp"
+                    app:chipCornerRadius="20dp"
+                    app:checkedIconVisible="false"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipForInvest"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_for_invest"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"
+                    app:chipStrokeWidth="0dp"
+                    app:chipCornerRadius="20dp"
+                    app:checkedIconVisible="false"/>
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
         <LinearLayout
+            android:id="@+id/placeholderState"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:gravity="center"
+            android:padding="40dp">
 
-            <!-- Operation Type -->
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_search"
+                app:tint="@color/text_hint"/>
+
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="نوع العملية"
-                android:textSize="14sp"
+                android:text="@string/search_placeholder_state"
+                android:textSize="16sp"
                 android:textColor="@color/text_secondary"
-                android:layout_marginBottom="8dp"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
-
-                <Button android:id="@+id/btnOpSell"
-                    android:layout_width="0dp" android:layout_height="48dp"
-                    android:layout_weight="1" android:layout_marginEnd="6dp"
-                    android:text="للبيع" android:textSize="14sp"
-                    android:gravity="center"
-                    android:backgroundTint="@color/btn_filter_bg"
-                    android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="24dp"/>
-
-                <Button android:id="@+id/btnOpRent"
-                    android:layout_width="0dp" android:layout_height="48dp"
-                    android:layout_weight="1" android:layout_marginHorizontal="3dp"
-                    android:text="للإيجار" android:textSize="14sp"
-                    android:gravity="center"
-                    android:backgroundTint="@color/btn_filter_bg"
-                    android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="24dp"/>
-
-                <Button android:id="@+id/btnOpInvest"
-                    android:layout_width="0dp" android:layout_height="48dp"
-                    android:layout_weight="1" android:layout_marginStart="6dp"
-                    android:text="استثمار" android:textSize="14sp"
-                    android:gravity="center"
-                    android:backgroundTint="@color/btn_filter_bg"
-                    android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="24dp"/>
-            </LinearLayout>
-
-            <!-- Governorate -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/governorate"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="8dp"/>
-
-            <Spinner
-                android:id="@+id/spinnerGovernorate"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@drawable/bg_spinner"
-                android:padding="8dp"
-                android:layout_marginBottom="16dp"/>
-
-            <!-- Property Type -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/property_type"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="8dp"/>
-
-            <Spinner
-                android:id="@+id/spinnerPropertyType"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@drawable/bg_spinner"
-                android:padding="8dp"
-                android:layout_marginBottom="16dp"/>
-
-            <!-- Price Range -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="السعر"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"/>
-                <TextView
-                    android:id="@+id/tvPriceRange"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="200,000 $ - 50,000 $"
-                    android:textSize="13sp"
-                    android:textColor="@color/primary"/>
-            </LinearLayout>
-
-            <com.google.android.material.slider.RangeSlider
-                android:id="@+id/sliderPrice"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:values="@array/price_range_values"
-                android:valueFrom="0"
-                android:valueTo="1000"
-                app:thumbColor="@color/primary"
-                app:trackColorActive="@color/primary"
-                android:layout_marginBottom="16dp"/>
-
-            <!-- Area Range -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="المساحة (م²)"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"/>
-                <TextView
-                    android:id="@+id/tvAreaRange"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="80 - 200 م²"
-                    android:textSize="13sp"
-                    android:textColor="@color/primary"/>
-            </LinearLayout>
-
-            <com.google.android.material.slider.RangeSlider
-                android:id="@+id/sliderArea"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:values="@array/area_range_values"
-                android:valueFrom="0"
-                android:valueTo="1000"
-                app:thumbColor="@color/primary"
-                app:trackColorActive="@color/primary"
-                android:layout_marginBottom="16dp"/>
-
-            <!-- Rooms Count -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="عدد الغرف"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="8dp"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="24dp">
-
-                <Button android:id="@+id/btnRoom1" android:layout_width="0dp"
-                    android:layout_height="48dp" android:layout_weight="1"
-                    android:layout_marginHorizontal="2dp" android:text="1"
-                    android:gravity="center" android:textSize="14sp"
-                    android:backgroundTint="@color/btn_filter_bg"
-                    android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="24dp"/>
-                <Button android:id="@+id/btnRoom2" android:layout_width="0dp"
-                    android:layout_height="48dp" android:layout_weight="1"
-                    android:layout_marginHorizontal="2dp" android:text="2"
-                    android:gravity="center" android:textSize="14sp"
-                    android:backgroundTint="@color/btn_filter_bg"
-                    android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="24dp"/>
-                <Button android:id="@+id/btnRoom3" android:layout_width="0dp"
-                    android:layout_height="48dp" android:layout_weight="1"
-                    android:layout_marginHorizontal="2dp" android:text="3"
-                    android:gravity="center" android:textSize="14sp"
-                    android:backgroundTint="@color/btn_filter_bg"
-                    android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="24dp"/>
-                <Button android:id="@+id/btnRoom4" android:layout_width="0dp"
-                    android:layout_height="48dp" android:layout_weight="1"
-                    android:layout_marginHorizontal="2dp" android:text="4"
-                    android:gravity="center" android:textSize="14sp"
-                    android:backgroundTint="@color/btn_filter_bg"
-                    android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="24dp"/>
-                <Button android:id="@+id/btnRoomPlus" android:layout_width="0dp"
-                    android:layout_height="48dp" android:layout_weight="1"
-                    android:layout_marginHorizontal="2dp" android:text="+4"
-                    android:gravity="center" android:textSize="14sp"
-                    android:backgroundTint="@color/btn_filter_bg"
-                    android:textColor="@color/btn_filter_color"
-                    app:cornerRadius="24dp"/>
-            </LinearLayout>
-
-            <!-- Buttons -->
-            <Button
-                android:id="@+id/btnSearch"
-                style="@style/Button.Primary"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="@string/show_results"
-                android:layout_marginBottom="12dp"/>
-
-            <Button
-                android:id="@+id/btnReset"
-                style="@style/Button.Outline"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="@string/reset_filters"/>
-
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:layout_marginTop="16dp"/>
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
 
-    <!-- Results -->
-    <TextView
-        android:id="@+id/tvResultCount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="عرض النتائج"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="8dp"
-        android:background="@color/divider"/>
+        <LinearLayout
+            android:id="@+id/emptyState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="40dp"
+            android:visibility="gone">
 
-    <ProgressBar
-        android:id="@+id/progressSearch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone"/>
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_empty_results"
+                app:tint="@color/text_hint"/>
 
-    <TextView
-        android:id="@+id/tvEmpty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="لا توجد نتائج"
-        android:gravity="center"
-        android:padding="32dp"
-        android:textColor="@color/text_secondary"
-        android:visibility="gone"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/no_results"
+                android:textSize="16sp"
+                android:textColor="@color/text_secondary"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:layout_marginTop="16dp"/>
+        </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvResults"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        android:paddingBottom="8dp"/>
+        <ProgressBar
+            android:id="@+id/progressSearch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvResults"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="8dp"
+            android:visibility="gone"/>
+    </FrameLayout>
 
 </LinearLayout>
