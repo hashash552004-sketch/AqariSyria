@@ -21,6 +21,7 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
@@ -88,14 +89,23 @@ public class AddPropertyActivity extends AppCompatActivity {
 
     private void loadUserInfo() {
         String uid = mAuth.getCurrentUser().getUid();
+        FirebaseUser user = mAuth.getCurrentUser();
+
+        if (user.getDisplayName() != null) {
+            ownerName = user.getDisplayName();
+        }
+
         db.collection("users").document(uid).get()
             .addOnSuccessListener(doc -> {
                 if (doc.exists()) {
-                    ownerName = doc.getString("fullName");
-                    if (ownerName == null) ownerName = "";
-                    ownerPhone = doc.getString("phone");
-                    if (ownerPhone == null) ownerPhone = "";
+                    String name = doc.getString("fullName");
+                    String phone = doc.getString("phone");
+                    if (name != null && !name.isEmpty()) ownerName = name;
+                    if (phone != null) ownerPhone = phone;
                 }
+            })
+            .addOnFailureListener(e -> {
+                // If Firestore fails, keep whatever fallback we have from Auth
             });
     }
 
