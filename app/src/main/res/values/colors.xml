@@ -1,45 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primary: Premium Green -->
     <color name="primary">#2E7D32</color>
     <color name="primary_dark">#1B5E20</color>
     <color name="primary_light">#E8F5E9</color>
     <color name="primary_container">#C8E6C9</color>
     <color name="on_primary_container">#1B5E20</color>
+    <color name="secondary">#4CAF50</color>
+    <color name="secondary_light">#C8E6C9</color>
 
-    <!-- Secondary: Purple -->
     <color name="accent">#8E24AA</color>
     <color name="accent_light">#E1BEE7</color>
     <color name="accent_container">#F3E5F5</color>
 
-    <!-- Surface -->
     <color name="background">#F8F9FA</color>
     <color name="surface">#FFFFFF</color>
     <color name="card_background">#FFFFFF</color>
     <color name="surface_variant">#F5F5F5</color>
     <color name="status_bar">#E8F5E9</color>
 
-    <!-- Text -->
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
-    <color name="text_hint">#BDBDBD</color>
+    <color name="text_hint">#9E9E9E</color>
     <color name="text_white">#FFFFFF</color>
 
-    <!-- Status -->
     <color name="error">#F44336</color>
     <color name="success">#4CAF50</color>
     <color name="warning">#FF9800</color>
 
-    <!-- Border -->
     <color name="border">#E0E0E0</color>
     <color name="divider">#EEEEEE</color>
     <color name="outline">#BDBDBD</color>
 
-    <!-- Overlay -->
     <color name="overlay">#80000000</color>
     <color name="scrim">#52000000</color>
 
-    <!-- Tags -->
     <color name="tag_sell">#E8F5E9</color>
     <color name="tag_rent">#F3E5F5</color>
     <color name="tag_invest">#FFF3E0</color>
@@ -47,14 +41,13 @@
     <color name="tag_rent_text">#7B1FA2</color>
     <color name="tag_invest_text">#E65100</color>
 
-    <!-- WhatsApp -->
     <color name="whatsapp">#25D366</color>
 
-    <!-- Gradient -->
     <color name="gradient_start">#1B5E20</color>
     <color name="gradient_end">#2E7D32</color>
 
-    <!-- Dark Mode -->
+    <color name="shimmer">#ECECEC</color>
+
     <color name="dark_background">#121212</color>
     <color name="dark_surface">#1E1E1E</color>
     <color name="dark_card">#2D2D2D</color>

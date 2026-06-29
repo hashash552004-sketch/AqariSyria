@@ -189,12 +189,8 @@ public class Property {
     }
 
     public String getFormattedPrice() {
-        if (price >= 1000000) {
-            return String.format("%.1f م $", price / 1000000);
-        } else if (price >= 1000) {
-            return String.format("%.0f,000 $", price / 1000);
-        }
-        return String.format("%.0f $", price);
+        java.text.DecimalFormat df = new java.text.DecimalFormat("#,##0");
+        return df.format(price) + " $";
     }
 
     public String getLocationString() {

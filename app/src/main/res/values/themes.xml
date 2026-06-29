@@ -6,17 +6,35 @@
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
         <item name="colorOnPrimary">@color/text_white</item>
-        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSecondary">@color/secondary</item>
         <item name="colorOnSecondary">@color/text_white</item>
         <item name="colorSurface">@color/surface</item>
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="colorError">@color/error</item>
         <item name="colorOnError">@color/text_white</item>
         <item name="android:windowBackground">@color/background</item>
-        <item name="android:statusBarColor">@color/status_bar</item>
+        <item name="android:statusBarColor">@color/background</item>
         <item name="android:navigationBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="materialCardViewStyle">@style/CardStyle</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.AqariSyria.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.AqariSyria.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.AqariSyria.Large</item>
+    </style>
+
+    <style name="ShapeAppearance.AqariSyria.Small" parent="ShapeAppearance.MaterialComponents.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="ShapeAppearance.AqariSyria.Medium" parent="ShapeAppearance.MaterialComponents.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.AqariSyria.Large" parent="ShapeAppearance.MaterialComponents.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">28dp</item>
     </style>
 
     <style name="Theme.AqariSyria.Splash" parent="Theme.AqariSyria">
@@ -29,21 +47,21 @@
         <item name="colorPrimary">@color/primary</item>
         <item name="colorAccent">@color/accent</item>
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowMinWidthMajor">280dp</item>
-        <item name="android:windowMinWidthMinor">280dp</item>
+        <item name="android:windowMinWidthMajor">300dp</item>
+        <item name="android:windowMinWidthMinor">300dp</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.AqariSyria.Medium</item>
     </style>
 
-    <!-- Cairo Font - Primary Typeface -->
     <style name="FontCairo" parent="android:TextAppearance">
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
-    <!-- Typography -->
     <style name="TextStyle.Hero" parent="TextAppearance.MaterialComponents.Headline3">
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textSize">28sp</item>
+        <item name="android:letterSpacing">0</item>
     </style>
 
     <style name="TextStyle.Title" parent="TextAppearance.MaterialComponents.Headline5">
@@ -57,110 +75,115 @@
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">18sp</item>
     </style>
 
     <style name="TextStyle.Subtitle" parent="TextAppearance.MaterialComponents.Subtitle1">
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">14sp</item>
     </style>
 
     <style name="TextStyle.Body" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">14sp</item>
     </style>
 
     <style name="TextStyle.Caption" parent="TextAppearance.MaterialComponents.Caption">
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">12sp</item>
     </style>
 
     <style name="TextStyle.Price" parent="TextAppearance.MaterialComponents.Headline6">
-        <item name="android:textColor">@color/accent</item>
+        <item name="android:textColor">@color/primary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">20sp</item>
     </style>
 
-    <!-- Button Primary - Green -->
     <style name="Button.Primary" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/primary</item>
         <item name="android:textColor">@color/text_white</item>
         <item name="android:textSize">16sp</item>
         <item name="android:gravity">center</item>
-        <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
         <item name="android:paddingStart">24dp</item>
         <item name="android:paddingEnd">24dp</item>
-        <item name="android:minHeight">56dp</item>
+        <item name="android:minHeight">52dp</item>
         <item name="cornerRadius">16dp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
         <item name="android:stateListAnimator">@anim/button_elevation</item>
     </style>
 
-    <!-- Button Accent (Purple) -->
     <style name="Button.Accent" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/accent</item>
         <item name="android:textColor">@color/text_white</item>
         <item name="android:textSize">16sp</item>
         <item name="android:gravity">center</item>
-        <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
         <item name="android:paddingStart">24dp</item>
         <item name="android:paddingEnd">24dp</item>
-        <item name="android:minHeight">56dp</item>
+        <item name="android:minHeight">52dp</item>
         <item name="cornerRadius">16dp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
     </style>
 
-    <!-- Button Outline -->
     <style name="Button.Outline" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="strokeColor">@color/primary</item>
         <item name="android:textColor">@color/primary</item>
         <item name="android:textSize">16sp</item>
         <item name="android:gravity">center</item>
-        <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
         <item name="android:paddingStart">24dp</item>
         <item name="android:paddingEnd">24dp</item>
-        <item name="android:minHeight">56dp</item>
+        <item name="android:minHeight">52dp</item>
         <item name="cornerRadius">16dp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
     </style>
 
-    <!-- Input Fields -->
+    <style name="Widget.AqariSyria.ChipChoice" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="chipCornerRadius">24dp</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="checkedIconVisible">false</item>
+    </style>
+
     <style name="InputField" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <item name="boxStrokeColor">@color/border</item>
         <item name="boxStrokeWidth">1.5dp</item>
         <item name="boxStrokeWidthFocused">2dp</item>
-        <item name="hintTextColor">@color/text_primary</item>
-        <item name="android:textColorHint">@color/text_primary</item>
+        <item name="hintTextColor">@color/text_secondary</item>
         <item name="editTextStyle">@style/InputEditText</item>
-        <item name="boxCornerRadiusTopStart">16dp</item>
-        <item name="boxCornerRadiusTopEnd">16dp</item>
-        <item name="boxCornerRadiusBottomStart">16dp</item>
-        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
     <style name="InputEditText" parent="Widget.MaterialComponents.TextInputEditText.OutlinedBox">
-        <item name="android:textColor">#FF000000</item>
-        <item name="android:textColorHint">@color/text_primary</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textSize">16sp</item>
     </style>
 
-    <!-- Card Style - MD3 -->
     <style name="CardStyle" parent="Widget.MaterialComponents.CardView">
         <item name="cardCornerRadius">20dp</item>
         <item name="cardElevation">4dp</item>
         <item name="cardBackgroundColor">@color/surface</item>
         <item name="strokeWidth">0dp</item>
+        <item name="contentPadding">0dp</item>
     </style>
 
 </resources>

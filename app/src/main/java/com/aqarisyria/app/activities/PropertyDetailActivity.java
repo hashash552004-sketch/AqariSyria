@@ -78,7 +78,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.btnOpenMap.setOnClickListener(v -> openMap());
         binding.btnOpenMapFull.setOnClickListener(v -> openMap());
         binding.tvToggleDescription.setOnClickListener(v -> toggleDescription());
-        binding.btnCalculateMortgage.setOnClickListener(v -> calculateMortgage());
+        
     }
 
     private void loadProperty(String propertyId) {
@@ -320,41 +320,6 @@ public class PropertyDetailActivity extends AppCompatActivity {
                     similarAdapter.notifyDataSetChanged();
                 }
             });
-    }
-
-    private void calculateMortgage() {
-        String priceStr = binding.etMortgagePrice.getText().toString().trim();
-        String downStr = binding.etDownPayment.getText().toString().trim();
-        String rateStr = binding.etInterestRate.getText().toString().trim();
-        String yearsStr = binding.etLoanYears.getText().toString().trim();
-
-        if (priceStr.isEmpty()) {
-            binding.tilMortgagePrice.setError(getString(R.string.required_field));
-            return;
-        }
-        binding.tilMortgagePrice.setError(null);
-
-        double price = Double.parseDouble(priceStr);
-        double downPercent = downStr.isEmpty() ? 20 : Double.parseDouble(downStr);
-        double annualRate = rateStr.isEmpty() ? 8 : Double.parseDouble(rateStr);
-        int years = yearsStr.isEmpty() ? 15 : Integer.parseInt(yearsStr);
-
-        double downAmount = price * (downPercent / 100.0);
-        double principal = price - downAmount;
-        double monthlyRate = annualRate / 100.0 / 12.0;
-        int months = years * 12;
-
-        double monthlyPayment;
-        if (monthlyRate == 0) {
-            monthlyPayment = principal / months;
-        } else {
-            double factor = Math.pow(1 + monthlyRate, months);
-            monthlyPayment = principal * (monthlyRate * factor) / (factor - 1);
-        }
-
-        DecimalFormat df = new DecimalFormat("#,##0");
-        binding.tvMonthlyPayment.setText(df.format(monthlyPayment) + " $");
-        binding.layoutMortgageResult.setVisibility(View.VISIBLE);
     }
 
     private class SimilarPropertiesAdapter extends RecyclerView.Adapter<SimilarPropertiesAdapter.ViewHolder> {

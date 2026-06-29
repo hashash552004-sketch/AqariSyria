@@ -3,9 +3,10 @@ package com.aqarisyria.app.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.Date;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.aqarisyria.app.R;
@@ -16,7 +17,6 @@ import com.aqarisyria.app.utils.DialogUtil;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 
 public class NotificationsActivity extends AppCompatActivity {
 
@@ -76,7 +76,6 @@ public class NotificationsActivity extends AppCompatActivity {
         String uid = currentUser.getUid();
         db.collection("notifications")
             .whereEqualTo("userId", uid)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener(queryDocumentSnapshots -> {
                 binding.swipeRefresh.setRefreshing(false);
@@ -102,6 +101,15 @@ public class NotificationsActivity extends AppCompatActivity {
                         }
                     }
                 }
+
+                java.util.Collections.sort(notificationList, (a, b) -> {
+                    Date ta = a.getTimestamp();
+                    Date tb = b.getTimestamp();
+                    if (ta == null && tb == null) return 0;
+                    if (ta == null) return 1;
+                    if (tb == null) return -1;
+                    return tb.compareTo(ta);
+                });
 
                 adapter.submitList(notificationList);
                 binding.btnMarkAllRead.setVisibility(hasUnread ? View.VISIBLE : View.GONE);
@@ -130,15 +138,20 @@ public class NotificationsActivity extends AppCompatActivity {
         String uid = currentUser.getUid();
         db.collection("notifications")
             .whereEqualTo("userId", uid)
-            .whereEqualTo("read", false)
             .get()
             .addOnSuccessListener(queryDocumentSnapshots -> {
                 for (int i = 0; i < queryDocumentSnapshots.size(); i++) {
-                    String docId = queryDocumentSnapshots.getDocuments().get(i).getId();
-                    db.collection("notifications").document(docId).update("read", true);
+                    NotificationItem item = queryDocumentSnapshots.getDocuments().get(i).toObject(NotificationItem.class);
+                    if (item != null && !item.isRead()) {
+                        String docId = queryDocumentSnapshots.getDocuments().get(i).getId();
+                        db.collection("notifications").document(docId).update("read", true);
+                    }
                 }
                 loadNotifications();
                 DialogUtil.showSuccess(this, R.string.mark_all_read);
+            })
+            .addOnFailureListener(e -> {
+                DialogUtil.showErrorWithDetails(this, getString(R.string.error_general), e.getLocalizedMessage());
             });
     }
 

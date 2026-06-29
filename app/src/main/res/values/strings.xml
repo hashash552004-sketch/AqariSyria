@@ -145,22 +145,15 @@
     <!-- Property Detail -->
     <string name="location_on_map">الموقع على الخريطة</string>
     <string name="property_features">مميزات العقار</string>
-    <string name="mortgage_calculator">حاسبة التمويل العقاري</string>
     <string name="property_owner">صاحب العقار</string>
     <string name="similar_properties">عقارات مشابهة</string>
     <string name="show_less">أقل</string>
     <string name="call_owner">اتصل بالبائع</string>
-    <string name="down_payment">الدفعة الأولى</string>
-    <string name="interest_rate">معدل الفائدة</string>
-    <string name="loan_years">المدة (سنة)</string>
-    <string name="monthly_payment">الدفعة الشهرية</string>
-    <string name="calculate">احسب</string>
     <string name="rooms_label">غرف</string>
     <string name="bathrooms_label">حمامات</string>
     <string name="area_label">المساحة</string>
     <string name="floor_label">الطابق</string>
     <string name="open_map">فتح الخريطة</string>
-    <string name="property_value">قيمة العقار</string>
     <string name="send_message">إرسال رسالة</string>
 
     <!-- Search -->
