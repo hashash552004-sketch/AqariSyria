@@ -29,6 +29,7 @@ import com.aqarisyria.app.activities.LoginActivity;
 import com.aqarisyria.app.activities.NotificationsActivity;
 import com.aqarisyria.app.activities.SettingsActivity;
 import com.aqarisyria.app.databinding.FragmentProfileBinding;
+import com.aqarisyria.app.utils.DialogUtil;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -233,15 +234,17 @@ public class ProfileFragment extends Fragment {
                         binding.loadingProfile.setVisibility(View.GONE);
                     })
                     .addOnFailureListener(e -> {
-                        if (!isAdded() || binding == null) return;
+                        if (!isAdded() || getActivity() == null) return;
                         binding.loadingProfile.setVisibility(View.GONE);
-                        Toast.makeText(getActivity(), R.string.error_general, Toast.LENGTH_SHORT).show();
+                        DialogUtil.showErrorWithDetails(getActivity(),
+                            getString(R.string.error_image_upload), e.getLocalizedMessage());
                     });
             })
             .addOnFailureListener(e -> {
-                if (!isAdded() || binding == null) return;
+                if (!isAdded() || getActivity() == null) return;
                 binding.loadingProfile.setVisibility(View.GONE);
-                Toast.makeText(getActivity(), R.string.error_general, Toast.LENGTH_SHORT).show();
+                DialogUtil.showErrorWithDetails(getActivity(),
+                    getString(R.string.error_image_upload), e.getLocalizedMessage());
             });
     }
 
@@ -294,7 +297,8 @@ public class ProfileFragment extends Fragment {
                 getString(R.string.app_name) + "\n" + getString(R.string.app_description));
             startActivity(Intent.createChooser(shareIntent, getString(R.string.profile_share_app)));
         } catch (Exception e) {
-            Toast.makeText(getActivity(), R.string.error_general, Toast.LENGTH_SHORT).show();
+            if (isAdded() && getActivity() != null)
+                DialogUtil.showError(getActivity(), R.string.error_general);
         }
     }
 
@@ -316,7 +320,8 @@ public class ProfileFragment extends Fragment {
                 Uri.parse("https://aqarisyria.com/privacy"));
             startActivity(browserIntent);
         } catch (Exception e) {
-            Toast.makeText(getActivity(), R.string.error_general, Toast.LENGTH_SHORT).show();
+            if (isAdded() && getActivity() != null)
+                DialogUtil.showError(getActivity(), R.string.error_general);
         }
     }
 

@@ -29,6 +29,7 @@ import com.google.firebase.storage.StorageReference;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.databinding.ActivityAddPropertyBinding;
 import com.aqarisyria.app.models.Property;
+import com.aqarisyria.app.utils.DialogUtil;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -54,6 +55,8 @@ public class AddPropertyActivity extends AppCompatActivity {
     private int floor = 1;
     private String city = "";
     private String address = "";
+    private String ownerName = "";
+    private String ownerPhone = "";
 
     private boolean hasElevator, hasParking, hasAC, hasHeating;
     private boolean hasGarden, hasPool, hasBalcony, hasInternet, hasGas, isFurnished;
@@ -78,8 +81,22 @@ public class AddPropertyActivity extends AppCompatActivity {
             return;
         }
 
+        loadUserInfo();
         setupListeners();
         updateStepUI();
+    }
+
+    private void loadUserInfo() {
+        String uid = mAuth.getCurrentUser().getUid();
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    ownerName = doc.getString("fullName");
+                    if (ownerName == null) ownerName = "";
+                    ownerPhone = doc.getString("phone");
+                    if (ownerPhone == null) ownerPhone = "";
+                }
+            });
     }
 
     private void setupListeners() {
@@ -512,7 +529,10 @@ public class AddPropertyActivity extends AppCompatActivity {
                     completedCount[0]++;
                     if (completedCount[0] == selectedImages.size()) {
                         if (uploadedImageUrls.isEmpty()) {
-                            showSnackbar(getString(R.string.error_general));
+                            if (!isFinishing() && !isDestroyed()) {
+                                DialogUtil.showErrorWithDetails(this,
+                                    getString(R.string.error_image_upload), e.getLocalizedMessage());
+                            }
                             resetLoadingState();
                         } else {
                             savePropertyToFirestore(uploadedImageUrls);
@@ -536,7 +556,7 @@ public class AddPropertyActivity extends AppCompatActivity {
         Property prop = new Property(title, description, propertyType, operationType,
             price, area, rooms, bathrooms, floor,
             city, address, "", "",
-            uid, "", "");
+            uid, ownerName, ownerPhone);
 
         prop.setImages(imageUrls);
         prop.setHasElevator(hasElevator);
@@ -563,17 +583,14 @@ public class AddPropertyActivity extends AppCompatActivity {
             .addOnFailureListener(e -> {
                 if (isFinishing() || isDestroyed()) return;
                 resetLoadingState();
-                showSnackbar(getString(R.string.error_general) + ": " + e.getMessage());
+                DialogUtil.showErrorWithDetails(this,
+                    getString(R.string.error_general), e.getLocalizedMessage());
             });
     }
 
     private void showDialog(String message) {
         if (isFinishing() || isDestroyed()) return;
-        new AlertDialog.Builder(this)
-            .setTitle(R.string.add_property)
-            .setMessage(message)
-            .setPositiveButton(R.string.ok, null)
-            .show();
+        DialogUtil.showSuccess(this, message);
     }
 
     private void showSnackbar(String message) {

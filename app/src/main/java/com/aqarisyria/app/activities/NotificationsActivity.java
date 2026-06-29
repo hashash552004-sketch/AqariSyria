@@ -12,6 +12,7 @@ import com.aqarisyria.app.R;
 import com.aqarisyria.app.adapters.NotificationsAdapter;
 import com.aqarisyria.app.databinding.ActivityNotificationsBinding;
 import com.aqarisyria.app.models.NotificationItem;
+import com.aqarisyria.app.utils.DialogUtil;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -107,7 +108,7 @@ public class NotificationsActivity extends AppCompatActivity {
             })
             .addOnFailureListener(e -> {
                 binding.swipeRefresh.setRefreshing(false);
-                Toast.makeText(this, R.string.loading_error, Toast.LENGTH_SHORT).show();
+                DialogUtil.showError(this, R.string.loading_error);
             });
     }
 
@@ -137,7 +138,7 @@ public class NotificationsActivity extends AppCompatActivity {
                     db.collection("notifications").document(docId).update("read", true);
                 }
                 loadNotifications();
-                Toast.makeText(this, R.string.mark_all_read, Toast.LENGTH_SHORT).show();
+                DialogUtil.showSuccess(this, R.string.mark_all_read);
             });
     }
 

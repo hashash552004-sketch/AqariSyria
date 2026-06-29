@@ -15,6 +15,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.activities.PropertyDetailActivity;
+import com.aqarisyria.app.activities.NotificationsActivity;
 import com.aqarisyria.app.activities.SearchActivity;
 import com.aqarisyria.app.adapters.PropertyAdapter;
 import com.aqarisyria.app.databinding.FragmentHomeBinding;
@@ -99,7 +100,7 @@ public class HomeFragment extends Fragment {
     private void setupNotifications() {
         binding.btnNotifications.setOnClickListener(v -> {
             if (isAdded()) {
-                Intent intent = new Intent(getActivity(), SearchActivity.class);
+                Intent intent = new Intent(getActivity(), NotificationsActivity.class);
                 startActivity(intent);
             }
         });

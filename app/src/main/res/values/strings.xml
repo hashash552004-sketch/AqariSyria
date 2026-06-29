@@ -4,6 +4,9 @@
     <string name="app_tagline">بيع - شراء - إيجار</string>
     <string name="app_description">منصة عقارية موثوقة في سوريا</string>
 
+    <!-- Google Sign-In (auto-generated from google-services.json) -->
+    <string name="default_web_client_id" translatable="false">364648375638-n11avn5uh2e5aumjiu1327mticu0t18k.apps.googleusercontent.com</string>
+
     <!-- Auth -->
     <string name="start_now">إبدأ الآن</string>
     <string name="login">تسجيل الدخول</string>
@@ -35,6 +38,12 @@
     <string name="error_save_data">حدث خطأ في حفظ البيانات</string>
     <string name="error_general">حدث خطأ</string>
     <string name="error_enter_email_first">أدخل بريدك الإلكتروني أولاً</string>
+    <string name="error_image_upload">فشل رفع الصورة. تأكد من اتصالك بالإنترنت</string>
+    <string name="error_permission_denied">ليس لديك صلاحية للقيام بهذه العملية</string>
+    <string name="error_network">تحقق من اتصالك بالإنترنت وحاول مرة أخرى</string>
+    <string name="success">تم بنجاح</string>
+    <string name="warning">تنبيه</string>
+    <string name="error">خطأ</string>
     <string name="success_reset_email">تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك</string>
     <string name="error_reset_password">حدث خطأ، تحقق من البريد الإلكتروني</string>
 

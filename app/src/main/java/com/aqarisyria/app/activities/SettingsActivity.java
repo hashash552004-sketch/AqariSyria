@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.databinding.ActivitySettingsBinding;
+import com.aqarisyria.app.utils.DialogUtil;
 import com.bumptech.glide.Glide;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.AuthCredential;
@@ -109,7 +110,7 @@ public class SettingsActivity extends AppCompatActivity {
             })
             .addOnFailureListener(e -> {
                 binding.progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, R.string.loading_error, Toast.LENGTH_SHORT).show();
+                DialogUtil.showError(this, R.string.loading_error);
             });
     }
 
@@ -128,7 +129,7 @@ public class SettingsActivity extends AppCompatActivity {
                 startActivity(new Intent(Intent.ACTION_VIEW,
                     Uri.parse("https://aqarisyria.com/privacy")));
             } catch (Exception e) {
-                Toast.makeText(this, R.string.error_general, Toast.LENGTH_SHORT).show();
+                DialogUtil.showError(this, R.string.error_general);
             }
         });
 
@@ -137,7 +138,7 @@ public class SettingsActivity extends AppCompatActivity {
                 startActivity(new Intent(Intent.ACTION_VIEW,
                     Uri.parse("https://aqarisyria.com/terms")));
             } catch (Exception e) {
-                Toast.makeText(this, R.string.error_general, Toast.LENGTH_SHORT).show();
+                DialogUtil.showError(this, R.string.error_general);
             }
         });
 
@@ -172,16 +173,18 @@ public class SettingsActivity extends AppCompatActivity {
                     .update("profileImage", url)
                     .addOnSuccessListener(unused -> {
                         binding.progressBar.setVisibility(View.GONE);
-                        Toast.makeText(this, R.string.changes_saved, Toast.LENGTH_SHORT).show();
+                        DialogUtil.showSuccess(this, R.string.changes_saved);
                     })
                     .addOnFailureListener(e -> {
                         binding.progressBar.setVisibility(View.GONE);
-                        Toast.makeText(this, R.string.error_general, Toast.LENGTH_SHORT).show();
+                        DialogUtil.showErrorWithDetails(this,
+                            getString(R.string.error_image_upload), e.getLocalizedMessage());
                     });
             })
             .addOnFailureListener(e -> {
                 binding.progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, R.string.error_general, Toast.LENGTH_SHORT).show();
+                DialogUtil.showErrorWithDetails(this,
+                    getString(R.string.error_image_upload), e.getLocalizedMessage());
             });
     }
 
@@ -209,12 +212,12 @@ public class SettingsActivity extends AppCompatActivity {
             .addOnSuccessListener(unused -> {
                 binding.btnSave.setEnabled(true);
                 binding.progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, R.string.changes_saved, Toast.LENGTH_SHORT).show();
+                DialogUtil.showSuccess(this, R.string.changes_saved);
             })
             .addOnFailureListener(e -> {
                 binding.btnSave.setEnabled(true);
                 binding.progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, R.string.error_save_data, Toast.LENGTH_SHORT).show();
+                DialogUtil.showError(this, R.string.error_save_data);
             });
     }
 
@@ -306,7 +309,7 @@ public class SettingsActivity extends AppCompatActivity {
                 String password = etPassword.getText() != null ?
                     etPassword.getText().toString().trim() : "";
                 if (password.isEmpty()) {
-                    Toast.makeText(this, R.string.error_enter_password, Toast.LENGTH_SHORT).show();
+                    DialogUtil.showWarning(this, getString(R.string.error_enter_password));
                     return;
                 }
                 reAuthAndDelete(firebaseUser, password);
@@ -323,7 +326,7 @@ public class SettingsActivity extends AppCompatActivity {
             .addOnSuccessListener(unused -> deleteAccount(firebaseUser))
             .addOnFailureListener(e -> {
                 binding.progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, R.string.error_email_or_password, Toast.LENGTH_SHORT).show();
+                DialogUtil.showError(this, R.string.error_email_or_password);
             });
     }
 
@@ -335,7 +338,7 @@ public class SettingsActivity extends AppCompatActivity {
                 firebaseUser.delete()
                     .addOnSuccessListener(unused2 -> {
                         binding.progressBar.setVisibility(View.GONE);
-                        Toast.makeText(this, R.string.account_deleted, Toast.LENGTH_SHORT).show();
+                        DialogUtil.showSuccess(this, R.string.account_deleted);
                         mAuth.signOut();
                         Intent intent = new Intent(this, LoginActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -344,12 +347,12 @@ public class SettingsActivity extends AppCompatActivity {
                     })
                     .addOnFailureListener(e -> {
                         binding.progressBar.setVisibility(View.GONE);
-                        Toast.makeText(this, R.string.error_delete_account, Toast.LENGTH_SHORT).show();
+                        DialogUtil.showError(this, R.string.error_delete_account);
                     });
             })
             .addOnFailureListener(e -> {
                 binding.progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, R.string.error_delete_account, Toast.LENGTH_SHORT).show();
+                DialogUtil.showError(this, R.string.error_delete_account);
             });
     }
 }

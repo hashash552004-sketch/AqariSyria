@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.databinding.ActivityLoginBinding;
 import com.aqarisyria.app.models.User;
+import com.aqarisyria.app.utils.DialogUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -231,9 +232,6 @@ public class LoginActivity extends AppCompatActivity {
 
     private void showErrorDialog(String message) {
         if (isFinishing() || isDestroyed()) return;
-        new AlertDialog.Builder(this)
-            .setMessage(message)
-            .setPositiveButton(getString(R.string.ok), null)
-            .show();
+        DialogUtil.showError(this, message);
     }
 }
