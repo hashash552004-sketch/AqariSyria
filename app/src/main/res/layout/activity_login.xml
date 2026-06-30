@@ -28,6 +28,7 @@
                 android:layout_marginBottom="32dp">
 
                 <ImageView
+                    android:id="@+id/ivLogo"
                     android:layout_width="72dp"
                     android:layout_height="72dp"
                     android:src="@drawable/ic_house_logo"
