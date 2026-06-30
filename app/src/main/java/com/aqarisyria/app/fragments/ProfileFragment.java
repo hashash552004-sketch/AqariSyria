@@ -23,6 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.bumptech.glide.Glide;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.activities.FavoritesActivity;
+import com.aqarisyria.app.activities.AdminActivity;
 import com.aqarisyria.app.activities.LoginActivity;
 import com.aqarisyria.app.activities.MyPropertiesActivity;
 import com.aqarisyria.app.activities.NotificationsActivity;
@@ -67,6 +68,7 @@ public class ProfileFragment extends Fragment {
         binding.layoutLoggedIn.setVisibility(View.VISIBLE);
         binding.layoutLoggedOut.setVisibility(View.GONE);
         loadUserData();
+        checkAdminStatus();
         setupClickListeners();
         setupDarkMode();
         setupVersionInfo();
@@ -128,6 +130,26 @@ public class ProfileFragment extends Fragment {
             });
     }
 
+    private void checkAdminStatus() {
+        if (!isAdded() || mAuth.getCurrentUser() == null) return;
+        String email = mAuth.getCurrentUser().getEmail();
+        if (email == null) {
+            binding.cardAdminPanel.setVisibility(View.GONE);
+            return;
+        }
+        db.collection("admins").document(email).get()
+            .addOnSuccessListener(doc -> {
+                if (isAdded() && binding != null) {
+                    binding.cardAdminPanel.setVisibility(doc.exists() ? View.VISIBLE : View.GONE);
+                }
+            })
+            .addOnFailureListener(e -> {
+                if (isAdded() && binding != null) {
+                    binding.cardAdminPanel.setVisibility(View.GONE);
+                }
+            });
+    }
+
     private void setupClickListeners() {
         binding.btnSettings.setOnClickListener(v -> {
             if (isAdded()) startActivity(new Intent(getActivity(), SettingsActivity.class));
@@ -153,6 +175,10 @@ public class ProfileFragment extends Fragment {
 
         binding.btnFavorites.setOnClickListener(v -> {
             if (isAdded()) startActivity(new Intent(getActivity(), FavoritesActivity.class));
+        });
+
+        binding.btnAdminPanel.setOnClickListener(v -> {
+            if (isAdded()) startActivity(new Intent(getActivity(), AdminActivity.class));
         });
 
         binding.btnLanguage.setOnClickListener(v -> showLanguageDialog());

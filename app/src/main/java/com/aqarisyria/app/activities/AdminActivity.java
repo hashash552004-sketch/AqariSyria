@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,6 +32,8 @@ public class AdminActivity extends AppCompatActivity {
 
         binding.btnBack.setOnClickListener(v -> finish());
         binding.btnAddAdmin.setOnClickListener(v -> addAdmin());
+        binding.btnBanUser.setOnClickListener(v -> banUser());
+        binding.btnUnbanUser.setOnClickListener(v -> unbanUser());
 
         loadStats();
         loadAdmins();
@@ -112,5 +115,47 @@ public class AdminActivity extends AppCompatActivity {
                 Toast.makeText(this, "فشل: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 binding.btnAddAdmin.setEnabled(true);
             });
+    }
+
+    private void banUser() {
+        String input = binding.etBanUser.getText().toString().trim();
+        if (input.isEmpty()) {
+            binding.etBanUser.setError("أدخل البريد الإلكتروني");
+            return;
+        }
+        findUserAndUpdate(input, true);
+    }
+
+    private void unbanUser() {
+        String input = binding.etBanUser.getText().toString().trim();
+        if (input.isEmpty()) {
+            binding.etBanUser.setError("أدخل البريد الإلكتروني");
+            return;
+        }
+        findUserAndUpdate(input, false);
+    }
+
+    private void findUserAndUpdate(String input, boolean ban) {
+        String action = ban ? "حظر" : "إلغاء حظر";
+        db.collection("users")
+            .whereEqualTo("email", input)
+            .get()
+            .addOnSuccessListener(snap -> {
+                if (snap.isEmpty()) {
+                    Toast.makeText(this, "لم يتم العثور على مستخدم بهذا البريد", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String uid = snap.getDocuments().get(0).getId();
+                db.collection("users").document(uid)
+                    .update("banned", ban)
+                    .addOnSuccessListener(v -> {
+                        Toast.makeText(this, "تم " + action + " المستخدم بنجاح", Toast.LENGTH_SHORT).show();
+                        binding.etBanUser.setText("");
+                    })
+                    .addOnFailureListener(e ->
+                        Toast.makeText(this, "فشل: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            })
+            .addOnFailureListener(e ->
+                Toast.makeText(this, "خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 }
