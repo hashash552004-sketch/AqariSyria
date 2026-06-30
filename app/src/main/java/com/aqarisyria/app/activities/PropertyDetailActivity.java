@@ -75,6 +75,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.btnCallOwner.setOnClickListener(v -> callOwner());
         binding.btnWhatsappOwner.setOnClickListener(v -> openWhatsApp());
         binding.btnMessage.setOnClickListener(v -> callOwner());
+        binding.btnDeleteProperty.setOnClickListener(v -> deleteProperty());
         binding.btnOpenMap.setOnClickListener(v -> openMap());
         binding.btnOpenMapFull.setOnClickListener(v -> openMap());
         binding.tvToggleDescription.setOnClickListener(v -> toggleDescription());
@@ -112,6 +113,10 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.tvDescription.setText(property.getDescription());
         binding.tvOwnerName.setText(property.getOwnerName());
         binding.tvOwnerPhone.setText(property.getOwnerPhone());
+
+        String currentUid = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : "";
+        boolean isOwner = property.getOwnerId() != null && property.getOwnerId().equals(currentUid);
+        if (isOwner) binding.btnDeleteProperty.setVisibility(View.VISIBLE);
 
         String areaText = new DecimalFormat("#.#").format(property.getArea()) + " " + getString(R.string.area);
         binding.tvArea.setText(areaText);
@@ -374,6 +379,24 @@ public class PropertyDetailActivity extends AppCompatActivity {
         public int getItemCount() {
             return similarProperties.size();
         }
+
+    private void deleteProperty() {
+        if (property == null || property.getId() == null) return;
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("حذف العقار")
+            .setMessage("هل أنت متأكد من حذف هذا العقار؟")
+            .setPositiveButton("حذف", (dialog, which) -> {
+                db.collection("properties").document(property.getId()).delete()
+                    .addOnSuccessListener(v -> {
+                        Snackbar.make(binding.getRoot(), "تم حذف العقار", Snackbar.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e ->
+                        Snackbar.make(binding.getRoot(), "فشل الحذف: " + e.getMessage(), Snackbar.LENGTH_SHORT).show());
+            })
+            .setNegativeButton("إلغاء", null)
+            .show();
+    }
 
         class ViewHolder extends RecyclerView.ViewHolder {
             ImageView image;

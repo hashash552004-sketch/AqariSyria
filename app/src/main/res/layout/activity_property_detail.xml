@@ -739,6 +739,19 @@
                             app:cornerRadius="12dp" />
 
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDeleteProperty"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_icon_button"
+                            app:icon="@drawable/ic_delete"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/error"
+                            app:cornerRadius="12dp"
+                            android:visibility="gone"/>
+
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnWhatsappOwner"
                             style="@style/Widget.MaterialComponents.Button.TextButton"
                             android:layout_width="48dp"
