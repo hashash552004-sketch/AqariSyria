@@ -99,13 +99,6 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         holder.binding.tvBathrooms.setText(context.getString(R.string.bathrooms_count_value, bathrooms));
         holder.binding.tvFloor.setText(context.getString(R.string.floor_value, floor));
 
-        String ownerName = property.getOwnerName();
-        if (ownerName != null && !ownerName.isEmpty()) {
-            holder.binding.tvOwnerName.setText(ownerName);
-        } else {
-            holder.binding.tvOwnerName.setText(context.getString(R.string.app_name));
-        }
-
         String imageUrl = property.getFirstImage();
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(context)
