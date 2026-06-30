@@ -173,6 +173,9 @@
     <string name="show_results">عرض النتائج</string>
     <string name="reset_filters">إعادة ضبط الفلاتر</string>
 
+    <!-- Search -->
+    <string name="search_results_count">%d نتيجة</string>
+
     <!-- Profile -->
     <string name="profile_properties">العقارات</string>
     <string name="profile_views">المشاهدات</string>

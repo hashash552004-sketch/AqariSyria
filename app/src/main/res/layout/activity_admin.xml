@@ -38,28 +38,28 @@
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:padding="12dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:orientation="vertical">
 
-            <!-- Stats Cards Row -->
+            <!-- Stats Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="12dp">
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="3dp"
+                    app:cardElevation="2dp"
                     app:cardBackgroundColor="@color/surface">
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -72,7 +72,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="32sp"
+                            android:textSize="28sp"
                             android:textStyle="bold"
                             android:textColor="@color/primary"/>
                         <TextView
@@ -83,15 +83,15 @@
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="4dp"/>
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="3dp"
+                    app:cardElevation="2dp"
                     app:cardBackgroundColor="@color/surface">
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -104,7 +104,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="32sp"
+                            android:textSize="28sp"
                             android:textStyle="bold"
                             android:textColor="@color/accent"/>
                         <TextView
@@ -115,17 +115,17 @@
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="4dp"/>
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
 
             <!-- Property Breakdown Card -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="3dp"
+                app:cardElevation="2dp"
                 app:cardBackgroundColor="@color/surface">
 
                 <LinearLayout
@@ -143,91 +143,35 @@
                         android:textColor="@color/text_primary"
                         android:layout_marginBottom="16dp"/>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="12dp">
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="للبيع"
-                            android:textColor="@color/text_primary"/>
-                        <TextView
-                            android:id="@+id/tvSellCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textStyle="bold"
-                            android:textColor="@color/primary"/>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="للبيع" android:textColor="@color/text_primary"/>
+                        <TextView android:id="@+id/tvSellCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" android:textColor="@color/primary"/>
                     </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp">
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="للإيجار"
-                            android:textColor="@color/text_primary"/>
-                        <TextView
-                            android:id="@+id/tvRentCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textStyle="bold"
-                            android:textColor="@color/accent"/>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="10dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="للإيجار" android:textColor="@color/text_primary"/>
+                        <TextView android:id="@+id/tvRentCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" android:textColor="@color/accent"/>
                     </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp">
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="استثمار"
-                            android:textColor="@color/text_primary"/>
-                        <TextView
-                            android:id="@+id/tvInvestCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textStyle="bold"
-                            android:textColor="@color/warning"/>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="10dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="استثمار" android:textColor="@color/text_primary"/>
+                        <TextView android:id="@+id/tvInvestCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" android:textColor="@color/warning"/>
                     </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="غير نشطة"
-                            android:textColor="@color/text_primary"/>
-                        <TextView
-                            android:id="@+id/tvInactiveCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textStyle="bold"
-                            android:textColor="@color/error"/>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="غير نشطة" android:textColor="@color/text_primary"/>
+                        <TextView android:id="@+id/tvInactiveCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" android:textColor="@color/error"/>
                     </LinearLayout>
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Add Admin Section -->
-            <androidx.cardview.widget.CardView
+            <!-- Add Admin Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="3dp"
+                app:cardElevation="2dp"
                 app:cardBackgroundColor="@color/surface">
 
                 <LinearLayout
@@ -250,7 +194,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="البريد الإلكتروني للمشرف"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="12dp"
+                        app:startIconDrawable="@drawable/ic_person"
+                        app:startIconTint="@color/text_hint">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etAdminEmail"
                             android:layout_width="match_parent"
@@ -258,13 +204,13 @@
                             android:inputType="textEmailAddress"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
-                <Button
-                    android:id="@+id/btnAddAdmin"
-                    style="@style/Button.Primary"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="إضافة مشرف"
-                    android:layout_marginBottom="12dp"/>
+                    <Button
+                        android:id="@+id/btnAddAdmin"
+                        style="@style/Button.Primary"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:text="إضافة مشرف"
+                        android:layout_marginBottom="12dp"/>
 
                     <TextView
                         android:id="@+id/tvAdminList"
@@ -274,15 +220,15 @@
                         android:textSize="13sp"
                         android:textColor="@color/text_secondary"/>
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Ban User Section -->
-            <androidx.cardview.widget.CardView
+            <!-- Ban User Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="3dp"
+                app:cardElevation="2dp"
                 app:cardBackgroundColor="@color/surface">
 
                 <LinearLayout
@@ -304,8 +250,10 @@
                         style="@style/InputField"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="البريد الإلكتروني أو اسم المستخدم"
-                        android:layout_marginBottom="12dp">
+                        android:hint="البريد الإلكتروني للمستخدم"
+                        android:layout_marginBottom="12dp"
+                        app:startIconDrawable="@drawable/ic_lock"
+                        app:startIconTint="@color/text_hint">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etBanUser"
                             android:layout_width="match_parent"
@@ -337,14 +285,15 @@
                             android:text="إلغاء الحظر"/>
                     </LinearLayout>
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Loading -->
             <ProgressBar
                 android:id="@+id/progressBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"/>
+                android:indeterminateTint="@color/primary"
+                android:layout_gravity="center"
+                android:layout_marginVertical="16dp"/>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

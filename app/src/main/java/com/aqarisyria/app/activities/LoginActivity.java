@@ -67,6 +67,37 @@ public class LoginActivity extends AppCompatActivity {
         enterAnimation();
     }
 
+    private void setupAdminOnFirstRun() {
+        db.collection("admins").get()
+            .addOnSuccessListener(snap -> {
+                if (snap.isEmpty() && mAuth.getCurrentUser() != null) {
+                    String email = mAuth.getCurrentUser().getEmail();
+                    if (email != null && email.equals("hashash552004@gmail.com")) {
+                        java.util.HashMap<String, Object> admin = new java.util.HashMap<>();
+                        admin.put("addedBy", "system");
+                        admin.put("addedAt", String.valueOf(System.currentTimeMillis()));
+                        db.collection("admins").document(email).set(admin);
+                    }
+                }
+            });
+    }
+
+    private void ensureAdmin() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user == null) return;
+        String email = user.getEmail();
+        if (email == null || !email.equals("hashash552004@gmail.com")) return;
+        db.collection("admins").document(email).get()
+            .addOnSuccessListener(doc -> {
+                if (!doc.exists()) {
+                    java.util.HashMap<String, Object> admin = new java.util.HashMap<>();
+                    admin.put("addedBy", "system");
+                    admin.put("addedAt", String.valueOf(System.currentTimeMillis()));
+                    db.collection("admins").document(email).set(admin);
+                }
+            });
+    }
+
     private void enterAnimation() {
         View[] views = {
             binding.ivLogo,
@@ -132,6 +163,7 @@ public class LoginActivity extends AppCompatActivity {
                     String name = doc.getString("fullName");
                     String phone = doc.getString("phone");
                     if (name != null && !name.isEmpty() && phone != null && !phone.isEmpty()) {
+                        ensureAdmin();
                         startActivity(new Intent(this, MainActivity.class));
                         finish();
                     } else {
@@ -205,6 +237,7 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener(authResult -> {
+                ensureAdmin();
                 startActivity(new Intent(this, MainActivity.class));
                 finish();
             })
