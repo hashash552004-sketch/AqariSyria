@@ -346,6 +346,34 @@ public class PropertyDetailActivity extends AppCompatActivity {
             });
     }
 
+    private void checkAdminAndShowDelete() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        com.google.firebase.auth.FirebaseUser user = auth.getCurrentUser();
+        if (user == null || user.getEmail() == null) return;
+        db.collection("admins").document(user.getEmail()).get()
+            .addOnSuccessListener(doc -> {
+                if (doc.exists()) binding.btnDeleteProperty.setVisibility(View.VISIBLE);
+            });
+    }
+
+    private void deleteProperty() {
+        if (property == null || property.getId() == null) return;
+        new androidx.appcompat.app.AlertDialog.Builder(PropertyDetailActivity.this)
+            .setTitle("حذف العقار")
+            .setMessage("هل أنت متأكد من حذف هذا العقار؟")
+            .setPositiveButton("حذف", (dialog, which) -> {
+                db.collection("properties").document(property.getId()).delete()
+                    .addOnSuccessListener(v -> {
+                        Snackbar.make(binding.getRoot(), "تم حذف العقار", Snackbar.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e ->
+                        Snackbar.make(binding.getRoot(), "فشل الحذف: " + e.getMessage(), Snackbar.LENGTH_SHORT).show());
+            })
+            .setNegativeButton("إلغاء", null)
+            .show();
+    }
+
     private class SimilarPropertiesAdapter extends RecyclerView.Adapter<SimilarPropertiesAdapter.ViewHolder> {
 
         @NonNull
@@ -383,33 +411,6 @@ public class PropertyDetailActivity extends AppCompatActivity {
         public int getItemCount() {
             return similarProperties.size();
         }
-
-    private void checkAdminAndShowDelete() {
-        com.google.firebase.auth.FirebaseUser user = mAuth.getCurrentUser();
-        if (user == null) return;
-        db.collection("admins").document(user.getEmail()).get()
-            .addOnSuccessListener(doc -> {
-                if (doc.exists()) binding.btnDeleteProperty.setVisibility(View.VISIBLE);
-            });
-    }
-
-    private void deleteProperty() {
-        if (property == null || property.getId() == null) return;
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("حذف العقار")
-            .setMessage("هل أنت متأكد من حذف هذا العقار؟")
-            .setPositiveButton("حذف", (dialog, which) -> {
-                db.collection("properties").document(property.getId()).delete()
-                    .addOnSuccessListener(v -> {
-                        Snackbar.make(binding.getRoot(), "تم حذف العقار", Snackbar.LENGTH_SHORT).show();
-                        finish();
-                    })
-                    .addOnFailureListener(e ->
-                        Snackbar.make(binding.getRoot(), "فشل الحذف: " + e.getMessage(), Snackbar.LENGTH_SHORT).show());
-            })
-            .setNegativeButton("إلغاء", null)
-            .show();
-    }
 
         class ViewHolder extends RecyclerView.ViewHolder {
             ImageView image;
