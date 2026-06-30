@@ -43,7 +43,6 @@ public class HomeFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
 
         setupRecyclerViews();
-        setupSearchBar();
         setupNotifications();
         setupCategoryChips();
         setupRefresh();
@@ -86,15 +85,6 @@ public class HomeFragment extends Fragment {
         recentAdapter = new PropertyAdapter(recentList, getActivity(), false);
         binding.rvRecent.setLayoutManager(new LinearLayoutManager(getActivity()));
         binding.rvRecent.setAdapter(recentAdapter);
-    }
-
-    private void setupSearchBar() {
-        binding.searchCard.setOnClickListener(v -> {
-            if (isAdded()) startActivity(new Intent(getActivity(), SearchActivity.class));
-        });
-        binding.tvSearchHint.setOnClickListener(v -> {
-            if (isAdded()) startActivity(new Intent(getActivity(), SearchActivity.class));
-        });
     }
 
     private void setupNotifications() {

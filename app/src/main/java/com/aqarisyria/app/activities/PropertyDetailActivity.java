@@ -75,6 +75,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.btnWhatsapp.setOnClickListener(v -> openWhatsApp());
         binding.btnCallOwner.setOnClickListener(v -> callOwner());
         binding.btnWhatsappOwner.setOnClickListener(v -> openWhatsApp());
+        binding.btnMessage.setOnClickListener(v -> openMessages());
         binding.btnOpenMap.setOnClickListener(v -> openMap());
         binding.btnOpenMapFull.setOnClickListener(v -> openMap());
         binding.tvToggleDescription.setOnClickListener(v -> toggleDescription());
@@ -257,6 +258,17 @@ public class PropertyDetailActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    private void openMessages() {
+        if (property == null) return;
+        Intent intent = new Intent(PropertyDetailActivity.this, com.aqarisyria.app.activities.MainActivity.class);
+        intent.putExtra("openTab", "messages");
+        intent.putExtra("propertyId", property.getId());
+        intent.putExtra("ownerId", property.getOwnerId());
+        intent.putExtra("ownerName", property.getOwnerName());
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+    }
+
     private void openWhatsApp() {
         if (property == null || property.getOwnerPhone() == null) return;
         String phone = property.getOwnerPhone().replaceAll("[^0-9]", "");
@@ -272,13 +284,18 @@ public class PropertyDetailActivity extends AppCompatActivity {
 
     private void shareProperty() {
         if (property == null) return;
+        String details = property.getTitle() + "\n" +
+            "💰 " + property.getFormattedPrice() + "\n" +
+            "📍 " + property.getLocationString() + "\n" +
+            "📐 " + getString(R.string.area_value, property.getArea()) + "\n" +
+            "🛏 " + getString(R.string.rooms_count_value, property.getRooms()) + " " + getString(R.string.rooms_label) + "\n" +
+            "🛁 " + getString(R.string.bathrooms_count_value, property.getBathrooms()) + " " + getString(R.string.bathrooms_label) + "\n" +
+            "🏢 " + getString(R.string.floor_value, property.getFloor()) + " " + getString(R.string.floor_label) + "\n" +
+            "📞 " + property.getOwnerPhone() + "\n\n" +
+            getString(R.string.app_name) + " - " + getString(R.string.app_tagline);
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TEXT,
-            property.getTitle() + "\n" +
-            property.getFormattedPrice() + "\n" +
-            property.getLocationString() + "\n" +
-            getString(R.string.app_description));
+        intent.putExtra(Intent.EXTRA_TEXT, details);
         startActivity(Intent.createChooser(intent, getString(R.string.share)));
     }
 

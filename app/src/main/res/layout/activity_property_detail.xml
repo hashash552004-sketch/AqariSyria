@@ -827,6 +827,19 @@
                 app:cornerRadius="12dp" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMessage"
+                style="@style/Button.Outline"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="@string/send_message"
+                android:textSize="13sp"
+                app:icon="@drawable/ic_message"
+                app:iconSize="18dp"
+                app:cornerRadius="12dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnWhatsapp"
                 style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="52dp"

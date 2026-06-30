@@ -6,10 +6,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.activities.PropertyDetailActivity;
 import com.aqarisyria.app.databinding.ItemPropertyBinding;
@@ -37,9 +40,10 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
     public PropertyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         ItemPropertyBinding binding = ItemPropertyBinding.inflate(LayoutInflater.from(context), parent, false);
         if (isHorizontal) {
-            ViewGroup.LayoutParams params = binding.getRoot().getLayoutParams();
-            params.width = (int) (280 * context.getResources().getDisplayMetrics().density);
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) binding.getRoot().getLayoutParams();
+            params.width = (int) (260 * context.getResources().getDisplayMetrics().density);
             params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            params.setMarginEnd((int) (12 * context.getResources().getDisplayMetrics().density));
             binding.getRoot().setLayoutParams(params);
         }
         return new PropertyViewHolder(binding);
@@ -114,12 +118,84 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
             holder.binding.ivPropertyImage.setImageResource(R.drawable.placeholder_property);
         }
 
+        setupFavoriteButton(holder, property);
+
         holder.binding.getRoot().setOnClickListener(v -> {
             if (context == null) return;
             Intent intent = new Intent(context, PropertyDetailActivity.class);
             intent.putExtra(PropertyDetailActivity.EXTRA_PROPERTY_ID, property.getId());
             context.startActivity(intent);
         });
+    }
+
+    private void setupFavoriteButton(PropertyViewHolder holder, Property property) {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            holder.binding.ivFavorite.setVisibility(View.GONE);
+            return;
+        }
+        holder.binding.ivFavorite.setVisibility(View.VISIBLE);
+        String uid = auth.getCurrentUser().getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    java.util.List<String> favs = (java.util.List<String>) doc.get("favorites");
+                    boolean isFav = favs != null && favs.contains(property.getId());
+                    updateHeartIcon(holder, isFav);
+                    holder.binding.ivFavorite.setTag(isFav);
+                }
+            });
+
+        holder.binding.ivFavorite.setOnClickListener(v -> {
+            boolean isFav = holder.binding.ivFavorite.getTag() != null && (boolean) holder.binding.ivFavorite.getTag();
+            if (isFav) {
+                db.collection("users").document(uid)
+                    .update("favorites", FieldValue.arrayRemove(property.getId()))
+                    .addOnSuccessListener(unused -> {
+                        updateHeartIcon(holder, false);
+                        holder.binding.ivFavorite.setTag(false);
+                    });
+            } else {
+                db.collection("users").document(uid)
+                    .update("favorites", FieldValue.arrayUnion(property.getId()))
+                    .addOnSuccessListener(unused -> {
+                        updateHeartIcon(holder, true);
+                        holder.binding.ivFavorite.setTag(true);
+                    })
+                    .addOnFailureListener(e -> {
+                        db.collection("users").document(uid)
+                            .set(new java.util.HashMap<String, Object>() {{
+                                put("favorites", new java.util.ArrayList<String>() {{
+                                    add(property.getId());
+                                }});
+                            }}, com.google.firebase.firestore.SetOptions.merge())
+                            .addOnSuccessListener(unused -> {
+                                updateHeartIcon(holder, true);
+                                holder.binding.ivFavorite.setTag(true);
+                            });
+                    });
+            }
+        });
+    }
+
+    private void updateHeartIcon(PropertyViewHolder holder, boolean isFav) {
+        if (isFav) {
+            holder.binding.ivFavorite.setImageResource(R.drawable.ic_favorite_filled);
+            holder.binding.ivFavorite.setColorFilter(
+                android.graphics.Color.parseColor("#F44336"),
+                android.graphics.PorterDuff.Mode.SRC_IN
+            );
+            holder.binding.ivFavorite.getBackground().setTint(android.graphics.Color.WHITE);
+        } else {
+            holder.binding.ivFavorite.setImageResource(R.drawable.ic_favorite_border);
+            holder.binding.ivFavorite.setColorFilter(
+                android.graphics.Color.WHITE,
+                android.graphics.PorterDuff.Mode.SRC_IN
+            );
+            holder.binding.ivFavorite.getBackground().setTint(android.graphics.Color.WHITE);
+        }
     }
 
     @Override
