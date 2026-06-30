@@ -24,6 +24,7 @@ import com.bumptech.glide.Glide;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.activities.FavoritesActivity;
 import com.aqarisyria.app.activities.LoginActivity;
+import com.aqarisyria.app.activities.MyPropertiesActivity;
 import com.aqarisyria.app.activities.NotificationsActivity;
 import com.aqarisyria.app.activities.SettingsActivity;
 import com.aqarisyria.app.databinding.FragmentProfileBinding;
@@ -147,7 +148,7 @@ public class ProfileFragment extends Fragment {
         });
 
         binding.btnMyProperties.setOnClickListener(v -> {
-            Toast.makeText(getActivity(), R.string.profile_my_properties, Toast.LENGTH_SHORT).show();
+            if (isAdded()) startActivity(new Intent(getActivity(), MyPropertiesActivity.class));
         });
 
         binding.btnFavorites.setOnClickListener(v -> {

@@ -61,6 +61,9 @@
         <!-- Notifications -->
         <activity android:name=".activities.NotificationsActivity" android:exported="false"/>
 
+        <!-- My Properties -->
+        <activity android:name=".activities.MyPropertiesActivity" android:exported="false"/>
+
     </application>
 
 </manifest>
