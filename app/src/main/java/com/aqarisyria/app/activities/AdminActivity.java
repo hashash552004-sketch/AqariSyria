@@ -34,6 +34,7 @@ public class AdminActivity extends AppCompatActivity {
         binding.btnAddAdmin.setOnClickListener(v -> addAdmin());
         binding.btnBanUser.setOnClickListener(v -> banUser());
         binding.btnUnbanUser.setOnClickListener(v -> unbanUser());
+        binding.btnDeleteProperties.setOnClickListener(v -> deleteUserProperties());
 
         loadStats();
         loadAdmins();
@@ -133,6 +134,53 @@ public class AdminActivity extends AppCompatActivity {
             return;
         }
         findUserAndUpdate(input, false);
+    }
+
+    private void deleteUserProperties() {
+        String email = binding.etDeletePropertyOwner.getText().toString().trim();
+        if (email.isEmpty()) {
+            binding.etDeletePropertyOwner.setError("أدخل البريد الإلكتروني");
+            return;
+        }
+        new AlertDialog.Builder(this)
+            .setTitle("حذف عقارات المستخدم")
+            .setMessage("هل أنت متأكد من حذف جميع عقارات " + email + "؟")
+            .setPositiveButton("حذف الكل", (dialog, which) -> {
+                db.collection("users")
+                    .whereEqualTo("email", email)
+                    .get()
+                    .addOnSuccessListener(userSnap -> {
+                        if (userSnap.isEmpty()) {
+                            Toast.makeText(this, "لم يتم العثور على المستخدم", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        String uid = userSnap.getDocuments().get(0).getId();
+                        db.collection("properties")
+                            .whereEqualTo("ownerId", uid)
+                            .get()
+                    .addOnSuccessListener(snap -> {
+                        if (snap.isEmpty()) {
+                            Toast.makeText(this, "لا توجد عقارات لهذا المستخدم", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        com.google.firebase.firestore.WriteBatch batch = db.batch();
+                        for (var doc : snap.getDocuments()) {
+                            batch.delete(doc.getReference());
+                        }
+                        batch.commit()
+                            .addOnSuccessListener(v -> {
+                                Toast.makeText(this, "تم حذف " + snap.size() + " عقار", Toast.LENGTH_SHORT).show();
+                                binding.etDeletePropertyOwner.setText("");
+                                loadStats();
+                            })
+                            .addOnFailureListener(e ->
+                                Toast.makeText(this, "فشل: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    })
+                    .addOnFailureListener(e ->
+                        Toast.makeText(this, "خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            })
+            .setNegativeButton("إلغاء", null)
+            .show();
     }
 
     private void findUserAndUpdate(String input, boolean ban) {

@@ -116,7 +116,11 @@ public class PropertyDetailActivity extends AppCompatActivity {
 
         String currentUid = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : "";
         boolean isOwner = property.getOwnerId() != null && property.getOwnerId().equals(currentUid);
-        if (isOwner) binding.btnDeleteProperty.setVisibility(View.VISIBLE);
+        if (isOwner) {
+            binding.btnDeleteProperty.setVisibility(View.VISIBLE);
+        } else {
+            checkAdminAndShowDelete();
+        }
 
         String areaText = new DecimalFormat("#.#").format(property.getArea()) + " " + getString(R.string.area);
         binding.tvArea.setText(areaText);
@@ -379,6 +383,15 @@ public class PropertyDetailActivity extends AppCompatActivity {
         public int getItemCount() {
             return similarProperties.size();
         }
+
+    private void checkAdminAndShowDelete() {
+        com.google.firebase.auth.FirebaseUser user = mAuth.getCurrentUser();
+        if (user == null) return;
+        db.collection("admins").document(user.getEmail()).get()
+            .addOnSuccessListener(doc -> {
+                if (doc.exists()) binding.btnDeleteProperty.setVisibility(View.VISIBLE);
+            });
+    }
 
     private void deleteProperty() {
         if (property == null || property.getId() == null) return;

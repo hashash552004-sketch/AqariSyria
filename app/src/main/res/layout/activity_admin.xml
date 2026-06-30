@@ -287,6 +287,56 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Delete Property Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/surface">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="حذف عقار"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/error"
+                        android:layout_marginBottom="16dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/InputField"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="البريد الإلكتروني لصاحب العقار"
+                        android:layout_marginBottom="12dp"
+                        app:startIconDrawable="@drawable/ic_person"
+                        app:startIconTint="@color/text_hint">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etDeletePropertyOwner"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textEmailAddress"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Button
+                        android:id="@+id/btnDeleteProperties"
+                        style="@style/Button.Outline"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="حذف جميع عقارات المستخدم"
+                        android:textColor="@color/error"
+                        app:strokeColor="@color/error"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <ProgressBar
                 android:id="@+id/progressBar"
                 android:layout_width="wrap_content"
