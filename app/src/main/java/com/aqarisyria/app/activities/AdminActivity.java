@@ -158,23 +158,26 @@ public class AdminActivity extends AppCompatActivity {
                         db.collection("properties")
                             .whereEqualTo("ownerId", uid)
                             .get()
-                    .addOnSuccessListener(snap -> {
-                        if (snap.isEmpty()) {
-                            Toast.makeText(this, "لا توجد عقارات لهذا المستخدم", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        com.google.firebase.firestore.WriteBatch batch = db.batch();
-                        for (var doc : snap.getDocuments()) {
-                            batch.delete(doc.getReference());
-                        }
-                        batch.commit()
-                            .addOnSuccessListener(v -> {
-                                Toast.makeText(this, "تم حذف " + snap.size() + " عقار", Toast.LENGTH_SHORT).show();
-                                binding.etDeletePropertyOwner.setText("");
-                                loadStats();
+                            .addOnSuccessListener(snap -> {
+                                if (snap.isEmpty()) {
+                                    Toast.makeText(this, "لا توجد عقارات لهذا المستخدم", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                                com.google.firebase.firestore.WriteBatch batch = db.batch();
+                                for (var doc : snap.getDocuments()) {
+                                    batch.delete(doc.getReference());
+                                }
+                                batch.commit()
+                                    .addOnSuccessListener(v -> {
+                                        Toast.makeText(this, "تم حذف " + snap.size() + " عقار", Toast.LENGTH_SHORT).show();
+                                        binding.etDeletePropertyOwner.setText("");
+                                        loadStats();
+                                    })
+                                    .addOnFailureListener(e ->
+                                        Toast.makeText(this, "فشل: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                             })
                             .addOnFailureListener(e ->
-                                Toast.makeText(this, "فشل: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                Toast.makeText(this, "خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                     })
                     .addOnFailureListener(e ->
                         Toast.makeText(this, "خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show());
