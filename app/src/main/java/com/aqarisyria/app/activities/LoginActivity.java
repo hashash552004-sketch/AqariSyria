@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -53,6 +54,10 @@ public class LoginActivity extends AppCompatActivity {
         binding.btnRegister.setOnClickListener(v ->
             startActivity(new Intent(this, RegisterActivity.class)));
         binding.btnGoogleSignIn.setOnClickListener(v -> signInWithGoogle());
+        binding.btnFacebookSignIn.setOnClickListener(v ->
+            Toast.makeText(this, "قريباً", Toast.LENGTH_SHORT).show());
+        binding.btnAppleSignIn.setOnClickListener(v ->
+            Toast.makeText(this, "قريباً", Toast.LENGTH_SHORT).show());
         binding.btnGuest.setOnClickListener(v -> {
             startActivity(new Intent(this, MainActivity.class));
             finish();
@@ -63,27 +68,21 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void enterAnimation() {
-        binding.ivLogo.setAlpha(0f);
-        binding.tvWelcome.setAlpha(0f);
-        binding.tilEmail.setAlpha(0f);
-        binding.tilPassword.setAlpha(0f);
-        binding.tvForgotPassword.setAlpha(0f);
-        binding.btnLogin.setAlpha(0f);
-        binding.dividerLayout.setAlpha(0f);
-        binding.btnGoogleSignIn.setAlpha(0f);
-        binding.registerContainer.setAlpha(0f);
-        binding.btnGuest.setAlpha(0f);
+        View[] views = {
+            binding.ivLogo,
+            binding.tilEmail,
+            binding.tilPassword,
+            binding.tvForgotPassword,
+            binding.btnLogin,
+            binding.registerContainer,
+            binding.btnGuest
+        };
+        for (View v : views) v.setAlpha(0f);
 
-        binding.ivLogo.animate().alpha(1f).setDuration(400).start();
-        binding.tvWelcome.animate().alpha(1f).setDuration(400).setStartDelay(100).start();
-        binding.tilEmail.animate().alpha(1f).setDuration(400).setStartDelay(200).start();
-        binding.tilPassword.animate().alpha(1f).setDuration(400).setStartDelay(300).start();
-        binding.tvForgotPassword.animate().alpha(1f).setDuration(400).setStartDelay(400).start();
-        binding.btnLogin.animate().alpha(1f).setDuration(400).setStartDelay(500).start();
-        binding.dividerLayout.animate().alpha(1f).setDuration(400).setStartDelay(600).start();
-        binding.btnGoogleSignIn.animate().alpha(1f).setDuration(400).setStartDelay(700).start();
-        binding.registerContainer.animate().alpha(1f).setDuration(400).setStartDelay(800).start();
-        binding.btnGuest.animate().alpha(1f).setDuration(400).setStartDelay(900).start();
+        int[] delays = {0, 200, 300, 400, 500, 700, 800};
+        for (int i = 0; i < views.length; i++) {
+            views[i].animate().alpha(1f).setDuration(400).setStartDelay(delays[i]).start();
+        }
     }
 
     private void signInWithGoogle() {
