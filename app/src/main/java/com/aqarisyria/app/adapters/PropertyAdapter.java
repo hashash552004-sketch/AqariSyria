@@ -113,6 +113,18 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
 
         setupFavoriteButton(holder, property);
 
+        holder.binding.ivShare.setOnClickListener(v -> {
+            if (context == null || property == null) return;
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType("text/plain");
+            share.putExtra(Intent.EXTRA_TEXT,
+                property.getTitle() + "\n" +
+                property.getFormattedPrice() + "\n" +
+                property.getLocationString() + "\n" +
+                context.getString(R.string.app_name));
+            context.startActivity(Intent.createChooser(share, context.getString(R.string.share)));
+        });
+
         holder.binding.getRoot().setOnClickListener(v -> {
             if (context == null) return;
             Intent intent = new Intent(context, PropertyDetailActivity.class);

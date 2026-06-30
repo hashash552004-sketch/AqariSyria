@@ -71,11 +71,10 @@ public class PropertyDetailActivity extends AppCompatActivity {
 
         binding.btnShare.setOnClickListener(v -> shareProperty());
         binding.btnFavorite.setOnClickListener(v -> toggleFavorite());
-        binding.btnContact.setOnClickListener(v -> callOwner());
         binding.btnWhatsapp.setOnClickListener(v -> openWhatsApp());
         binding.btnCallOwner.setOnClickListener(v -> callOwner());
         binding.btnWhatsappOwner.setOnClickListener(v -> openWhatsApp());
-        binding.btnMessage.setOnClickListener(v -> openMessages());
+        binding.btnMessage.setOnClickListener(v -> callOwner());
         binding.btnOpenMap.setOnClickListener(v -> openMap());
         binding.btnOpenMapFull.setOnClickListener(v -> openMap());
         binding.tvToggleDescription.setOnClickListener(v -> toggleDescription());
@@ -109,7 +108,6 @@ public class PropertyDetailActivity extends AppCompatActivity {
     private void displayProperty() {
         binding.tvTitle.setText(property.getTitle());
         binding.tvPrice.setText(property.getFormattedPrice());
-        binding.tvBottomPrice.setText(property.getFormattedPrice());
         binding.tvLocation.setText(property.getLocationString());
         binding.tvDescription.setText(property.getDescription());
         binding.tvOwnerName.setText(property.getOwnerName());

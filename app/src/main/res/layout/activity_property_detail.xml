@@ -802,50 +802,30 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp"
-            android:paddingBottom="12dp">
-
-            <TextView
-                android:id="@+id/tvBottomPrice"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium"
-                android:textColor="@color/primary" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnContact"
-                style="@style/Button.Primary"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:text="@string/call_owner"
-                android:textSize="14sp"
-                app:cornerRadius="12dp" />
+            android:paddingVertical="10dp"
+            android:paddingBottom="10dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnMessage"
-                style="@style/Button.Outline"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="52dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:text="@string/send_message"
-                android:textSize="13sp"
+                android:layout_marginEnd="10dp"
                 app:icon="@drawable/ic_message"
-                app:iconSize="18dp"
-                app:cornerRadius="12dp" />
+                app:iconSize="24dp"
+                app:iconTint="@color/primary"
+                app:cornerRadius="12dp"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1.5dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnWhatsapp"
                 style="@style/Widget.MaterialComponents.Button"
-                android:layout_width="52dp"
+                android:layout_width="0dp"
                 android:layout_height="52dp"
+                android:layout_weight="1"
                 android:backgroundTint="@color/whatsapp"
-                android:textColor="@color/text_white"
                 app:icon="@drawable/ic_share"
                 app:iconSize="24dp"
                 app:iconTint="@color/text_white"
