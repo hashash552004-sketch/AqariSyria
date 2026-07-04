@@ -88,6 +88,18 @@
                     app:tint="@color/text_primary"
                     android:contentDescription="@string/share" />
 
+                    <ImageButton
+                        android:id="@+id/btnDeleteProperty"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_white_circle"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_delete"
+                        app:tint="@color/error"
+                        android:visibility="gone"
+                        android:contentDescription="@string/delete" />
+
                 </LinearLayout>
 
             </androidx.appcompat.widget.Toolbar>
