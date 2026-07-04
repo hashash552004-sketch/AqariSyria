@@ -72,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
             .addOnSuccessListener(snap -> {
                 if (snap.isEmpty() && mAuth.getCurrentUser() != null) {
                     String email = mAuth.getCurrentUser().getEmail();
-                    if (email != null && email.equals(com.aqarisyria.app.utils.AdminUtil.MASTER_ADMIN_EMAIL)) {
+                    if (email != null && email.equals(com.aqarisyria.app.utils.AdminUtil.getMasterAdminEmail())) {
                         java.util.HashMap<String, Object> admin = new java.util.HashMap<>();
                         admin.put("addedBy", "system");
                         admin.put("addedAt", String.valueOf(System.currentTimeMillis()));

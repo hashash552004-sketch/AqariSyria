@@ -6,6 +6,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class AdminUtil {
     private static final String MASTER_ADMIN_EMAIL = "hashash552004@gmail.com";
 
+    public static String getMasterAdminEmail() {
+        return MASTER_ADMIN_EMAIL;
+    }
+
     public static boolean isMasterAdmin() {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) return false;
         return MASTER_ADMIN_EMAIL.equals(FirebaseAuth.getInstance().getCurrentUser().getEmail());
