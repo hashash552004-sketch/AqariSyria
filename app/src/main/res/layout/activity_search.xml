@@ -49,7 +49,16 @@
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"
                     android:gravity="center"
-                    android:layout_marginEnd="40dp"/>
+                    android:layout_marginEnd="8dp"/>
+
+                <ImageButton
+                    android:id="@+id/btnCompare"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_compare"
+                    android:background="@android:color/transparent"
+                    android:tint="@color/text_white"
+                    android:contentDescription="@string/compare"/>
             </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView

@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import android.widget.ArrayAdapter;
 import androidx.appcompat.app.AppCompatActivity;
 import com.aqarisyria.app.R;
+import com.aqarisyria.app.activities.ComparisonActivity;
 import com.aqarisyria.app.databinding.ActivitySearchBinding;
 
 public class SearchActivity extends AppCompatActivity {
@@ -19,6 +20,9 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         binding.btnBack.setOnClickListener(v -> finish());
+
+        binding.btnCompare.setOnClickListener(v ->
+            startActivity(new Intent(this, ComparisonActivity.class)));
 
         setupGovernorateDropdown();
         setupSearchInput();
