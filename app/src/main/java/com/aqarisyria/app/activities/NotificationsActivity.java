@@ -171,7 +171,7 @@ public class NotificationsActivity extends AppCompatActivity {
                 if (notification.getSenderId() != null) {
                     Intent chatIntent = new Intent(this, ChatActivity.class);
                     chatIntent.putExtra("ownerId", notification.getSenderId());
-                    chatIntent.putExtra("ownerName", notification.getSenderName() != null ? notification.getSenderName() : "");
+                    chatIntent.putExtra("ownerName", "");
                     chatIntent.putExtra("ownerPhone", "");
                     chatIntent.putExtra("propertyId", notification.getTargetId());
                     startActivity(chatIntent);
