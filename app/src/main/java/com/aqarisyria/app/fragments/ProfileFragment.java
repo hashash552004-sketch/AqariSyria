@@ -92,7 +92,7 @@ public class ProfileFragment extends Fragment {
                     }
                     String uniqueId = doc.getString("uniqueUserId");
                     if (uniqueId != null && !uniqueId.isEmpty()) {
-                        binding.tvUserUniqueId.setText("رقم العضوية: " + uniqueId);
+                        binding.tvUserUniqueId.setText(getString(R.string.membership_number, uniqueId));
                     } else {
                         binding.tvUserUniqueId.setVisibility(View.GONE);
                     }
@@ -294,14 +294,14 @@ public class ProfileFragment extends Fragment {
         new AlertDialog.Builder(getActivity())
             .setTitle(R.string.profile_logout)
             .setMessage(R.string.profile_logout_confirm)
-            .setPositiveButton(R.string.profile_confirm, (dialog, which) -> {
+            .setPositiveButton(R.string.ok, (dialog, which) -> {
                 mAuth.signOut();
                 if (isAdded()) {
                     startActivity(new Intent(getActivity(), LoginActivity.class));
                     if (getActivity() != null) getActivity().finish();
                 }
             })
-            .setNegativeButton(R.string.ok, null)
+            .setNegativeButton(R.string.cancel, null)
             .show();
     }
 

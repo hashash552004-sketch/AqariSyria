@@ -2,6 +2,7 @@ package com.aqarisyria.app.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,13 +18,19 @@ import com.aqarisyria.app.R;
 import com.aqarisyria.app.activities.PropertyDetailActivity;
 import com.aqarisyria.app.databinding.ItemPropertyBinding;
 import com.aqarisyria.app.models.Property;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.PropertyViewHolder> {
 
     private List<Property> properties;
     private Context context;
     private boolean isHorizontal;
+    private static final String COMPARE_PREFS = "compare_prefs";
+    private static final String COMPARE_IDS = "compare_ids";
+    private java.util.Set<String> cachedFavorites = new java.util.HashSet<>();
+    private boolean favoritesLoaded = false;
 
     public PropertyAdapter(List<Property> properties, Context context) {
         this(properties, context, false);
@@ -33,6 +40,26 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         this.properties = properties;
         this.context = context;
         this.isHorizontal = isHorizontal;
+        loadFavorites();
+    }
+
+    private void loadFavorites() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) return;
+        String uid = auth.getCurrentUser().getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    java.util.List<String> favs = (java.util.List<String>) doc.get("favorites");
+                    if (favs != null) {
+                        cachedFavorites = new java.util.HashSet<>(favs);
+                    }
+                }
+                favoritesLoaded = true;
+                notifyDataSetChanged();
+            })
+            .addOnFailureListener(e -> favoritesLoaded = true);
     }
 
     @NonNull
@@ -57,8 +84,8 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
 
         holder.binding.tvTitle.setText(property.getTitle());
         holder.binding.tvLocation.setText(property.getLocationString());
-        holder.binding.tvPrice.setText(property.getFormattedPrice());
-        holder.binding.tvPriceBadge.setText(property.getFormattedPrice());
+        holder.binding.tvPrice.setText(property.getFormattedPrice(context));
+        holder.binding.tvPriceBadge.setText(property.getFormattedPrice(context));
 
         String priceLabel;
         switch (property.getOperationType()) {
@@ -66,12 +93,12 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
                 priceLabel = context.getString(R.string.payment_monthly);
                 break;
             default:
-                priceLabel = property.getOperationTypeLabel();
+                priceLabel = property.getOperationTypeLabel(context);
                 break;
         }
         holder.binding.tvPriceLabel.setText(priceLabel);
 
-        String typeLabel = property.getTypeLabel();
+        String typeLabel = property.getTypeLabel(context);
         holder.binding.chipType.setText(typeLabel);
 
         switch (property.getOperationType()) {
@@ -111,6 +138,9 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
             holder.binding.ivPropertyImage.setImageResource(R.drawable.placeholder_property);
         }
 
+        setupBadge(holder, property);
+        setupDate(holder, property);
+        setupCompareButton(holder, property);
         setupFavoriteButton(holder, property);
 
         holder.binding.ivShare.setOnClickListener(v -> {
@@ -119,7 +149,7 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
             share.setType("text/plain");
             share.putExtra(Intent.EXTRA_TEXT,
                 property.getTitle() + "\n" +
-                property.getFormattedPrice() + "\n" +
+                property.getFormattedPrice(context) + "\n" +
                 property.getLocationString() + "\n" +
                 context.getString(R.string.app_name));
             context.startActivity(Intent.createChooser(share, context.getString(R.string.share)));
@@ -133,6 +163,73 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         });
     }
 
+    private void setupBadge(PropertyViewHolder holder, Property property) {
+        if (property.isUrgent()) {
+            holder.binding.chipBadge.setVisibility(View.VISIBLE);
+            holder.binding.chipBadge.setText(context.getString(R.string.badge_urgent));
+            holder.binding.chipBadge.setChipBackgroundColorResource(R.color.error);
+        } else if (property.isFeatured()) {
+            holder.binding.chipBadge.setVisibility(View.VISIBLE);
+            holder.binding.chipBadge.setText(context.getString(R.string.badge_featured));
+            holder.binding.chipBadge.setChipBackgroundColorResource(R.color.warning);
+        } else if (property.isNewProperty()) {
+            holder.binding.chipBadge.setVisibility(View.VISIBLE);
+            holder.binding.chipBadge.setText(context.getString(R.string.badge_new));
+            holder.binding.chipBadge.setChipBackgroundColorResource(R.color.accent);
+        } else {
+            holder.binding.chipBadge.setVisibility(View.GONE);
+        }
+    }
+
+    private void setupDate(PropertyViewHolder holder, Property property) {
+        String relativeTime = property.getRelativeTime(context);
+        if (!relativeTime.isEmpty()) {
+            holder.binding.tvDate.setVisibility(View.VISIBLE);
+            holder.binding.tvDate.setText(relativeTime);
+        } else {
+            holder.binding.tvDate.setVisibility(View.GONE);
+        }
+    }
+
+    private void setupCompareButton(PropertyViewHolder holder, Property property) {
+        SharedPreferences prefs = context.getSharedPreferences(COMPARE_PREFS, Context.MODE_PRIVATE);
+        Set<String> compareIds = prefs.getStringSet(COMPARE_IDS, new HashSet<>());
+        boolean inCompare = compareIds.contains(property.getId());
+        int compareColor = inCompare ? R.color.icon_compare_active : R.color.icon_default;
+        holder.binding.ivCompare.setColorFilter(
+            context.getColor(compareColor),
+            android.graphics.PorterDuff.Mode.SRC_IN
+        );
+        holder.binding.ivCompare.setTag(inCompare);
+
+        holder.binding.frameCompare.setOnClickListener(v -> {
+            Set<String> current = prefs.getStringSet(COMPARE_IDS, new HashSet<>());
+            Set<String> updated = new HashSet<>(current);
+            if (updated.contains(property.getId())) {
+                updated.remove(property.getId());
+                holder.binding.ivCompare.setColorFilter(
+                    context.getColor(R.color.icon_default),
+                    android.graphics.PorterDuff.Mode.SRC_IN
+                );
+                holder.binding.ivCompare.setTag(false);
+                Toast.makeText(context, context.getString(R.string.remove_from_compare), Toast.LENGTH_SHORT).show();
+            } else {
+                if (updated.size() >= 4) {
+                    Toast.makeText(context, context.getString(R.string.compare_max), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                updated.add(property.getId());
+                holder.binding.ivCompare.setColorFilter(
+                    context.getColor(R.color.icon_compare_active),
+                    android.graphics.PorterDuff.Mode.SRC_IN
+                );
+                holder.binding.ivCompare.setTag(true);
+                Toast.makeText(context, context.getString(R.string.add_to_compare), Toast.LENGTH_SHORT).show();
+            }
+            prefs.edit().putStringSet(COMPARE_IDS, updated).apply();
+        });
+    }
+
     private void setupFavoriteButton(PropertyViewHolder holder, Property property) {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {
@@ -143,24 +240,19 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         String uid = auth.getCurrentUser().getUid();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener(doc -> {
-                if (doc.exists()) {
-                    java.util.List<String> favs = (java.util.List<String>) doc.get("favorites");
-                    boolean isFav = favs != null && favs.contains(property.getId());
-                    updateHeartIcon(holder, isFav);
-                    holder.binding.ivFavorite.setTag(isFav);
-                }
-            });
+        boolean isFav = cachedFavorites.contains(property.getId());
+        updateHeartIcon(holder, isFav);
+        holder.binding.ivFavorite.setTag(isFav);
 
         holder.binding.ivFavorite.setOnClickListener(v -> {
-            boolean isFav = holder.binding.ivFavorite.getTag() != null && (boolean) holder.binding.ivFavorite.getTag();
-            if (isFav) {
+            boolean isFavNow = holder.binding.ivFavorite.getTag() != null && (boolean) holder.binding.ivFavorite.getTag();
+            if (isFavNow) {
                 db.collection("users").document(uid)
                     .update("favorites", FieldValue.arrayRemove(property.getId()))
                     .addOnSuccessListener(unused -> {
                         updateHeartIcon(holder, false);
                         holder.binding.ivFavorite.setTag(false);
+                        cachedFavorites.remove(property.getId());
                     });
             } else {
                 db.collection("users").document(uid)
@@ -168,17 +260,19 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
                     .addOnSuccessListener(unused -> {
                         updateHeartIcon(holder, true);
                         holder.binding.ivFavorite.setTag(true);
+                        cachedFavorites.add(property.getId());
                     })
                     .addOnFailureListener(e -> {
+                        java.util.Map<String, Object> data = new java.util.HashMap<>();
+                        java.util.List<String> favs = new java.util.ArrayList<>();
+                        favs.add(property.getId());
+                        data.put("favorites", favs);
                         db.collection("users").document(uid)
-                            .set(new java.util.HashMap<String, Object>() {{
-                                put("favorites", new java.util.ArrayList<String>() {{
-                                    add(property.getId());
-                                }});
-                            }}, com.google.firebase.firestore.SetOptions.merge())
+                            .set(data, com.google.firebase.firestore.SetOptions.merge())
                             .addOnSuccessListener(unused -> {
                                 updateHeartIcon(holder, true);
                                 holder.binding.ivFavorite.setTag(true);
+                                cachedFavorites.add(property.getId());
                             });
                     });
             }
@@ -189,7 +283,7 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         if (isFav) {
             holder.binding.ivFavorite.setImageResource(R.drawable.ic_favorite_filled);
             holder.binding.ivFavorite.setColorFilter(
-                android.graphics.Color.parseColor("#F44336"),
+                context.getColor(R.color.icon_favorite_active),
                 android.graphics.PorterDuff.Mode.SRC_IN
             );
         } else {

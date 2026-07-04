@@ -58,7 +58,7 @@
                 android:layout_marginTop="12dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="#1AFFFFFF"
+                app:cardBackgroundColor="@color/white_alpha_10"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -72,14 +72,14 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@drawable/ic_search"
-                        android:tint="#B3ffffff"/>
+                        android:tint="@color/white_alpha_70"/>
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etSearch"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:hint="@string/search_hint_home"
-                        android:textColorHint="#B3ffffff"
+                        android:textColorHint="@color/white_alpha_70"
                         android:textColor="@color/text_white"
                         android:textSize="14sp"
                         android:fontFamily="sans-serif-medium"
@@ -445,15 +445,15 @@
                         android:layout_height="56dp"
                         android:background="@drawable/bg_login_button"
                         android:text="@string/search"
-                        android:textColor="#FFFFFF"
-                        android:textSize="16sp"
+                        android:textColor="@color/text_white"
+                        android:textSize="@dimen/text_normal"
                         android:textStyle="bold"
                         android:fontFamily="sans-serif-medium"
                         android:textAllCaps="false"
                         android:elevation="4dp"
                         android:drawableStart="@drawable/ic_search"
-                        android:drawablePadding="8dp"
-                        android:drawableTint="#FFFFFF"/>
+                        android:drawablePadding="@dimen/padding_small"
+                        android:drawableTint="@color/text_white"/>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

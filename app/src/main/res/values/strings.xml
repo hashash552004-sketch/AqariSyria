@@ -24,7 +24,7 @@
     <string name="no_account">ليس لديك حساب؟</string>
     <string name="have_account">لديك حساب؟</string>
     <string name="welcome_back">مرحباً بعودتك</string>
-    <string name="or_label">أو</string>
+    <string name="or_label">أو سجل الدخول باستخدام</string>
     <string name="create_account">إنشاء حساب جديد</string>
     <string name="agree_terms">أوافق على الشروط والأحكام</string>
     <string name="sign_in_google">تسجيل الدخول عبر Google</string>
@@ -287,4 +287,112 @@
     <!-- Favorites -->
     <string name="favorites_login_required">يجب تسجيل الدخول لعرض المفضلة</string>
     <string name="favorites_empty">لا توجد عقارات في المفضلة</string>
+
+    <!-- Sort -->
+    <string name="sort_by">ترتيب حسب</string>
+    <string name="sort_newest">الأحدث</string>
+    <string name="sort_oldest">الأقدم</string>
+    <string name="sort_cheapest">الأرخص</string>
+    <string name="sort_most_expensive">الأغلى</string>
+    <string name="sort_most_viewed">الأكثر مشاهدة</string>
+
+    <!-- Bathrooms filter -->
+    <string name="bathrooms">حمامات</string>
+    <string name="any_bathrooms">عدد الحمامات</string>
+
+    <!-- Furnished filter -->
+    <string name="furnished_only">مفروش فقط</string>
+
+    <!-- Badges -->
+    <string name="badge_new">جديد</string>
+    <string name="badge_featured">مميز</string>
+    <string name="badge_urgent">عاجل</string>
+
+    <!-- Compare -->
+    <string name="compare">مقارنة</string>
+    <string name="add_to_compare">إضافة إلى المقارنة</string>
+    <string name="remove_from_compare">إزالة من المقارنة</string>
+    <string name="compare_title">مقارنة العقارات</string>
+    <string name="compare_max">يمكنك مقارنة حتى 4 عقارات</string>
+    <string name="compare_empty">أضف عقارات للمقارنة</string>
+    <string name="compare_clear">حذف الكل</string>
+    <string name="compare_go">مقارنة</string>
+    <string name="feature_not_available">غير متوفر</string>
+    <string name="compare_spec">المواصفات</string>
+    <string name="compare_price_label">السعر</string>
+    <string name="compare_type_label">النوع</string>
+    <string name="compare_operation_label">نوع العملية</string>
+    <string name="compare_area_label">المساحة</string>
+    <string name="compare_rooms_label">الغرف</string>
+    <string name="compare_bathrooms_label">الحمامات</string>
+    <string name="compare_floor_label">الطابق</string>
+    <string name="compare_location_label">الموقع</string>
+    <string name="compare_furnished_label">مفروش</string>
+    <string name="compare_yes">نعم</string>
+    <string name="compare_no">لا</string>
+
+    <!-- Views -->
+    <string name="views_count">%d مشاهدة</string>
+
+    <!-- Update Checker -->
+    <string name="app_updated">التطبيق محدث</string>
+    <string name="update_available">تحديث متوفر %s</string>
+    <string name="update_message">يوجد إصدار أحدث من التطبيق. هل تريد التحميل الآن؟</string>
+    <string name="download">تحميل</string>
+    <string name="later">لاحقاً</string>
+
+    <!-- Admin -->
+    <string name="current_admins">المشرفون الحاليون:\n</string>
+    <string name="no_extra_admins">لا يوجد مشرفون إضافيون</string>
+    <string name="enter_email">أدخل البريد الإلكتروني</string>
+    <string name="already_admin">هذا البريد مشرف بالفعل</string>
+    <string name="admin_added">تم إضافة %s كمشرف</string>
+    <string name="delete_user_properties_title">حذف عقارات المستخدم</string>
+    <string name="delete_user_properties_message">هل أنت متأكد من حذف جميع عقارات %s؟</string>
+    <string name="delete_all">حذف الكل</string>
+    <string name="user_not_found">لم يتم العثور على المستخدم</string>
+    <string name="uid_error">خطأ في معرف المستخدم</string>
+    <string name="no_properties_found">لا توجد عقارات لهذا المستخدم</string>
+    <string name="deleted_count_properties">تم حذف %d عقار</string>
+    <string name="user_not_found_email">لم يتم العثور على مستخدم بهذا البريد</string>
+    <string name="failed">فشل: %s</string>
+    <string name="ban">حظر</string>
+    <string name="unban">إلغاء حظر</string>
+    <string name="action_success">تم %s المستخدم بنجاح</string>
+
+    <!-- Property Detail -->
+    <string name="delete_property_title">حذف العقار</string>
+    <string name="delete_property_message">هل أنت متأكد من حذف هذا العقار؟</string>
+    <string name="delete">حذف</string>
+    <string name="dashboard">لوحة التحكم</string>
+    <string name="step_1">1</string>
+    <string name="step_2">2</string>
+    <string name="step_3">3</string>
+    <string name="property_deleted">تم حذف العقار</string>
+    <string name="delete_failed">فشل الحذف: %s</string>
+
+    <!-- Profile -->
+    <string name="membership_number">رقم العضوية: %s</string>
+
+    <!-- Dialog -->
+    <string name="complete_profile_title">أكمل بيانات حسابك</string>
+    <string name="complete_profile_message">يرجى إدخال اسمك ورقم هاتفك للمتابعة</string>
+    <string name="save_and_continue">حفظ ومتابعة</string>
+    <string name="old_password">كلمة المرور القديمة</string>
+    <string name="new_password">كلمة المرور الجديدة</string>
+    <string name="confirm_new_password">تأكيد كلمة المرور الجديدة</string>
+
+    <!-- General -->
+    <string name="coming_soon">قريباً</string>
+    <string name="today">اليوم</string>
+    <string name="since_days">منذ %d أيام</string>
+    <string name="currency_symbol" translatable="false">$</string>
+    <string name="category_office">مكتب</string>
+    <string name="category_farm">أرض زراعية</string>
+    <string name="since_weeks">منذ %d أسابيع</string>
+    <string name="since_months">منذ %d أشهر</string>
+    <string name="since_years">منذ %d سنوات</string>
+
+    <!-- appbar_scrolling_view_behavior (required by Material Design) -->
+    <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
 </resources>

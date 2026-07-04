@@ -108,7 +108,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
 
     private void displayProperty() {
         binding.tvTitle.setText(property.getTitle());
-        binding.tvPrice.setText(property.getFormattedPrice());
+        binding.tvPrice.setText(property.getFormattedPrice(this));
         binding.tvLocation.setText(property.getLocationString());
         binding.tvDescription.setText(property.getDescription());
         binding.tvOwnerName.setText(property.getOwnerName());
@@ -128,12 +128,13 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.tvBathrooms.setText(getString(R.string.bathrooms_count_value, property.getBathrooms()) + " " + getString(R.string.bathrooms_label));
         binding.tvFloor.setText(getString(R.string.floor_value, property.getFloor()) + " " + getString(R.string.floor_label));
 
-        String opLabel = property.getOperationTypeLabel();
+        String opLabel = property.getOperationTypeLabel(this);
         binding.tvOperationType.setText(opLabel);
-        if ("للبيع".equals(opLabel)) {
+        String opType = property.getOperationType();
+        if ("sell".equals(opType)) {
             binding.tvOperationType.setBackgroundResource(R.drawable.bg_tag_sell);
             binding.tvOperationType.setTextColor(ContextCompat.getColor(this, R.color.tag_sell_text));
-        } else if ("للإيجار".equals(opLabel)) {
+        } else if ("rent".equals(opType)) {
             binding.tvOperationType.setBackgroundResource(R.drawable.bg_tag_rent);
             binding.tvOperationType.setTextColor(ContextCompat.getColor(this, R.color.tag_rent_text));
         } else {
@@ -141,7 +142,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
             binding.tvOperationType.setTextColor(ContextCompat.getColor(this, R.color.tag_invest_text));
         }
 
-        binding.tvPropertyType.setText(property.getTypeLabel());
+        binding.tvPropertyType.setText(property.getTypeLabel(this));
         binding.tvPropertyType.setVisibility(View.VISIBLE);
 
         if (property.getImages() != null && !property.getImages().isEmpty()) {
@@ -291,7 +292,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
     private void shareProperty() {
         if (property == null) return;
         String details = property.getTitle() + "\n" +
-            "💰 " + property.getFormattedPrice() + "\n" +
+            "\uD83D\uDCB0 " + property.getFormattedPrice(this) + "\n" +
             "📍 " + property.getLocationString() + "\n" +
             "📐 " + getString(R.string.area_value, property.getArea()) + "\n" +
             "🛏 " + getString(R.string.rooms_count_value, property.getRooms()) + " " + getString(R.string.rooms_label) + "\n" +
@@ -358,18 +359,18 @@ public class PropertyDetailActivity extends AppCompatActivity {
     private void deleteProperty() {
         if (property == null || property.getId() == null) return;
         new androidx.appcompat.app.AlertDialog.Builder(PropertyDetailActivity.this)
-            .setTitle("حذف العقار")
-            .setMessage("هل أنت متأكد من حذف هذا العقار؟")
-            .setPositiveButton("حذف", (dialog, which) -> {
+            .setTitle(getString(R.string.delete_property_title))
+            .setMessage(getString(R.string.delete_property_message))
+            .setPositiveButton(getString(R.string.delete), (dialog, which) -> {
                 db.collection("properties").document(property.getId()).delete()
                     .addOnSuccessListener(v -> {
-                        Snackbar.make(binding.getRoot(), "تم حذف العقار", Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(binding.getRoot(), R.string.property_deleted, Snackbar.LENGTH_SHORT).show();
                         finish();
                     })
                     .addOnFailureListener(e ->
-                        Snackbar.make(binding.getRoot(), "فشل الحذف: " + e.getMessage(), Snackbar.LENGTH_SHORT).show());
+                        Snackbar.make(binding.getRoot(), getString(R.string.delete_failed, e.getMessage()), Snackbar.LENGTH_SHORT).show());
             })
-            .setNegativeButton("إلغاء", null)
+            .setNegativeButton(getString(R.string.cancel), null)
             .show();
     }
 
@@ -386,7 +387,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Property p = similarProperties.get(position);
             holder.title.setText(p.getTitle());
-            holder.price.setText(p.getFormattedPrice());
+            holder.price.setText(p.getFormattedPrice(PropertyDetailActivity.this));
             holder.location.setText(p.getLocationString());
 
             if (p.getFirstImage() != null) {

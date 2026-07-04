@@ -47,6 +47,7 @@ public class AdminActivity extends AppCompatActivity {
             .addOnSuccessListener(snap -> {
                 int total = snap.size();
                 int sell = 0, rent = 0, invest = 0, inactive = 0;
+                long totalViews = 0;
                 for (var doc : snap.getDocuments()) {
                     String op = doc.getString("operationType");
                     Boolean active = doc.getBoolean("active");
@@ -55,12 +56,16 @@ public class AdminActivity extends AppCompatActivity {
                     } else if ("sell".equals(op)) sell++;
                     else if ("rent".equals(op)) rent++;
                     else if ("invest".equals(op)) invest++;
+
+                    Object views = doc.get("viewsCount");
+                    if (views instanceof Number) totalViews += ((Number) views).longValue();
                 }
                 binding.tvTotalProperties.setText(String.valueOf(total));
                 binding.tvSellCount.setText(String.valueOf(sell));
                 binding.tvRentCount.setText(String.valueOf(rent));
                 binding.tvInvestCount.setText(String.valueOf(invest));
                 binding.tvInactiveCount.setText(String.valueOf(inactive));
+                binding.tvTotalViews.setText(String.valueOf(totalViews));
             });
 
         db.collection("users").get()
@@ -72,14 +77,14 @@ public class AdminActivity extends AppCompatActivity {
         db.collection("admins").get()
             .addOnSuccessListener(snap -> {
                 adminEmails.clear();
-                StringBuilder sb = new StringBuilder("المشرفون الحاليون:\n");
+                StringBuilder sb = new StringBuilder(getString(R.string.current_admins));
                 for (var doc : snap.getDocuments()) {
                     String email = doc.getId();
                     adminEmails.add(email);
                     sb.append("• ").append(email).append("\n");
                 }
                 if (adminEmails.isEmpty()) {
-                    sb.append("لا يوجد مشرفون إضافيون");
+                    sb.append(getString(R.string.no_extra_admins));
                 }
                 binding.tvAdminList.setText(sb.toString());
                 binding.progressBar.setVisibility(View.GONE);
@@ -89,13 +94,13 @@ public class AdminActivity extends AppCompatActivity {
     private void addAdmin() {
         String email = binding.etAdminEmail.getText().toString().trim();
         if (email.isEmpty()) {
-            binding.etAdminEmail.setError("أدخل البريد الإلكتروني");
+            binding.etAdminEmail.setError(getString(R.string.enter_email));
             return;
         }
         binding.btnAddAdmin.setEnabled(false);
 
         if (adminEmails.contains(email)) {
-            Toast.makeText(this, "هذا البريد مشرف بالفعل", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.already_admin), Toast.LENGTH_SHORT).show();
             binding.btnAddAdmin.setEnabled(true);
             return;
         }
@@ -107,7 +112,7 @@ public class AdminActivity extends AppCompatActivity {
         data.put("addedAt", String.valueOf(System.currentTimeMillis()));
         db.collection("admins").document(email).set(data)
             .addOnSuccessListener(v -> {
-                Toast.makeText(this, "تم إضافة " + email + " كمشرف", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.admin_added, email), Toast.LENGTH_SHORT).show();
                 binding.etAdminEmail.setText("");
                 binding.btnAddAdmin.setEnabled(true);
                 loadAdmins();
@@ -121,7 +126,7 @@ public class AdminActivity extends AppCompatActivity {
     private void banUser() {
         String input = binding.etBanUser.getText().toString().trim();
         if (input.isEmpty()) {
-            binding.etBanUser.setError("أدخل البريد الإلكتروني");
+            binding.etBanUser.setError(getString(R.string.enter_email));
             return;
         }
         findUserAndUpdate(input, true);
@@ -130,7 +135,7 @@ public class AdminActivity extends AppCompatActivity {
     private void unbanUser() {
         String input = binding.etBanUser.getText().toString().trim();
         if (input.isEmpty()) {
-            binding.etBanUser.setError("أدخل البريد الإلكتروني");
+            binding.etBanUser.setError(getString(R.string.enter_email));
             return;
         }
         findUserAndUpdate(input, false);
@@ -139,28 +144,33 @@ public class AdminActivity extends AppCompatActivity {
     private void deleteUserProperties() {
         String email = binding.etDeletePropertyOwner.getText().toString().trim();
         if (email.isEmpty()) {
-            binding.etDeletePropertyOwner.setError("أدخل البريد الإلكتروني");
+            binding.etDeletePropertyOwner.setError(getString(R.string.enter_email));
             return;
         }
         new AlertDialog.Builder(this)
-            .setTitle("حذف عقارات المستخدم")
-            .setMessage("هل أنت متأكد من حذف جميع عقارات " + email + "؟")
-            .setPositiveButton("حذف الكل", (dialog, which) -> {
+            .setTitle(getString(R.string.delete_user_properties_title))
+            .setMessage(getString(R.string.delete_user_properties_message, email))
+            .setPositiveButton(getString(R.string.delete_all), (dialog, which) -> {
                 db.collection("users")
                     .whereEqualTo("email", email)
                     .get()
                     .addOnSuccessListener(userSnap -> {
-                        if (userSnap.isEmpty()) {
-                            Toast.makeText(this, "لم يتم العثور على المستخدم", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        String uid = userSnap.getDocuments().get(0).getId();
+                                if (userSnap.isEmpty()) {
+                                    Toast.makeText(this, getString(R.string.user_not_found), Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                                String uid = userSnap.getDocuments().get(0).getId();
+
+                                if (uid == null) {
+                                    Toast.makeText(this, getString(R.string.uid_error), Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
                         db.collection("properties")
                             .whereEqualTo("ownerId", uid)
                             .get()
                             .addOnSuccessListener(snap -> {
-                                if (snap.isEmpty()) {
-                                    Toast.makeText(this, "لا توجد عقارات لهذا المستخدم", Toast.LENGTH_SHORT).show();
+                                if (snap == null || snap.isEmpty()) {
+                                    Toast.makeText(this, getString(R.string.no_properties_found), Toast.LENGTH_SHORT).show();
                                     return;
                                 }
                                 com.google.firebase.firestore.WriteBatch batch = db.batch();
@@ -169,44 +179,44 @@ public class AdminActivity extends AppCompatActivity {
                                 }
                                 batch.commit()
                                     .addOnSuccessListener(v -> {
-                                        Toast.makeText(this, "تم حذف " + snap.size() + " عقار", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(this, getString(R.string.deleted_count_properties, snap.size()), Toast.LENGTH_SHORT).show();
                                         binding.etDeletePropertyOwner.setText("");
                                         loadStats();
                                     })
-                                    .addOnFailureListener(e ->
-                                        Toast.makeText(this, "فشل: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            .addOnFailureListener(e ->
+                Toast.makeText(this, getString(R.string.failed, e.getMessage()), Toast.LENGTH_SHORT).show());
                             })
                             .addOnFailureListener(e ->
-                                Toast.makeText(this, "خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                Toast.makeText(this, getString(R.string.error_general) + ": " + e.getMessage(), Toast.LENGTH_SHORT).show());
                     })
                     .addOnFailureListener(e ->
-                        Toast.makeText(this, "خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                        Toast.makeText(this, getString(R.string.error_general) + ": " + e.getMessage(), Toast.LENGTH_SHORT).show());
             })
-            .setNegativeButton("إلغاء", null)
+            .setNegativeButton(getString(R.string.cancel), null)
             .show();
     }
 
     private void findUserAndUpdate(String input, boolean ban) {
-        String action = ban ? "حظر" : "إلغاء حظر";
+        String action = ban ? getString(R.string.ban) : getString(R.string.unban);
         db.collection("users")
             .whereEqualTo("email", input)
             .get()
             .addOnSuccessListener(snap -> {
                 if (snap.isEmpty()) {
-                    Toast.makeText(this, "لم يتم العثور على مستخدم بهذا البريد", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.user_not_found_email), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 String uid = snap.getDocuments().get(0).getId();
                 db.collection("users").document(uid)
                     .update("banned", ban)
                     .addOnSuccessListener(v -> {
-                        Toast.makeText(this, "تم " + action + " المستخدم بنجاح", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.action_success, action), Toast.LENGTH_SHORT).show();
                         binding.etBanUser.setText("");
                     })
                     .addOnFailureListener(e ->
-                        Toast.makeText(this, "فشل: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                        Toast.makeText(this, getString(R.string.failed, e.getMessage()), Toast.LENGTH_SHORT).show());
             })
             .addOnFailureListener(e ->
-                Toast.makeText(this, "خطأ: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                Toast.makeText(this, getString(R.string.error_general) + ": " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 }

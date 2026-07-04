@@ -55,9 +55,9 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(new Intent(this, RegisterActivity.class)));
         binding.btnGoogleSignIn.setOnClickListener(v -> signInWithGoogle());
         binding.btnFacebookSignIn.setOnClickListener(v ->
-            Toast.makeText(this, "قريباً", Toast.LENGTH_SHORT).show());
+            Toast.makeText(this, R.string.coming_soon, Toast.LENGTH_SHORT).show());
         binding.btnAppleSignIn.setOnClickListener(v ->
-            Toast.makeText(this, "قريباً", Toast.LENGTH_SHORT).show());
+            Toast.makeText(this, R.string.coming_soon, Toast.LENGTH_SHORT).show());
         binding.btnGuest.setOnClickListener(v -> {
             startActivity(new Intent(this, MainActivity.class));
             finish();
@@ -72,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
             .addOnSuccessListener(snap -> {
                 if (snap.isEmpty() && mAuth.getCurrentUser() != null) {
                     String email = mAuth.getCurrentUser().getEmail();
-                    if (email != null && email.equals("hashash552004@gmail.com")) {
+                    if (email != null && email.equals(com.aqarisyria.app.utils.AdminUtil.MASTER_ADMIN_EMAIL)) {
                         java.util.HashMap<String, Object> admin = new java.util.HashMap<>();
                         admin.put("addedBy", "system");
                         admin.put("addedAt", String.valueOf(System.currentTimeMillis()));

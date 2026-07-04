@@ -41,7 +41,7 @@
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">28sp</item>
+        <item name="android:textSize">@dimen/text_28sp</item>
         <item name="android:letterSpacing">0</item>
     </style>
 
@@ -49,45 +49,45 @@
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">22sp</item>
+        <item name="android:textSize">@dimen/text_xlarge</item>
     </style>
 
     <style name="TextStyle.SectionTitle" parent="TextAppearance.MaterialComponents.Headline6">
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">@dimen/text_large</item>
     </style>
 
     <style name="TextStyle.Subtitle" parent="TextAppearance.MaterialComponents.Subtitle1">
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">@dimen/text_medium</item>
     </style>
 
     <style name="TextStyle.Body" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">@dimen/text_medium</item>
     </style>
 
     <style name="TextStyle.Caption" parent="TextAppearance.MaterialComponents.Caption">
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">@dimen/text_small</item>
     </style>
 
     <style name="TextStyle.Price" parent="TextAppearance.MaterialComponents.Headline6">
         <item name="android:textColor">@color/primary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">@dimen/text_20sp</item>
     </style>
 
     <style name="Button.Primary" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/primary</item>
         <item name="android:textColor">@color/text_white</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">@dimen/text_normal</item>
         <item name="android:gravity">center</item>
         <item name="android:paddingTop">14dp</item>
         <item name="android:paddingBottom">14dp</item>
@@ -104,7 +104,7 @@
     <style name="Button.Accent" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/accent</item>
         <item name="android:textColor">@color/text_white</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">@dimen/text_normal</item>
         <item name="android:gravity">center</item>
         <item name="android:paddingTop">14dp</item>
         <item name="android:paddingBottom">14dp</item>
@@ -120,7 +120,7 @@
     <style name="Button.Outline" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="strokeColor">@color/primary</item>
         <item name="android:textColor">@color/primary</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">@dimen/text_normal</item>
         <item name="android:gravity">center</item>
         <item name="android:paddingTop">14dp</item>
         <item name="android:paddingBottom">14dp</item>
@@ -156,7 +156,7 @@
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textColorHint">@color/text_hint</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">@dimen/text_normal</item>
     </style>
 
     <style name="CardStyle" parent="Widget.MaterialComponents.CardView">
@@ -168,7 +168,7 @@
     </style>
 
     <style name="BottomNavText">
-        <item name="android:textSize">11sp</item>
+        <item name="android:textSize">@dimen/text_11sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 

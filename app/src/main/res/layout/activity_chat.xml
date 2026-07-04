@@ -61,8 +61,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/chat_typing"
-                    android:textColor="#AAffffff"
-                    android:textSize="12sp"
+                    android:textColor="@color/white_alpha_70"
+                    android:textSize="@dimen/text_small"
                     android:fontFamily="sans-serif-medium"
                     android:visibility="gone"/>
             </LinearLayout>

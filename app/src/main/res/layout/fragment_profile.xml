@@ -84,17 +84,17 @@
                     android:id="@+id/tvUserEmail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#CCffffff"
-                    android:textSize="14sp"
+                    android:textColor="@color/white_alpha_80"
+                    android:textSize="@dimen/text_medium"
                     android:fontFamily="sans-serif-medium"
-                    android:layout_marginTop="4dp"/>
+                    android:layout_marginTop="@dimen/margin_4dp"/>
 
                 <TextView
                     android:id="@+id/tvUserUniqueId"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#AAffffff"
-                    android:textSize="12sp"
+                    android:textColor="@color/white_alpha_70"
+                    android:textSize="@dimen/text_small"
                     android:fontFamily="sans-serif-medium"
                     android:layout_marginTop="2dp"/>
             </LinearLayout>
@@ -492,8 +492,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="لوحة التحكم"
-                        android:textSize="15sp"
+                        android:text="@string/dashboard"
+                        android:textSize="@dimen/text_15sp"
                         android:textColor="@color/text_primary"
                         android:fontFamily="sans-serif-medium"
                         android:layout_marginStart="16dp"/>

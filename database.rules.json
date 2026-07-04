@@ -3,13 +3,13 @@
     "chats": {
       "$chatId": {
         "metadata": {
-          ".read": "auth != null",
-          ".write": "auth != null"
+          ".read": "auth != null && root.child('userChats').child(auth.uid).child($chatId).exists()",
+          ".write": "auth != null && root.child('userChats').child(auth.uid).child($chatId).exists()"
         },
         "messages": {
-          ".read": "auth != null",
-          "messageId": {
-            ".write": "auth != null && (data.child('senderId').val() == auth.uid || newData.child('senderId').val() == auth.uid)"
+          ".read": "auth != null && root.child('userChats').child(auth.uid).child($chatId).exists()",
+          "$messageId": {
+            ".write": "auth != null && root.child('userChats').child(auth.uid).child($chatId).exists() && newData.child('senderId').val() == auth.uid"
           },
           ".indexOn": ["timestamp"]
         }

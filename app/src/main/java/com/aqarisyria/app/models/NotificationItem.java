@@ -1,10 +1,12 @@
 package com.aqarisyria.app.models;
 
+import com.google.firebase.firestore.DocumentId;
 import com.google.firebase.firestore.ServerTimestamp;
 import java.util.Date;
 
 public class NotificationItem {
 
+    @DocumentId
     private String id;
     private String userId;
     private String type;

@@ -1,5 +1,8 @@
 package com.aqarisyria.app.models;
 
+import android.content.Context;
+
+import com.aqarisyria.app.R;
 import com.google.firebase.firestore.DocumentId;
 import com.google.firebase.firestore.ServerTimestamp;
 import java.util.Date;
@@ -36,6 +39,8 @@ public class Property {
     private boolean hasGas;
     private boolean isFurnished;
     private boolean isActive;
+    private boolean isFeatured;
+    private boolean isUrgent;
     private int viewsCount;
     @ServerTimestamp
     private Date createdAt;
@@ -154,6 +159,12 @@ public class Property {
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
 
+    public boolean isFeatured() { return isFeatured; }
+    public void setFeatured(boolean featured) { isFeatured = featured; }
+
+    public boolean isUrgent() { return isUrgent; }
+    public void setUrgent(boolean urgent) { isUrgent = urgent; }
+
     public int getViewsCount() { return viewsCount; }
     public void setViewsCount(int viewsCount) { this.viewsCount = viewsCount; }
 
@@ -166,30 +177,70 @@ public class Property {
     }
 
     public String getOperationTypeLabel() {
-        switch (operationType) {
-            case "sell": return "للبيع";
-            case "rent": return "للإيجار";
-            case "invest": return "استثمار";
+        return getOperationTypeLabel(null);
+    }
+
+    public String getOperationTypeLabel(Context context) {
+        String op = operationType;
+        if (op == null) return "";
+        if (context != null) {
+            switch (op) {
+                case "sell": return context.getString(R.string.for_sale);
+                case "rent": return context.getString(R.string.for_rent);
+                case "invest": return context.getString(R.string.for_invest);
+                default: return "";
+            }
+        }
+        switch (op) {
+            case "sell": return "\u0644\u0644\u0628\u064A\u0639";
+            case "rent": return "\u0644\u0644\u0625\u064A\u062C\u0627\u0631";
+            case "invest": return "\u0627\u0633\u062A\u062B\u0645\u0627\u0631";
             default: return "";
         }
     }
 
     public String getTypeLabel() {
-        switch (type) {
-            case "apartment": return "شقة";
-            case "land": return "أرض";
-            case "villa": return "فيلا";
-            case "house": return "منزل";
-            case "office": return "مكتب";
-            case "shop": return "محل";
-            case "farm": return "أرض زراعية";
-            case "warehouse": return "مستودع";
-            default: return type;
+        return getTypeLabel(null);
+    }
+
+    public String getTypeLabel(Context context) {
+        String t = type;
+        if (t == null) return "";
+        if (context != null) {
+            switch (t) {
+                case "apartment": return context.getString(R.string.category_apartment);
+                case "land": return context.getString(R.string.category_land);
+                case "villa": return context.getString(R.string.category_villa);
+                case "house": return context.getString(R.string.category_house);
+                case "office": return context.getString(R.string.category_office);
+                case "shop": return context.getString(R.string.category_shop);
+                case "farm": return context.getString(R.string.category_farm);
+                case "warehouse": return context.getString(R.string.category_warehouse);
+                default: return t;
+            }
+        }
+        switch (t) {
+            case "apartment": return "\u0634\u0642\u0629";
+            case "land": return "\u0623\u0631\u0636";
+            case "villa": return "\u0641\u064A\u0644\u0627";
+            case "house": return "\u0645\u0646\u0632\u0644";
+            case "office": return "\u0645\u0643\u062A\u0628";
+            case "shop": return "\u0645\u062D\u0644";
+            case "farm": return "\u0623\u0631\u0636 \u0632\u0631\u0627\u0639\u064A\u0629";
+            case "warehouse": return "\u0645\u0633\u062A\u0648\u062F\u0639";
+            default: return t;
         }
     }
 
     public String getFormattedPrice() {
+        return getFormattedPrice(null);
+    }
+
+    public String getFormattedPrice(Context context) {
         java.text.DecimalFormat df = new java.text.DecimalFormat("#,##0");
+        if (context != null) {
+            return df.format(price) + " " + context.getString(R.string.currency_symbol);
+        }
         return df.format(price) + " $";
     }
 
@@ -197,5 +248,35 @@ public class Property {
         String g = governorate != null ? governorate : "";
         String r = region != null ? region : "";
         return g + " - " + r;
+    }
+
+    public String getRelativeTime() {
+        return getRelativeTime(null);
+    }
+
+    public String getRelativeTime(Context context) {
+        if (createdAt == null) return "";
+        long diff = new Date().getTime() - createdAt.getTime();
+        long days = diff / (1000 * 60 * 60 * 24);
+        if (context != null) {
+            if (days < 1) return context.getString(R.string.today);
+            if (days == 1) return context.getString(R.string.yesterday);
+            if (days < 7) return context.getString(R.string.since_days, days);
+            if (days < 30) return context.getString(R.string.since_weeks, days / 7);
+            if (days < 365) return context.getString(R.string.since_months, days / 30);
+            return context.getString(R.string.since_years, days / 365);
+        }
+        if (days < 1) return "\u0627\u0644\u064A\u0648\u0645";
+        if (days == 1) return "\u0623\u0645\u0633";
+        if (days < 7) return "\u0645\u0646\u0630 " + days + " \u0623\u064A\u0627\u0645";
+        if (days < 30) return "\u0645\u0646\u0630 " + (days / 7) + " \u0623\u0633\u0627\u0628\u064A\u0639";
+        if (days < 365) return "\u0645\u0646\u0630 " + (days / 30) + " \u0623\u0634\u0647\u0631";
+        return "\u0645\u0646\u0630 " + (days / 365) + " \u0633\u0646\u0648\u0627\u062A";
+    }
+
+    public boolean isNewProperty() {
+        if (createdAt == null) return false;
+        long diff = new Date().getTime() - createdAt.getTime();
+        return diff < 7 * 24 * 60 * 60 * 1000L;
     }
 }

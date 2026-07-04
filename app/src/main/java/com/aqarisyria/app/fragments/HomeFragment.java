@@ -169,6 +169,7 @@ public class HomeFragment extends Fragment {
         binding.progressRecent.setVisibility(View.VISIBLE);
         recentListener = db.collection("properties")
             .whereEqualTo("active", true)
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .limit(20)
             .addSnapshotListener((snapshot, error) -> {
                 if (error != null) {

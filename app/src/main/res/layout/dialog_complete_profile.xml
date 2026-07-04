@@ -10,8 +10,8 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="أكمل بيانات حسابك"
-        android:textSize="20sp"
+        android:text="@string/complete_profile_title"
+        android:textSize="@dimen/text_20sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
         android:layout_marginBottom="8dp"/>
@@ -19,8 +19,8 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="يرجى إدخال اسمك ورقم هاتفك للمتابعة"
-        android:textSize="14sp"
+        android:text="@string/complete_profile_message"
+        android:textSize="@dimen/text_medium"
         android:textColor="@color/text_secondary"
         android:layout_marginBottom="24dp"/>
 
@@ -28,8 +28,8 @@
         style="@style/InputField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="الاسم الكامل"
-        android:layout_marginBottom="16dp">
+        android:hint="@string/full_name"
+        android:layout_marginBottom="@dimen/padding_medium">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etFullName"
             android:layout_width="match_parent"
@@ -41,8 +41,8 @@
         style="@style/InputField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="رقم الهاتف"
-        android:layout_marginBottom="24dp">
+        android:hint="@string/phone"
+        android:layout_marginBottom="@dimen/padding_large">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etPhone"
             android:layout_width="match_parent"
@@ -55,6 +55,6 @@
         style="@style/Button.Primary"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:text="حفظ ومتابعة"/>
+        android:text="@string/save_and_continue"/>
 
 </LinearLayout>
