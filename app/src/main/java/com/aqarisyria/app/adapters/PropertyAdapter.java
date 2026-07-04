@@ -31,6 +31,7 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
     private static final String COMPARE_IDS = "compare_ids";
     private java.util.Set<String> cachedFavorites = new java.util.HashSet<>();
     private boolean favoritesLoaded = false;
+    private static final int MAX_FAVORITES = 50;
 
     public PropertyAdapter(List<Property> properties, Context context) {
         this(properties, context, false);
@@ -246,6 +247,10 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
 
         holder.binding.ivFavorite.setOnClickListener(v -> {
             boolean isFavNow = holder.binding.ivFavorite.getTag() != null && (boolean) holder.binding.ivFavorite.getTag();
+            if (!isFavNow && cachedFavorites.size() >= MAX_FAVORITES) {
+                Toast.makeText(context, context.getString(R.string.favorites_max_limit), Toast.LENGTH_SHORT).show();
+                return;
+            }
             if (isFavNow) {
                 db.collection("users").document(uid)
                     .update("favorites", FieldValue.arrayRemove(property.getId()))

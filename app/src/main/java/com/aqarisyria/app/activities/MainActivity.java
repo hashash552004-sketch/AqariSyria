@@ -10,7 +10,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.aqarisyria.app.R;
 import com.aqarisyria.app.databinding.ActivityMainBinding;
 import com.aqarisyria.app.fragments.HomeFragment;
-import com.aqarisyria.app.fragments.SearchFragment;
 import com.aqarisyria.app.fragments.FavoritesFragment;
 import com.aqarisyria.app.fragments.MessagesFragment;
 import com.aqarisyria.app.fragments.ProfileFragment;
@@ -68,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.nav_home) {
                 fragment = new HomeFragment();
             } else if (id == R.id.nav_search) {
-                fragment = new SearchFragment();
+                startActivity(new Intent(this, SearchActivity.class));
+                return true;
             } else if (id == R.id.nav_favorites) {
                 fragment = new FavoritesFragment();
             } else if (id == R.id.nav_messages) {

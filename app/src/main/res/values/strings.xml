@@ -330,6 +330,9 @@
     <string name="compare_yes">نعم</string>
     <string name="compare_no">لا</string>
 
+    <!-- Favorites -->
+    <string name="favorites_max_limit">لقد وصلت للحد الأقصى للمفضلة (50)</string>
+
     <!-- Views -->
     <string name="views_count">%d مشاهدة</string>
 

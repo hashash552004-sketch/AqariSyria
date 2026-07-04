@@ -42,6 +42,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
     private Property property;
     private boolean isFavorite = false;
     private boolean isDescriptionExpanded = false;
+    private static final int MAX_FAVORITES = 50;
     private List<Property> similarProperties = new ArrayList<>();
     private SimilarPropertiesAdapter similarAdapter;
 
@@ -72,8 +73,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.btnShare.setOnClickListener(v -> shareProperty());
         binding.btnFavorite.setOnClickListener(v -> toggleFavorite());
         binding.btnWhatsapp.setOnClickListener(v -> openWhatsApp());
-        binding.btnCallOwner.setOnClickListener(v -> callOwner());
-        binding.btnWhatsappOwner.setOnClickListener(v -> openWhatsApp());
+
         binding.btnMessage.setOnClickListener(v -> openMessages());
         binding.btnDeleteProperty.setOnClickListener(v -> deleteProperty());
         binding.btnOpenMap.setOnClickListener(v -> openMap());
@@ -111,8 +111,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.tvPrice.setText(property.getFormattedPrice(this));
         binding.tvLocation.setText(property.getLocationString());
         binding.tvDescription.setText(property.getDescription());
-        binding.tvOwnerName.setText(property.getOwnerName());
-        binding.tvOwnerPhone.setText(property.getOwnerPhone());
+
 
         String currentUid = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : "";
         boolean isOwner = property.getOwnerId() != null && property.getOwnerId().equals(currentUid);
@@ -157,10 +156,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
             binding.tvToggleDescription.setVisibility(View.VISIBLE);
         }
 
-        Glide.with(this)
-            .load(R.drawable.ic_person)
-            .transform(new CircleCrop())
-            .into(binding.ivOwnerAvatar);
+
     }
 
     private void setupAmenities() {
@@ -230,11 +226,24 @@ public class PropertyDetailActivity extends AppCompatActivity {
                     updateFavoriteButton();
                 });
         } else {
-            db.collection("users").document(uid)
-                .update("favorites", FieldValue.arrayUnion(property.getId()))
-                .addOnSuccessListener(u -> {
-                    isFavorite = true;
-                    updateFavoriteButton();
+            db.collection("users").document(uid).get()
+                .addOnSuccessListener(doc -> {
+                    if (isFinishing() || isDestroyed() || property == null) return;
+                    java.util.List<String> favs = (java.util.List<String>) doc.get("favorites");
+                    if (favs != null && favs.size() >= MAX_FAVORITES) {
+                        Snackbar.make(binding.getRoot(), R.string.favorites_max_limit, Snackbar.LENGTH_SHORT).show();
+                        return;
+                    }
+                    db.collection("users").document(uid)
+                        .update("favorites", FieldValue.arrayUnion(property.getId()))
+                        .addOnSuccessListener(u -> {
+                            isFavorite = true;
+                            updateFavoriteButton();
+                        })
+                        .addOnFailureListener(e -> {
+                            isFavorite = false;
+                            updateFavoriteButton();
+                        });
                 })
                 .addOnFailureListener(e -> {
                     isFavorite = false;

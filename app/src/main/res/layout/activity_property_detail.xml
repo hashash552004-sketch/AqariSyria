@@ -644,114 +644,6 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/CardStyle"
-                android:layout_marginTop="12dp"
-                android:layout_marginHorizontal="16dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/property_owner"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium"
-                        android:textColor="@color/text_primary" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <de.hdodenhof.circleimageview.CircleImageView
-                            android:id="@+id/ivOwnerAvatar"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
-                            android:src="@drawable/ic_person"
-                            app:civ_border_width="2dp"
-                            app:civ_border_color="@color/primary"
-                            app:civ_circle_background_color="@color/primary_light" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="12dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:id="@+id/tvOwnerName"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:fontFamily="sans-serif-medium"
-                                android:textColor="@color/text_primary" />
-
-                            <TextView
-                                android:id="@+id/tvOwnerPhone"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:textSize="14sp"
-                                android:fontFamily="sans-serif-medium"
-                                android:textColor="@color/text_secondary" />
-
-                        </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnCallOwner"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_icon_button"
-                            app:icon="@drawable/ic_phone"
-                            app:iconSize="24dp"
-                            app:iconTint="@color/primary"
-                            app:cornerRadius="12dp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnDeleteProperty"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_icon_button"
-                            app:icon="@drawable/ic_delete"
-                            app:iconSize="24dp"
-                            app:iconTint="@color/error"
-                            app:cornerRadius="12dp"
-                            android:visibility="gone"/>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnWhatsappOwner"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:layout_marginStart="8dp"
-                            android:backgroundTint="@color/whatsapp"
-                            app:icon="@drawable/ic_share"
-                            app:iconSize="24dp"
-                            app:iconTint="@color/text_white"
-                            app:cornerRadius="12dp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -805,11 +697,11 @@
                 android:id="@+id/btnMessage"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="54dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="10dp"
                 app:icon="@drawable/ic_message"
-                app:iconSize="24dp"
+                app:iconSize="20dp"
                 app:iconTint="@color/primary"
                 app:cornerRadius="16dp"
                 app:strokeColor="@color/primary"
@@ -819,11 +711,11 @@
                 android:id="@+id/btnWhatsapp"
                 style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="0dp"
-                android:layout_height="54dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/whatsapp"
-                app:icon="@drawable/ic_phone"
-                app:iconSize="24dp"
+                app:icon="@drawable/ic_whatsapp"
+                app:iconSize="20dp"
                 app:iconTint="@color/text_white"
                 app:cornerRadius="16dp" />
 
