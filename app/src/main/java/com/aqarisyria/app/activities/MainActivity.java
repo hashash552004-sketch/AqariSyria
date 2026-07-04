@@ -69,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_search) {
                 startActivity(new Intent(this, SearchActivity.class));
                 return true;
+            } else if (id == R.id.nav_compare) {
+                startActivity(new Intent(this, ComparisonActivity.class));
+                return true;
             } else if (id == R.id.nav_favorites) {
                 fragment = new FavoritesFragment();
             } else if (id == R.id.nav_messages) {
