@@ -172,9 +172,15 @@
     <string name="rooms_count">عدد الغرف</string>
     <string name="show_results">عرض النتائج</string>
     <string name="reset_filters">إعادة ضبط الفلاتر</string>
+    <string name="price_range">نطاق السعر</string>
+    <string name="price_from">من</string>
+    <string name="price_to">إلى</string>
+    <string name="area_min">المساحة (م²)</string>
 
     <!-- Search -->
+    <string name="search_results">نتائج البحث</string>
     <string name="search_results_count">%d نتيجة</string>
+    <string name="all_governorates">كل المحافظات</string>
 
     <!-- Profile -->
     <string name="profile_properties">العقارات</string>

@@ -167,4 +167,9 @@
         <item name="contentPadding">0dp</item>
     </style>
 
+    <style name="BottomNavText">
+        <item name="android:textSize">11sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
 </resources>

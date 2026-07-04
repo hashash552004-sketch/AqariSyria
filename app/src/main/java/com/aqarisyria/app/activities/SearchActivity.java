@@ -1,26 +1,16 @@
 package com.aqarisyria.app.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 import com.aqarisyria.app.R;
-import com.aqarisyria.app.adapters.PropertyAdapter;
 import com.aqarisyria.app.databinding.ActivitySearchBinding;
-import com.aqarisyria.app.models.Property;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SearchActivity extends AppCompatActivity {
 
     private ActivitySearchBinding binding;
-    private FirebaseFirestore db;
-    private PropertyAdapter adapter;
-    private List<Property> resultList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,20 +18,27 @@ public class SearchActivity extends AppCompatActivity {
         binding = ActivitySearchBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        db = FirebaseFirestore.getInstance();
         binding.btnBack.setOnClickListener(v -> finish());
 
-        adapter = new PropertyAdapter(resultList, this);
-        binding.rvResults.setLayoutManager(new LinearLayoutManager(this));
-        binding.rvResults.setAdapter(adapter);
-
         setupGovernorateDropdown();
-        setupChips();
-        setupSearchButton();
         setupSearchInput();
+        setupSearchButton();
+        setupChips();
 
         binding.chipAll.setChecked(true);
         binding.chipTypeAll.setChecked(true);
+
+        String incomingType = getIntent().getStringExtra("type");
+        if (incomingType != null) {
+            switch (incomingType) {
+                case "apartment": binding.chipApartment.setChecked(true); break;
+                case "villa": binding.chipVilla.setChecked(true); break;
+                case "house": binding.chipHouse.setChecked(true); break;
+                case "land": binding.chipLand.setChecked(true); break;
+                case "shop": binding.chipShop.setChecked(true); break;
+                case "warehouse": binding.chipWarehouse.setChecked(true); break;
+            }
+        }
     }
 
     private void setupGovernorateDropdown() {
@@ -54,25 +51,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void setupChips() {
-        binding.chipAll.setOnCheckedChangeListener((button, isChecked) -> {
-            if (isChecked) clearOperationChips();
-        });
-        binding.chipSell.setOnCheckedChangeListener((button, isChecked) -> {
-            if (isChecked) clearOperationChips();
-        });
-        binding.chipRent.setOnCheckedChangeListener((button, isChecked) -> {
-            if (isChecked) clearOperationChips();
-        });
-        binding.chipInvest.setOnCheckedChangeListener((button, isChecked) -> {
-            if (isChecked) clearOperationChips();
-        });
-    }
-
-    private void clearOperationChips() {
-        if (!binding.chipAll.isChecked()) binding.chipAll.setChecked(false);
-        if (!binding.chipSell.isChecked()) binding.chipSell.setChecked(false);
-        if (!binding.chipRent.isChecked()) binding.chipRent.setChecked(false);
-        if (!binding.chipInvest.isChecked()) binding.chipInvest.setChecked(false);
+        // Single selection handles itself, no need for clearOperationChips
     }
 
     private void setupSearchInput() {
@@ -94,11 +73,14 @@ public class SearchActivity extends AppCompatActivity {
         else if (binding.chipInvest.isChecked()) operation = "invest";
 
         String governorate = binding.etGovernorate.getText().toString().trim();
-        if (governorate.equals("كل المحافظات")) governorate = "";
+        if (governorate.equals(getString(R.string.all_governorates))) governorate = "";
         String type = "";
         if (binding.chipApartment.isChecked()) type = "apartment";
         else if (binding.chipVilla.isChecked()) type = "villa";
         else if (binding.chipLand.isChecked()) type = "land";
+        else if (binding.chipHouse.isChecked()) type = "house";
+        else if (binding.chipShop.isChecked()) type = "shop";
+        else if (binding.chipWarehouse.isChecked()) type = "warehouse";
 
         String minPriceStr = binding.etMinPrice.getText().toString().trim();
         String maxPriceStr = binding.etMaxPrice.getText().toString().trim();
@@ -113,65 +95,15 @@ public class SearchActivity extends AppCompatActivity {
         try { if (!roomsStr.isEmpty()) rooms = Integer.parseInt(roomsStr); } catch (NumberFormatException ignored) {}
         try { if (!minAreaStr.isEmpty()) minArea = Double.parseDouble(minAreaStr); } catch (NumberFormatException ignored) {}
 
-        loadFilteredProperties(searchText, operation, governorate, type, minPrice, maxPrice, rooms, minArea);
-    }
-
-    private void loadFilteredProperties(String searchText, String operation, String governorate,
-                                         String type, double minPrice, double maxPrice,
-                                         int rooms, double minArea) {
-        binding.progressBar.setVisibility(View.VISIBLE);
-        binding.rvResults.setVisibility(View.GONE);
-        binding.tvEmpty.setVisibility(View.GONE);
-        binding.tvResultCount.setVisibility(View.GONE);
-
-        Query query = db.collection("properties").whereEqualTo("active", true);
-
-        if (!TextUtils.isEmpty(operation))
-            query = query.whereEqualTo("operationType", operation);
-        if (!TextUtils.isEmpty(governorate))
-            query = query.whereEqualTo("governorate", governorate);
-        if (!TextUtils.isEmpty(type))
-            query = query.whereEqualTo("type", type);
-
-        query.limit(50)
-            .get()
-            .addOnSuccessListener(snapshot -> {
-                if (isFinishing() || isDestroyed()) return;
-                resultList.clear();
-                for (var doc : snapshot.getDocuments()) {
-                    Property p = doc.toObject(Property.class);
-                    if (p != null) {
-                        p.setId(doc.getId());
-
-                        boolean matchesSearch = searchText.isEmpty() ||
-                            (p.getTitle() != null && p.getTitle().toLowerCase().contains(searchText)) ||
-                            (p.getDescription() != null && p.getDescription().toLowerCase().contains(searchText)) ||
-                            (p.getLocationString() != null && p.getLocationString().toLowerCase().contains(searchText));
-
-                        boolean matchesPrice = p.getPrice() >= minPrice && p.getPrice() <= maxPrice;
-                        boolean matchesArea = p.getArea() >= minArea;
-                        boolean matchesRooms = rooms == 0 || (rooms == 5 ? p.getRooms() >= 5 : p.getRooms() == rooms);
-
-                        if (matchesSearch && matchesPrice && matchesArea && matchesRooms) {
-                            resultList.add(p);
-                        }
-                    }
-                }
-                adapter.notifyDataSetChanged();
-                binding.progressBar.setVisibility(View.GONE);
-
-                if (resultList.isEmpty()) {
-                    binding.tvEmpty.setVisibility(View.VISIBLE);
-                } else {
-                    binding.rvResults.setVisibility(View.VISIBLE);
-                    binding.tvResultCount.setVisibility(View.VISIBLE);
-                    binding.tvResultCount.setText(getString(R.string.search_results_count, resultList.size()));
-                }
-            })
-            .addOnFailureListener(e -> {
-                if (isFinishing() || isDestroyed()) return;
-                binding.progressBar.setVisibility(View.GONE);
-                binding.tvEmpty.setVisibility(View.VISIBLE);
-            });
+        Intent intent = new Intent(this, SearchResultsActivity.class);
+        intent.putExtra("query", searchText);
+        intent.putExtra("operation", operation);
+        intent.putExtra("governorate", governorate);
+        intent.putExtra("type", type);
+        intent.putExtra("minPrice", minPrice);
+        intent.putExtra("maxPrice", maxPrice);
+        intent.putExtra("rooms", rooms);
+        intent.putExtra("minArea", minArea);
+        startActivity(intent);
     }
 }

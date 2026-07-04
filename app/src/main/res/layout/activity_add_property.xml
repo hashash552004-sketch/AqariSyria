@@ -676,15 +676,19 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:hint="@string/governorate"
-                        app:endIconMode="none">
+                        app:startIconDrawable="@drawable/ic_location"
+                        app:startIconTint="@color/text_hint"
+                        app:endIconMode="dropdown_menu">
 
-                        <com.google.android.material.textfield.TextInputEditText
+                        <AutoCompleteTextView
                             android:id="@+id/etCity"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
                             android:maxLines="1"
-                            android:fontFamily="sans-serif-medium" />
+                            android:fontFamily="sans-serif-medium"
+                            android:focusable="false"
+                            android:clickable="true" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 

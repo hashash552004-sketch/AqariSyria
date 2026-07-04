@@ -42,6 +42,7 @@
 
         <!-- Search -->
         <activity android:name=".activities.SearchActivity" android:exported="false"/>
+        <activity android:name=".activities.SearchResultsActivity" android:exported="false"/>
 
         <!-- Favorites -->
         <activity android:name=".activities.FavoritesActivity" android:exported="false"/>

@@ -115,12 +115,7 @@ public class SearchFragment extends Fragment {
             query = query.whereEqualTo("operationType", currentFilter);
         }
 
-        if (!currentQuery.isEmpty()) {
-            query = query.orderBy("title")
-                .startAt(currentQuery)
-                .endAt(currentQuery + "\uf8ff");
-        }
-
+        String queryText = currentQuery.toLowerCase();
         searchListener = query.limit(50).addSnapshotListener((snapshot, error) -> {
             if (error != null) {
                 binding.progressSearch.setVisibility(View.GONE);
@@ -134,7 +129,12 @@ public class SearchFragment extends Fragment {
                 Property p = doc.toObject(Property.class);
                 if (p != null) {
                     p.setId(doc.getId());
-                    propertyList.add(p);
+                    if (queryText.isEmpty() ||
+                        (p.getTitle() != null && p.getTitle().toLowerCase().contains(queryText)) ||
+                        (p.getDescription() != null && p.getDescription().toLowerCase().contains(queryText)) ||
+                        (p.getLocationString() != null && p.getLocationString().toLowerCase().contains(queryText))) {
+                        propertyList.add(p);
+                    }
                 }
             }
             adapter.notifyDataSetChanged();

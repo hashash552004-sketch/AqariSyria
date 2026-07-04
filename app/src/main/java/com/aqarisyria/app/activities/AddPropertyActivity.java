@@ -8,7 +8,9 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
+import android.widget.Gravity;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -111,6 +113,16 @@ public class AddPropertyActivity extends AppCompatActivity {
         binding.btnNext.setOnClickListener(v -> handleNext());
         binding.btnAddImage.setOnClickListener(v -> pickImages());
         setupCounters();
+        setupGovernorateDropdown();
+    }
+
+    private void setupGovernorateDropdown() {
+        String[] governorates = getResources().getStringArray(R.array.governorates);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+            android.R.layout.simple_dropdown_item_1line, governorates);
+        binding.etCity.setAdapter(adapter);
+        binding.etCity.setOnItemClickListener((parent, view, position, id) ->
+            binding.tilCity.setHintEnabled(false));
     }
 
     private void setupCounters() {
