@@ -11,15 +11,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary"
-        android:translationZ="4dp"
+        android:translationZ="6dp"
         app:elevation="0dp">
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingHorizontal="20dp"
-            android:paddingTop="32dp"
-            android:paddingBottom="12dp">
+            android:paddingTop="36dp"
+            android:paddingBottom="20dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -44,7 +44,8 @@
                             android:text="@string/home_user_greeting"
                             android:textColor="#B3ffffff"
                             android:textSize="13sp"
-                            android:fontFamily="sans-serif-medium"/>
+                            android:fontFamily="sans-serif-medium"
+                            android:letterSpacing="0.02"/>
 
                         <TextView
                             android:id="@+id/tvUserName"
@@ -52,7 +53,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/app_name"
                             android:textColor="@color/text_white"
-                            android:textSize="22sp"
+                            android:textSize="24sp"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-medium"
                             android:layout_marginTop="2dp"/>
@@ -74,16 +75,53 @@
 
                         <View
                             android:id="@+id/badgeDot"
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
                             android:layout_gravity="top|end"
-                            android:layout_marginTop="4dp"
-                            android:layout_marginEnd="2dp"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginEnd="4dp"
                             android:background="@drawable/bg_notification_badge"
                             android:visibility="gone"/>
                     </FrameLayout>
                 </LinearLayout>
 
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/searchBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#1AFFFFFF"
+                    app:strokeWidth="0dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="16dp"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_search"
+                            android:tint="#B3ffffff"/>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/search_hint_home"
+                            android:textColor="#B3ffffff"
+                            android:textSize="14sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:layout_marginStart="12dp"/>
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
@@ -103,25 +141,34 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="16dp">
+                android:paddingBottom="24dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/browse_categories"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:fontFamily="sans-serif-medium"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:paddingHorizontal="20dp"
-                    android:paddingTop="20dp"
-                    android:paddingBottom="12dp"/>
+                    android:paddingTop="24dp"
+                    android:paddingBottom="4dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/browse_categories"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
 
                 <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scrollbars="none"
                     android:paddingStart="20dp"
+                    android:paddingTop="8dp"
                     android:clipToPadding="false">
 
                     <com.google.android.material.chip.ChipGroup
@@ -129,7 +176,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         app:singleSelection="true"
-                        app:chipSpacing="8dp"
+                        app:chipSpacing="10dp"
                         app:selectionRequired="false">
 
                         <com.google.android.material.chip.Chip
@@ -138,12 +185,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/category_apartment"
+                            android:textSize="13sp"
                             app:chipIcon="@drawable/ic_apartment"
-                            app:iconStartPadding="4dp"
+                            app:iconStartPadding="6dp"
+                            app:iconEndPadding="4dp"
                             app:chipIconTint="@color/primary"
-                            app:chipBackgroundColor="@color/primary_light"
+                            app:chipBackgroundColor="@color/accent_container"
                             app:chipStrokeWidth="0dp"
-                            app:chipCornerRadius="24dp"
+                            app:chipCornerRadius="16dp"
+                            app:chipMinHeight="40dp"
                             app:checkedIconVisible="false"/>
 
                         <com.google.android.material.chip.Chip
@@ -152,12 +202,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/category_villa"
+                            android:textSize="13sp"
                             app:chipIcon="@drawable/ic_villa"
-                            app:iconStartPadding="4dp"
+                            app:iconStartPadding="6dp"
+                            app:iconEndPadding="4dp"
                             app:chipIconTint="@color/primary"
-                            app:chipBackgroundColor="@color/primary_light"
+                            app:chipBackgroundColor="@color/accent_container"
                             app:chipStrokeWidth="0dp"
-                            app:chipCornerRadius="24dp"
+                            app:chipCornerRadius="16dp"
+                            app:chipMinHeight="40dp"
                             app:checkedIconVisible="false"/>
 
                         <com.google.android.material.chip.Chip
@@ -166,12 +219,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/category_house"
+                            android:textSize="13sp"
                             app:chipIcon="@drawable/ic_home"
-                            app:iconStartPadding="4dp"
+                            app:iconStartPadding="6dp"
+                            app:iconEndPadding="4dp"
                             app:chipIconTint="@color/primary"
-                            app:chipBackgroundColor="@color/primary_light"
+                            app:chipBackgroundColor="@color/accent_container"
                             app:chipStrokeWidth="0dp"
-                            app:chipCornerRadius="24dp"
+                            app:chipCornerRadius="16dp"
+                            app:chipMinHeight="40dp"
                             app:checkedIconVisible="false"/>
 
                         <com.google.android.material.chip.Chip
@@ -180,12 +236,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/category_land"
+                            android:textSize="13sp"
                             app:chipIcon="@drawable/ic_land"
-                            app:iconStartPadding="4dp"
+                            app:iconStartPadding="6dp"
+                            app:iconEndPadding="4dp"
                             app:chipIconTint="@color/primary"
-                            app:chipBackgroundColor="@color/primary_light"
+                            app:chipBackgroundColor="@color/accent_container"
                             app:chipStrokeWidth="0dp"
-                            app:chipCornerRadius="24dp"
+                            app:chipCornerRadius="16dp"
+                            app:chipMinHeight="40dp"
                             app:checkedIconVisible="false"/>
 
                         <com.google.android.material.chip.Chip
@@ -194,12 +253,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/category_shop"
+                            android:textSize="13sp"
                             app:chipIcon="@drawable/ic_shop"
-                            app:iconStartPadding="4dp"
+                            app:iconStartPadding="6dp"
+                            app:iconEndPadding="4dp"
                             app:chipIconTint="@color/primary"
-                            app:chipBackgroundColor="@color/primary_light"
+                            app:chipBackgroundColor="@color/accent_container"
                             app:chipStrokeWidth="0dp"
-                            app:chipCornerRadius="24dp"
+                            app:chipCornerRadius="16dp"
+                            app:chipMinHeight="40dp"
                             app:checkedIconVisible="false"/>
 
                         <com.google.android.material.chip.Chip
@@ -208,12 +270,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/category_warehouse"
+                            android:textSize="13sp"
                             app:chipIcon="@drawable/ic_warehouse"
-                            app:iconStartPadding="4dp"
+                            app:iconStartPadding="6dp"
+                            app:iconEndPadding="4dp"
                             app:chipIconTint="@color/primary"
-                            app:chipBackgroundColor="@color/primary_light"
+                            app:chipBackgroundColor="@color/accent_container"
                             app:chipStrokeWidth="0dp"
-                            app:chipCornerRadius="24dp"
+                            app:chipCornerRadius="16dp"
+                            app:chipMinHeight="40dp"
                             app:checkedIconVisible="false"/>
                     </com.google.android.material.chip.ChipGroup>
                 </HorizontalScrollView>
@@ -225,7 +290,7 @@
                     android:gravity="center_vertical"
                     android:paddingHorizontal="20dp"
                     android:paddingTop="24dp"
-                    android:paddingBottom="8dp">
+                    android:paddingBottom="4dp">
 
                     <TextView
                         android:layout_width="0dp"
@@ -260,8 +325,8 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvFeatured"
                     android:layout_width="match_parent"
-                    android:layout_height="300dp"
-                    android:layout_marginTop="4dp"
+                    android:layout_height="320dp"
+                    android:layout_marginTop="8dp"
                     android:clipToPadding="false"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
@@ -273,8 +338,8 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:paddingHorizontal="20dp"
-                    android:paddingTop="20dp"
-                    android:paddingBottom="8dp">
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp">
 
                     <TextView
                         android:layout_width="0dp"
@@ -323,7 +388,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false"
-                    android:paddingHorizontal="16dp"
                     android:paddingBottom="16dp"/>
 
             </LinearLayout>

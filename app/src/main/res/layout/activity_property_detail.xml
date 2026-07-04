@@ -111,9 +111,10 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/CardStyle"
                 android:layout_marginHorizontal="16dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="28dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/surface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -133,7 +134,7 @@
                             android:layout_height="wrap_content"
                             android:paddingHorizontal="12dp"
                             android:paddingVertical="4dp"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-medium"
                             android:background="@drawable/bg_tag_sell" />
@@ -145,7 +146,7 @@
                             android:layout_marginStart="8dp"
                             android:paddingHorizontal="12dp"
                             android:paddingVertical="4dp"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-medium"
                             android:background="@drawable/bg_tag_rent"
@@ -805,9 +806,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        app:cardElevation="8dp"
+        app:cardElevation="12dp"
         app:cardCornerRadius="0dp"
-        android:elevation="8dp">
+        android:elevation="12dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -815,20 +816,20 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="10dp"
-            android:paddingBottom="10dp">
+            android:paddingVertical="12dp"
+            android:paddingBottom="12dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnMessage"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="52dp"
+                android:layout_height="54dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="10dp"
                 app:icon="@drawable/ic_message"
                 app:iconSize="24dp"
                 app:iconTint="@color/primary"
-                app:cornerRadius="12dp"
+                app:cornerRadius="16dp"
                 app:strokeColor="@color/primary"
                 app:strokeWidth="1.5dp" />
 
@@ -836,16 +837,15 @@
                 android:id="@+id/btnWhatsapp"
                 style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="0dp"
-                android:layout_height="52dp"
+                android:layout_height="54dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/whatsapp"
-                app:icon="@drawable/ic_share"
+                app:icon="@drawable/ic_phone"
                 app:iconSize="24dp"
                 app:iconTint="@color/text_white"
-                app:cornerRadius="12dp" />
+                app:cornerRadius="16dp" />
 
         </LinearLayout>
-
     </com.google.android.material.card.MaterialCardView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

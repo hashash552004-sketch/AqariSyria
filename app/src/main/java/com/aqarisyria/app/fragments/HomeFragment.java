@@ -50,6 +50,10 @@ public class HomeFragment extends Fragment {
         loadFeaturedProperties();
         loadRecentProperties();
 
+        binding.searchBar.setOnClickListener(v -> {
+            if (isAdded()) startActivity(new Intent(getActivity(), SearchActivity.class));
+        });
+
         binding.tvShowAllFeatured.setOnClickListener(v -> {
             if (isAdded()) startActivity(new Intent(getActivity(), SearchActivity.class));
         });
