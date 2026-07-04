@@ -10,7 +10,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
-import android.widget.Gravity;
+import android.view.Gravity;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
