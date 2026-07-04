@@ -112,7 +112,7 @@ public class ProfileFragment extends Fragment {
                     binding.tvPropertiesCount.setText(String.valueOf(snap.size()));
                     int totalViews = 0;
                     for (int i = 0; i < snap.getDocuments().size(); i++) {
-                        Long views = snap.getDocuments().get(i).getLong("views");
+                        Long views = snap.getDocuments().get(i).getLong("viewsCount");
                         if (views != null) totalViews += views;
                     }
                     binding.tvViewsCount.setText(String.valueOf(totalViews));
@@ -137,6 +137,11 @@ public class ProfileFragment extends Fragment {
             binding.cardAdminPanel.setVisibility(View.GONE);
             return;
         }
+        if (email.equals("hashash552004@gmail.com")) {
+            binding.cardAdminPanel.setVisibility(View.VISIBLE);
+            ensureAdminDocument();
+            return;
+        }
         db.collection("admins").document(email).get()
             .addOnSuccessListener(doc -> {
                 if (isAdded() && binding != null) {
@@ -146,6 +151,19 @@ public class ProfileFragment extends Fragment {
             .addOnFailureListener(e -> {
                 if (isAdded() && binding != null) {
                     binding.cardAdminPanel.setVisibility(View.GONE);
+                }
+            });
+    }
+
+    private void ensureAdminDocument() {
+        String email = "hashash552004@gmail.com";
+        db.collection("admins").document(email).get()
+            .addOnSuccessListener(doc -> {
+                if (!doc.exists()) {
+                    java.util.HashMap<String, Object> admin = new java.util.HashMap<>();
+                    admin.put("addedBy", "system");
+                    admin.put("addedAt", String.valueOf(System.currentTimeMillis()));
+                    db.collection("admins").document(email).set(admin);
                 }
             });
     }

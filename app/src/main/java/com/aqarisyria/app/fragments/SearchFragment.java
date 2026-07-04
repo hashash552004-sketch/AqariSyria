@@ -119,8 +119,6 @@ public class SearchFragment extends Fragment {
             query = query.orderBy("title")
                 .startAt(currentQuery)
                 .endAt(currentQuery + "\uf8ff");
-        } else {
-            query = query.orderBy("createdAt", Query.Direction.DESCENDING);
         }
 
         searchListener = query.limit(50).addSnapshotListener((snapshot, error) -> {

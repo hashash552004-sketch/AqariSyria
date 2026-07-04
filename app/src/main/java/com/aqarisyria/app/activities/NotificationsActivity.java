@@ -10,6 +10,7 @@ import java.util.Date;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.aqarisyria.app.R;
+import com.aqarisyria.app.activities.PropertyDetailActivity;
 import com.aqarisyria.app.adapters.NotificationsAdapter;
 import com.aqarisyria.app.databinding.ActivityNotificationsBinding;
 import com.aqarisyria.app.models.NotificationItem;
@@ -162,31 +163,28 @@ public class NotificationsActivity extends AppCompatActivity {
             case "new_property":
                 if (notification.getTargetId() != null) {
                     Intent propertyIntent = new Intent(this, PropertyDetailActivity.class);
-                    propertyIntent.putExtra("propertyId", notification.getTargetId());
+                    propertyIntent.putExtra(PropertyDetailActivity.EXTRA_PROPERTY_ID, notification.getTargetId());
                     startActivity(propertyIntent);
                 }
                 break;
             case "message":
-                if (notification.getTargetId() != null) {
+                if (notification.getSenderId() != null) {
                     Intent chatIntent = new Intent(this, ChatActivity.class);
-                    chatIntent.putExtra("conversationId", notification.getTargetId());
-                    if (notification.getSenderId() != null) {
-                        chatIntent.putExtra("otherUserId", notification.getSenderId());
-                    }
+                    chatIntent.putExtra("ownerId", notification.getSenderId());
                     startActivity(chatIntent);
                 }
                 break;
             case "favorite":
                 if (notification.getTargetId() != null) {
                     Intent propertyIntent = new Intent(this, PropertyDetailActivity.class);
-                    propertyIntent.putExtra("propertyId", notification.getTargetId());
+                    propertyIntent.putExtra(PropertyDetailActivity.EXTRA_PROPERTY_ID, notification.getTargetId());
                     startActivity(propertyIntent);
                 }
                 break;
             case "review":
                 if (notification.getTargetId() != null) {
                     Intent propertyIntent = new Intent(this, PropertyDetailActivity.class);
-                    propertyIntent.putExtra("propertyId", notification.getTargetId());
+                    propertyIntent.putExtra(PropertyDetailActivity.EXTRA_PROPERTY_ID, notification.getTargetId());
                     startActivity(propertyIntent);
                 }
                 break;

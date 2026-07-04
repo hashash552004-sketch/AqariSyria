@@ -74,7 +74,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
         binding.btnWhatsapp.setOnClickListener(v -> openWhatsApp());
         binding.btnCallOwner.setOnClickListener(v -> callOwner());
         binding.btnWhatsappOwner.setOnClickListener(v -> openWhatsApp());
-        binding.btnMessage.setOnClickListener(v -> callOwner());
+        binding.btnMessage.setOnClickListener(v -> openMessages());
         binding.btnDeleteProperty.setOnClickListener(v -> deleteProperty());
         binding.btnOpenMap.setOnClickListener(v -> openMap());
         binding.btnOpenMapFull.setOnClickListener(v -> openMap());
@@ -267,12 +267,11 @@ public class PropertyDetailActivity extends AppCompatActivity {
 
     private void openMessages() {
         if (property == null) return;
-        Intent intent = new Intent(PropertyDetailActivity.this, com.aqarisyria.app.activities.MainActivity.class);
-        intent.putExtra("openTab", "messages");
-        intent.putExtra("propertyId", property.getId());
+        Intent intent = new Intent(PropertyDetailActivity.this, ChatActivity.class);
         intent.putExtra("ownerId", property.getOwnerId());
         intent.putExtra("ownerName", property.getOwnerName());
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("ownerPhone", property.getOwnerPhone());
+        intent.putExtra("propertyId", property.getId());
         startActivity(intent);
     }
 

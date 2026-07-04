@@ -15,6 +15,9 @@ import com.aqarisyria.app.fragments.FavoritesFragment;
 import com.aqarisyria.app.fragments.MessagesFragment;
 import com.aqarisyria.app.fragments.ProfileFragment;
 import com.aqarisyria.app.utils.UpdateChecker;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,8 +37,27 @@ public class MainActivity extends AppCompatActivity {
             loadFragment(new HomeFragment());
         }
 
+        ensureAdmin();
+
         binding.fabAddProperty.setOnClickListener(v ->
             startActivity(new Intent(this, AddPropertyActivity.class)));
+    }
+
+    private void ensureAdmin() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) return;
+        String email = auth.getCurrentUser().getEmail();
+        if (email == null || !email.equals("hashash552004@gmail.com")) return;
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("admins").document(email).get()
+            .addOnSuccessListener(doc -> {
+                if (!doc.exists()) {
+                    HashMap<String, Object> admin = new HashMap<>();
+                    admin.put("addedBy", "system");
+                    admin.put("addedAt", String.valueOf(System.currentTimeMillis()));
+                    db.collection("admins").document(email).set(admin);
+                }
+            });
     }
 
     private void setupBottomNavigation() {

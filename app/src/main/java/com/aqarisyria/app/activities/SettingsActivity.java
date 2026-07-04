@@ -317,7 +317,13 @@ public class SettingsActivity extends AppCompatActivity {
     private void reAuthAndDelete(FirebaseUser firebaseUser, String password) {
         binding.progressBar.setVisibility(View.VISIBLE);
 
-        AuthCredential credential = EmailAuthProvider.getCredential(firebaseUser.getEmail(), password);
+        String email = firebaseUser.getEmail();
+        if (email == null) {
+            binding.progressBar.setVisibility(View.GONE);
+            DialogUtil.showError(this, R.string.error_general);
+            return;
+        }
+        AuthCredential credential = EmailAuthProvider.getCredential(email, password);
         firebaseUser.reauthenticate(credential)
             .addOnSuccessListener(unused -> deleteAccount(firebaseUser))
             .addOnFailureListener(e -> {

@@ -194,6 +194,8 @@ public class Property {
     }
 
     public String getLocationString() {
-        return governorate + " - " + region;
+        String g = governorate != null ? governorate : "";
+        String r = region != null ? region : "";
+        return g + " - " + r;
     }
 }

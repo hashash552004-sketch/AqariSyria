@@ -105,10 +105,13 @@ public class SearchActivity extends AppCompatActivity {
         String roomsStr = binding.etRooms.getText().toString().trim();
         String minAreaStr = binding.etMinArea.getText().toString().trim();
 
-        double minPrice = minPriceStr.isEmpty() ? 0 : Double.parseDouble(minPriceStr);
-        double maxPrice = maxPriceStr.isEmpty() ? Double.MAX_VALUE : Double.parseDouble(maxPriceStr);
-        int rooms = roomsStr.isEmpty() ? 0 : Integer.parseInt(roomsStr);
-        double minArea = minAreaStr.isEmpty() ? 0 : Double.parseDouble(minAreaStr);
+        double minPrice = 0, maxPrice = Double.MAX_VALUE;
+        int rooms = 0;
+        double minArea = 0;
+        try { if (!minPriceStr.isEmpty()) minPrice = Double.parseDouble(minPriceStr); } catch (NumberFormatException ignored) {}
+        try { if (!maxPriceStr.isEmpty()) maxPrice = Double.parseDouble(maxPriceStr); } catch (NumberFormatException ignored) {}
+        try { if (!roomsStr.isEmpty()) rooms = Integer.parseInt(roomsStr); } catch (NumberFormatException ignored) {}
+        try { if (!minAreaStr.isEmpty()) minArea = Double.parseDouble(minAreaStr); } catch (NumberFormatException ignored) {}
 
         loadFilteredProperties(searchText, operation, governorate, type, minPrice, maxPrice, rooms, minArea);
     }
@@ -130,7 +133,7 @@ public class SearchActivity extends AppCompatActivity {
         if (!TextUtils.isEmpty(type))
             query = query.whereEqualTo("type", type);
 
-        query.orderBy("createdAt", Query.Direction.DESCENDING).limit(50)
+        query.limit(50)
             .get()
             .addOnSuccessListener(snapshot -> {
                 if (isFinishing() || isDestroyed()) return;

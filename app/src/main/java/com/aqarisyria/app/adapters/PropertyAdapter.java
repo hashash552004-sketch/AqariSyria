@@ -192,14 +192,12 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
                 android.graphics.Color.parseColor("#F44336"),
                 android.graphics.PorterDuff.Mode.SRC_IN
             );
-            holder.binding.ivFavorite.getBackground().setTint(android.graphics.Color.WHITE);
         } else {
             holder.binding.ivFavorite.setImageResource(R.drawable.ic_favorite_border);
             holder.binding.ivFavorite.setColorFilter(
                 android.graphics.Color.WHITE,
                 android.graphics.PorterDuff.Mode.SRC_IN
             );
-            holder.binding.ivFavorite.getBackground().setTint(android.graphics.Color.WHITE);
         }
     }
 

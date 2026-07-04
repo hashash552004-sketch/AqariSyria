@@ -165,7 +165,6 @@ public class HomeFragment extends Fragment {
         binding.progressRecent.setVisibility(View.VISIBLE);
         recentListener = db.collection("properties")
             .whereEqualTo("active", true)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(20)
             .addSnapshotListener((snapshot, error) -> {
                 if (error != null) {

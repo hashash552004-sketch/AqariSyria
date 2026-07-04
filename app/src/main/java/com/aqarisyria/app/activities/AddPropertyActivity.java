@@ -32,6 +32,7 @@ import com.aqarisyria.app.utils.ImageUploader;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class AddPropertyActivity extends AppCompatActivity {
@@ -211,7 +212,13 @@ public class AddPropertyActivity extends AppCompatActivity {
                 }
 
                 String priceStr = binding.etPrice.getText().toString().trim();
-                if (priceStr.isEmpty() || Double.parseDouble(priceStr) <= 0) {
+                try {
+                    if (priceStr.isEmpty() || Double.parseDouble(priceStr) <= 0) {
+                        binding.tilPrice.setError(getString(R.string.error_price_positive));
+                        binding.etPrice.requestFocus();
+                        return false;
+                    }
+                } catch (NumberFormatException e) {
                     binding.tilPrice.setError(getString(R.string.error_price_positive));
                     binding.etPrice.requestFocus();
                     return false;
@@ -221,7 +228,13 @@ public class AddPropertyActivity extends AppCompatActivity {
 
             case 2:
                 String areaStr = binding.etArea.getText().toString().trim();
-                if (areaStr.isEmpty() || Double.parseDouble(areaStr) <= 0) {
+                try {
+                    if (areaStr.isEmpty() || Double.parseDouble(areaStr) <= 0) {
+                        binding.tilArea.setError(getString(R.string.error_area_positive));
+                        binding.etArea.requestFocus();
+                        return false;
+                    }
+                } catch (NumberFormatException e) {
                     binding.tilArea.setError(getString(R.string.error_area_positive));
                     binding.etArea.requestFocus();
                     return false;
@@ -567,6 +580,7 @@ public class AddPropertyActivity extends AppCompatActivity {
         prop.setHasGas(hasGas);
         prop.setFurnished(isFurnished);
         prop.setActive(true);
+        prop.setCreatedAt(new Date());
 
         db.collection("properties").add(prop)
             .addOnSuccessListener(ref -> {

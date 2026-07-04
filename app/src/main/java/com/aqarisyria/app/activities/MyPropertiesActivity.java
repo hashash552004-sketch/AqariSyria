@@ -45,7 +45,6 @@ public class MyPropertiesActivity extends AppCompatActivity {
         binding.progressBar.setVisibility(View.VISIBLE);
         db.collection("properties")
             .whereEqualTo("ownerId", uid)
-            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener(snapshot -> {
                 binding.progressBar.setVisibility(View.GONE);
