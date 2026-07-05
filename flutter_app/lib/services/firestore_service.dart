@@ -4,6 +4,7 @@ import '../models/user.dart';
 import '../models/chat.dart';
 import '../models/report.dart';
 import '../models/app_settings.dart';
+import '../models/notification.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -110,14 +111,34 @@ class FirestoreService {
             ?.map((e) => e.toString())
             .toList() ??
         <String>[];
-    if (current.contains(propertyId)) {
-      current.remove(propertyId);
-    } else {
+    final isAdding = !current.contains(propertyId);
+    if (isAdding) {
       current.add(propertyId);
+    } else {
+      current.remove(propertyId);
     }
     await _firestore.collection('users').doc(uid).update({
       'favorites': current,
     });
+
+    if (isAdding) {
+      final propDoc = await _firestore.collection('properties').doc(propertyId).get();
+      if (propDoc.exists) {
+        final ownerId = propDoc.data()?['ownerId']?.toString() ?? '';
+        if (ownerId.isNotEmpty && ownerId != uid) {
+          final userName = await getUserName(uid);
+          final title = await getPropertyTitle(propertyId);
+          await createNotification(
+            userId: ownerId,
+            type: 'property',
+            title: 'إضافة للمفضلة',
+            message: 'أضاف ${userName ?? 'مستخدم'} عقارك "${title ?? propertyId}" إلى المفضلة',
+            targetId: propertyId,
+            senderId: uid,
+          );
+        }
+      }
+    }
   }
 
   Future<void> deleteProperty(String propertyId) async {
@@ -267,6 +288,24 @@ class FirestoreService {
       'lastMessage': message,
       'lastMessageTime': FieldValue.serverTimestamp(),
     });
+
+    final convDoc = await _firestore.collection('conversations').doc(conversationId).get();
+    final convData = convDoc.data();
+    if (convData != null) {
+      final ownerId = convData['ownerId']?.toString() ?? '';
+      final interestedUserId = convData['interestedUserId']?.toString() ?? '';
+      final recipientId = senderId == ownerId ? interestedUserId : ownerId;
+      if (recipientId.isNotEmpty && recipientId != senderId) {
+        await createNotification(
+          userId: recipientId,
+          type: 'message',
+          title: 'رسالة جديدة',
+          message: 'لديك رسالة جديدة من $senderName',
+          targetId: conversationId,
+          senderId: senderId,
+        );
+      }
+    }
   }
 
   Stream<List<ChatMessage>> streamMessages(String conversationId) {
@@ -328,6 +367,44 @@ class FirestoreService {
 
   // ---- Notification Methods ----
 
+  Future<void> createNotification({
+    required String userId,
+    required String type,
+    required String title,
+    required String message,
+    String? targetId,
+    String? senderId,
+  }) async {
+    await _firestore.collection('notifications').add({
+      'userId': userId,
+      'type': type,
+      'title': title,
+      'message': message,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+      'targetId': targetId,
+      'senderId': senderId,
+    });
+  }
+
+  Future<int> getUnreadNotificationCount(String userId) async {
+    final snapshot = await _firestore
+        .collection('notifications')
+        .where('userId', isEqualTo: userId)
+        .where('isRead', isEqualTo: false)
+        .get();
+    return snapshot.docs.length;
+  }
+
+  Stream<int> streamUnreadNotificationCount(String userId) {
+    return streamUserNotifications(userId).map((snapshot) {
+      return snapshot.docs.where((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data['isRead'] != true;
+      }).length;
+    });
+  }
+
   Stream<QuerySnapshot> streamUserNotifications(String userId) {
     return _firestore
         .collection('notifications')
@@ -382,6 +459,22 @@ class FirestoreService {
       'createdAt': FieldValue.serverTimestamp(),
       'status': 'pending',
     });
+
+    final allUsersSnapshot = await _firestore.collection('users').get();
+    final adminSnapshot = allUsersSnapshot.docs.where((doc) {
+      final role = doc.data()['role']?.toString() ?? '';
+      return role == 'admin' || role == 'moderator';
+    });
+    for (final adminDoc in adminSnapshot) {
+      await createNotification(
+        userId: adminDoc.id,
+        type: 'system',
+        title: 'بلاغ جديد',
+        message: 'تم تقديم بلاغ جديد عن عقار: $reason',
+        targetId: propertyId,
+        senderId: reportedBy,
+      );
+    }
   }
 
   Stream<List<Report>> streamReports() {
@@ -400,9 +493,25 @@ class FirestoreService {
   }
 
   Future<void> resolveReport(String reportId) async {
+    final reportDoc = await _firestore.collection('reports').doc(reportId).get();
+    if (!reportDoc.exists) return;
+    final reportedBy = reportDoc.data()?['reportedBy']?.toString() ?? '';
+    final propertyId = reportDoc.data()?['propertyId']?.toString() ?? '';
+
     await _firestore.collection('reports').doc(reportId).update({
       'status': 'resolved',
     });
+
+    if (reportedBy.isNotEmpty) {
+      final title = propertyId.isNotEmpty ? await getPropertyTitle(propertyId) : null;
+      await createNotification(
+        userId: reportedBy,
+        type: 'system',
+        title: 'تم حل البلاغ',
+        message: 'تم حل البلاغ الذي قدمته${title != null ? ' عن "$title"' : ''}',
+        targetId: reportId,
+      );
+    }
   }
 
   // ---- Settings Methods ----

@@ -218,7 +218,7 @@ class _HomeTabState extends State<_HomeTab> {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: _buildPremiumHeader(userName)),
+          SliverToBoxAdapter(child: _buildPremiumHeader(userName, user?.uid ?? '')),
           SliverToBoxAdapter(child: _buildFeaturedSection(firestore)),
           SliverToBoxAdapter(child: _buildCategoryChips()),
           SliverPadding(
@@ -245,7 +245,7 @@ class _HomeTabState extends State<_HomeTab> {
     );
   }
 
-  Widget _buildPremiumHeader(String userName) {
+  Widget _buildPremiumHeader(String userName, String userId) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -288,21 +288,55 @@ class _HomeTabState extends State<_HomeTab> {
                       ),
                     ],
                   ),
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                      ),
-                    ),
+                  StreamBuilder<int>(
+                    stream: context.read<FirestoreService>().streamUnreadNotificationCount(userId),
+                    builder: (context, snapshot) {
+                      final unread = snapshot.data ?? 0;
+                      return Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                        ),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                              ),
+                            ),
+                            if (unread > 0)
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.error,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 1.5),
+                                  ),
+                                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                                  child: Text(
+                                    unread > 99 ? '99+' : '$unread',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
