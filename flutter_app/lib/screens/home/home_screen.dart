@@ -16,6 +16,7 @@ import '../add_property/add_property_screen.dart';
 import '../profile/profile_screen.dart';
 import '../chat/conversations_screen.dart';
 import '../compare/compare_properties_screen.dart';
+import '../notifications/notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -297,7 +298,10 @@ class _HomeTabState extends State<_HomeTab> {
                     ),
                     child: IconButton(
                       icon: Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
-                      onPressed: () {},
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      ),
                     ),
                   ),
                 ],

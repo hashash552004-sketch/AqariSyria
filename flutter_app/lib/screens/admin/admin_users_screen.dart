@@ -17,6 +17,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   final FirestoreService _firestore = FirestoreService();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  int _filterIndex = 0;
 
   @override
   void initState() {
@@ -66,7 +67,24 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 36,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: AppConstants.screenHorizontalPadding,
+              children: [
+                _filterChip('الكل', 0),
+                const SizedBox(width: 8),
+                _filterChip('مدير', 1),
+                const SizedBox(width: 8),
+                _filterChip('مشرف', 2),
+                const SizedBox(width: 8),
+                _filterChip('مستخدم', 3),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           Expanded(
             child: StreamBuilder<List<AppUser>>(
               stream: _firestore.streamUsers(),
@@ -79,6 +97,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 }
 
                 List<AppUser> users = snapshot.data!;
+                if (_filterIndex == 1) {
+                  users = users.where((u) => u.role == 'admin').toList();
+                } else if (_filterIndex == 2) {
+                  users = users.where((u) => u.role == 'moderator').toList();
+                } else if (_filterIndex == 3) {
+                  users = users.where((u) => u.role == 'user').toList();
+                }
                 if (_searchQuery.isNotEmpty) {
                   users = users.where((u) =>
                     u.fullName.toLowerCase().contains(_searchQuery) ||
@@ -106,6 +131,30 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _filterChip(String label, int index) {
+    final selected = _filterIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _filterIndex = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : AppColors.cards,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.labelMedium.copyWith(
+            color: selected ? Colors.white : AppColors.textPrimary,
+            fontSize: 13,
+          ),
+        ),
       ),
     );
   }

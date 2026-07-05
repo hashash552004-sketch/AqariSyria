@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../services/auth_service.dart';
@@ -31,28 +32,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _username = '';
   String? _profileImage;
   bool _loadingRole = true;
+  int _propertyCount = 0;
+  int _favoritesCount = 0;
+  int _totalViews = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadUserRole();
+    _loadUserData();
   }
 
-  Future<void> _loadUserRole() async {
+  Future<void> _loadUserData() async {
     final auth = context.read<AuthService>();
+    final fs = context.read<FirestoreService>();
     final uid = auth.currentUser?.uid;
     if (uid == null) {
       if (mounted) setState(() => _loadingRole = false);
       return;
     }
     try {
-      final userData = await context.read<FirestoreService>().getUser(uid);
+      final userData = await fs.getUser(uid);
+      final props = await FirebaseFirestore.instance
+          .collection('properties')
+          .where('ownerId', isEqualTo: uid)
+          .get();
+      int views = 0;
+      for (final doc in props.docs) {
+        views += (doc.data()['viewsCount'] as num?)?.toInt() ?? 0;
+      }
       if (mounted) {
         setState(() {
           _userRole = userData?.role ?? 'user';
           _username = userData?.username ?? '';
           final img = userData?.profileImage;
           _profileImage = (img != null && img.isNotEmpty) ? img : auth.currentUser?.photoURL;
+          _propertyCount = props.docs.length;
+          _favoritesCount = userData?.favorites.length ?? 0;
+          _totalViews = views;
           _loadingRole = false;
         });
       }
@@ -129,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           builder: (_) => const EditProfileScreen(),
                         ),
                       );
-                      _loadUserRole();
+                      _loadUserData();
                     },
                     child: Container(
                       padding: const EdgeInsets.all(8),
@@ -259,11 +275,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatsRow(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('العقارات', '24', Icons.home_work_rounded, AppColors.primary)),
+        Expanded(child: _buildStatCard('العقارات', '$_propertyCount', Icons.home_work_rounded, AppColors.primary)),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('المفضلة', '12', Icons.favorite_rounded, AppColors.error)),
+        Expanded(child: _buildStatCard('المفضلة', '$_favoritesCount', Icons.favorite_rounded, AppColors.error)),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('المشاهدات', '1.2k', Icons.visibility_rounded, AppColors.warning)),
+        Expanded(child: _buildStatCard('المشاهدات', '$_totalViews', Icons.visibility_rounded, AppColors.warning)),
       ],
     );
   }
