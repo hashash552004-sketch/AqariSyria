@@ -5,6 +5,7 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String? label;
   final String? hint;
+  final String? helperText;
   final String? prefixText;
   final IconData? prefixIcon;
   final IconData? suffixIcon;
@@ -23,6 +24,7 @@ class CustomTextField extends StatefulWidget {
     this.controller,
     this.label,
     this.hint,
+    this.helperText,
     this.prefixText,
     this.prefixIcon,
     this.suffixIcon,
@@ -122,6 +124,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
             counterText: '',
           ),
         ),
+        if (widget.helperText != null) ...[
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Text(
+              widget.helperText!,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

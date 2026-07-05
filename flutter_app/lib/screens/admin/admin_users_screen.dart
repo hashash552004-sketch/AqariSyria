@@ -100,6 +100,17 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         Icon(Icons.error_outline, size: 48, color: AppColors.error),
                         const SizedBox(height: 12),
                         Text('حدث خطأ في تحميل المستخدمين', style: AppTextStyles.bodyMedium),
+                        const SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            '${snapshot.error}',
+                            style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         TextButton(
                           onPressed: () => setState(() {}),

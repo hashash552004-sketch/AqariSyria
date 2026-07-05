@@ -211,10 +211,8 @@ class FirestoreService {
   Stream<List<AppUser>> streamUsers() {
     return _firestore.collection('users').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
-        return AppUser.fromFirestore(
-          Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
-          doc.id,
-        );
+        final data = doc.data();
+        return AppUser.fromFirestore(Map<String, dynamic>.from(data), doc.id);
       }).toList();
     });
   }
