@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
@@ -435,13 +436,45 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Widget _buildQuickStats(Property property) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+    final hasDeedType = property.deedType.isNotEmpty;
+    return Column(
       children: [
-        _statItem(Icons.bed_outlined, 'غرف', '${property.rooms}'),
-        _statItem(Icons.bathtub_outlined, 'حمامات', '${property.bathrooms}'),
-        _statItem(Icons.square_foot, 'المساحة', '${property.area.toInt()} م²'),
-        _statItem(Icons.stairs, 'الطابق', property.floor > 0 ? '${property.floor}' : 'أرضي'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _statItem(Icons.bed_outlined, 'غرف', '${property.rooms}'),
+            _statItem(Icons.bathtub_outlined, 'حمامات', '${property.bathrooms}'),
+            _statItem(Icons.square_foot, 'المساحة', '${property.area.toInt()} م²'),
+            _statItem(Icons.stairs, 'الطابق', property.floor > 0 ? '${property.floor}' : 'أرضي'),
+          ],
+        ),
+        if (hasDeedType) ...[
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.description_outlined, color: AppColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'نوع الطابو: ${property.deedType}',
+                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -891,7 +924,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     final auth = context.read<AuthService>();
     final isOwner = auth.currentUser?.uid == property.ownerId;
 
-    return Container(
+    return FutureBuilder<DocumentSnapshot>(
+      future: firestore.getUserDoc(property.ownerId),
+      builder: (context, snap) {
+        final data = snap.data?.data() as Map<String, dynamic>?;
+        final ownerPhone = data?['phone']?.toString() ?? property.ownerPhone;
+        final ownerWhatsapp = data?['whatsapp']?.toString().isNotEmpty == true
+            ? data!['whatsapp'].toString()
+            : ownerPhone;
+
+        return Container(
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
@@ -947,7 +989,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             ),
           Expanded(
             child: GestureDetector(
-              onTap: () => _launchUrl('https://wa.me/${property.ownerPhone}'),
+              onTap: () => _launchUrl('https://wa.me/$ownerWhatsapp'),
               child: Container(
                 height: 52,
                 decoration: BoxDecoration(
@@ -968,7 +1010,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: GestureDetector(
-              onTap: () => _launchUrl('tel:${property.ownerPhone}'),
+              onTap: () => _launchUrl('tel:$ownerPhone'),
               child: Container(
                 height: 52,
                 decoration: BoxDecoration(
@@ -1027,6 +1069,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ),
         ],
       ),
+    );
+        },
     );
   }
 
@@ -1101,49 +1145,60 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Future<void> _startChat(BuildContext context, Property p) async {
-    final auth = context.read<AuthService>();
-    final firestore = context.read<FirestoreService>();
-    final user = auth.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('سجل دخول أولاً للمراسلة'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-    final currentUserId = user.uid;
-    if (currentUserId == p.ownerId) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('لا يمكنك مراسلة نفسك'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    final userName = user.displayName ?? user.email ?? 'مستخدم';
-    final convId = await firestore.createConversation(
-      p.id,
-      p.title,
-      p.ownerId,
-      p.ownerName.isNotEmpty ? p.ownerName : 'مالك العقار',
-      currentUserId,
-      userName,
-    );
-
-    if (context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ChatScreen(
-            conversationId: convId,
-            propertyTitle: p.title,
+    try {
+      final auth = context.read<AuthService>();
+      final firestore = context.read<FirestoreService>();
+      final user = auth.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('سجل دخول أولاً للمراسلة'),
+            behavior: SnackBarBehavior.floating,
           ),
-        ),
+        );
+        return;
+      }
+      final currentUserId = user.uid;
+      if (currentUserId == p.ownerId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('لا يمكنك مراسلة نفسك'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      final userName = user.displayName ?? user.email ?? 'مستخدم';
+      final convId = await firestore.createConversation(
+        p.id,
+        p.title,
+        p.ownerId,
+        p.ownerName.isNotEmpty ? p.ownerName : 'مالك العقار',
+        currentUserId,
+        userName,
       );
+
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              conversationId: convId,
+              propertyTitle: p.title,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('حدث خطأ، حاول مرة أخرى'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 

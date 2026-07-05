@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../models/property.dart';
 import '../../services/auth_service.dart';
+import '../../services/firestore_service.dart';
 import '../../services/imgbb_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_text_field.dart';
@@ -167,6 +169,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      unawaited(_notifyAdminsNewProperty(property));
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -185,6 +189,27 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _notifyAdminsNewProperty(Property property) async {
+    try {
+      final firestore = context.read<FirestoreService>();
+      final allUsers = await FirebaseFirestore.instance.collection('users').get();
+      final admins = allUsers.docs.where((doc) {
+        final role = doc.data()['role']?.toString() ?? '';
+        return role == 'admin';
+      });
+      for (final adminDoc in admins) {
+        await firestore.createNotification(
+          userId: adminDoc.id,
+          type: 'property',
+          title: 'عقار جديد',
+          message: 'تم إضافة عقار جديد: ${property.title}',
+          targetId: property.id,
+          senderId: property.ownerId,
+        );
+      }
+    } catch (_) {}
   }
 
   void _showError(String msg) {

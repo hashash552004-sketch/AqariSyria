@@ -143,6 +143,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       } catch (_) {}
 
+      final existingUser = await firestore.getUser(fbUser.uid);
+
       await firestore.saveUser(AppUser(
         uid: fbUser.uid,
         fullName: _nameController.text.trim(),
@@ -151,6 +153,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         whatsapp: _whatsappController.text.trim().isEmpty ? null : _whatsappController.text.trim(),
         profileImage: _photoURL,
         username: username,
+        favorites: existingUser?.favorites ?? [],
+        role: existingUser?.role ?? 'user',
       ));
 
       if (!mounted) return;

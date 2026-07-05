@@ -49,11 +49,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       if (!mounted) return;
       final firestore = context.read<FirestoreService>();
+      final email = _emailController.text.trim();
+      final defaultUsername = email.split('@').first.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
       final user = AppUser(
         uid: credential.user!.uid,
         fullName: _nameController.text.trim(),
-        email: _emailController.text.trim(),
+        email: email,
         phone: _phoneController.text.trim(),
+        username: defaultUsername,
       );
       await firestore.saveUser(user);
       if (!mounted) return;

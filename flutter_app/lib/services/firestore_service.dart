@@ -67,10 +67,31 @@ class FirestoreService {
   }
 
   Future<void> createProperty(Property property) async {
-    await _firestore.collection('properties').add({
+    final docRef = await _firestore.collection('properties').add({
       ...property.toFirestore(),
       'createdAt': FieldValue.serverTimestamp(),
     });
+    _notifyAdminsNewProperty(property, docRef.id);
+  }
+
+  Future<void> _notifyAdminsNewProperty(Property property, String propertyId) async {
+    try {
+      final allUsersSnapshot = await _firestore.collection('users').get();
+      final admins = allUsersSnapshot.docs.where((doc) {
+        final role = doc.data()['role']?.toString() ?? '';
+        return role == 'admin';
+      });
+      for (final adminDoc in admins) {
+        await createNotification(
+          userId: adminDoc.id,
+          type: 'property',
+          title: 'عقار جديد',
+          message: 'تم إضافة عقار جديد: ${property.title}',
+          targetId: propertyId,
+          senderId: property.ownerId,
+        );
+      }
+    } catch (_) {}
   }
 
   Future<bool> isUsernameTaken(String username) async {
@@ -95,6 +116,10 @@ class FirestoreService {
     if (role != 'admin') {
       await _firestore.collection('users').doc(uid).update({'role': 'admin'});
     }
+  }
+
+  Future<DocumentSnapshot> getUserDoc(String uid) async {
+    return _firestore.collection('users').doc(uid).get();
   }
 
   Future<AppUser?> getUser(String uid) async {
@@ -259,6 +284,26 @@ class FirestoreService {
       'unreadCount': 0,
     });
     return convId;
+  }
+
+  Future<void> createDirectConversation(
+    String convId,
+    String user1Id,
+    String user1Name,
+    String user2Id,
+    String user2Name,
+  ) async {
+    await _firestore.collection('conversations').doc(convId).set({
+      'propertyId': '',
+      'propertyTitle': 'محادثة مباشرة',
+      'ownerId': user1Id,
+      'ownerName': user1Name,
+      'interestedUserId': user2Id,
+      'interestedUserName': user2Name,
+      'lastMessage': '',
+      'lastMessageTime': FieldValue.serverTimestamp(),
+      'unreadCount': 0,
+    });
   }
 
   Future<void> sendMessage(
@@ -495,21 +540,27 @@ class FirestoreService {
       'status': 'pending',
     });
 
-    final allUsersSnapshot = await _firestore.collection('users').get();
-    final adminSnapshot = allUsersSnapshot.docs.where((doc) {
-      final role = doc.data()['role']?.toString() ?? '';
-      return role == 'admin' || role == 'moderator';
-    });
-    for (final adminDoc in adminSnapshot) {
-      await createNotification(
-        userId: adminDoc.id,
-        type: 'system',
-        title: 'بلاغ جديد',
-        message: 'تم تقديم بلاغ جديد عن عقار: $reason',
-        targetId: propertyId,
-        senderId: reportedBy,
-      );
-    }
+    _notifyAdminsReport(propertyId, reportedBy, reason);
+  }
+
+  Future<void> _notifyAdminsReport(String propertyId, String reportedBy, String reason) async {
+    try {
+      final allUsersSnapshot = await _firestore.collection('users').get();
+      final adminSnapshot = allUsersSnapshot.docs.where((doc) {
+        final role = doc.data()['role']?.toString() ?? '';
+        return role == 'admin' || role == 'moderator';
+      });
+      for (final adminDoc in adminSnapshot) {
+        await createNotification(
+          userId: adminDoc.id,
+          type: 'system',
+          title: 'بلاغ جديد',
+          message: 'تم تقديم بلاغ جديد عن عقار: $reason',
+          targetId: propertyId,
+          senderId: reportedBy,
+        );
+      }
+    } catch (_) {}
   }
 
   Stream<List<Report>> streamReports() {
