@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/property.dart';
 import '../models/user.dart';
 import '../models/chat.dart';
 import '../models/report.dart';
 import '../models/app_settings.dart';
-import '../models/notification.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -241,17 +241,13 @@ class FirestoreService {
     String interestedUserId,
     String interestedUserName,
   ) async {
-    final existing = await _firestore
-        .collection('conversations')
-        .where('propertyId', isEqualTo: propertyId)
-        .where('interestedUserId', isEqualTo: interestedUserId)
-        .get();
+    final convId = '${propertyId}_$interestedUserId';
+    final docRef = _firestore.collection('conversations').doc(convId);
 
-    if (existing.docs.isNotEmpty) {
-      return existing.docs.first.id;
-    }
+    final existing = await docRef.get();
+    if (existing.exists) return convId;
 
-    final doc = await _firestore.collection('conversations').add({
+    await docRef.set({
       'propertyId': propertyId,
       'propertyTitle': propertyTitle,
       'ownerId': ownerId,
@@ -262,7 +258,7 @@ class FirestoreService {
       'lastMessageTime': FieldValue.serverTimestamp(),
       'unreadCount': 0,
     });
-    return doc.id;
+    return convId;
   }
 
   Future<void> sendMessage(
@@ -326,24 +322,63 @@ class FirestoreService {
   }
 
   Stream<List<Conversation>> streamConversations(String userId) {
-    return _firestore
-        .collection('conversations')
-        .where('interestedUserId', isEqualTo: userId)
-        .snapshots()
-        .map((snapshot) {
-      final conversations = snapshot.docs.map((doc) {
-        return Conversation.fromFirestore(
-          Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
-          doc.id,
-        );
-      }).toList();
-      conversations.sort((a, b) {
+    final controller = StreamController<List<Conversation>>();
+
+    QuerySnapshot? lastInterested;
+    QuerySnapshot? lastOwner;
+
+    void emitCombined() {
+      if (lastInterested == null || lastOwner == null) return;
+      final all = <Conversation>[];
+      final seen = <String>{};
+      for (final doc in lastInterested!.docs) {
+        if (seen.add(doc.id)) {
+          all.add(Conversation.fromFirestore(
+            Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
+            doc.id,
+          ));
+        }
+      }
+      for (final doc in lastOwner!.docs) {
+        if (seen.add(doc.id)) {
+          all.add(Conversation.fromFirestore(
+            Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
+            doc.id,
+          ));
+        }
+      }
+      all.sort((a, b) {
         final aTime = a.lastMessageTime ?? DateTime(2000);
         final bTime = b.lastMessageTime ?? DateTime(2000);
         return bTime.compareTo(aTime);
       });
-      return conversations;
+      controller.add(all);
+    }
+
+    final sub1 = _firestore
+        .collection('conversations')
+        .where('interestedUserId', isEqualTo: userId)
+        .snapshots()
+        .listen((s) {
+      lastInterested = s;
+      emitCombined();
     });
+
+    final sub2 = _firestore
+        .collection('conversations')
+        .where('ownerId', isEqualTo: userId)
+        .snapshots()
+        .listen((s) {
+      lastOwner = s;
+      emitCombined();
+    });
+
+    controller.onCancel = () {
+      sub1.cancel();
+      sub2.cancel();
+    };
+
+    return controller.stream;
   }
 
   Future<void> markConversationRead(String conversationId, String userId) async {
