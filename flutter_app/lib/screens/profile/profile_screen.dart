@@ -30,6 +30,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String _userRole = 'user';
   String _username = '';
+  String _phone = '';
+  String _whatsapp = '';
   String? _profileImage;
   bool _loadingRole = true;
   int _propertyCount = 0;
@@ -64,6 +66,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _userRole = userData?.role ?? 'user';
           _username = userData?.username ?? '';
+          _phone = userData?.phone ?? '';
+          _whatsapp = userData?.whatsapp ?? '';
           final img = userData?.profileImage;
           _profileImage = (img != null && img.isNotEmpty) ? img : auth.currentUser?.photoURL;
           _propertyCount = props.docs.length;
@@ -254,6 +258,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: Colors.white.withValues(alpha: 0.85),
                 ),
               ),
+              if (_phone.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.phone_rounded, size: 14, color: Colors.white.withValues(alpha: 0.7)),
+                    const SizedBox(width: 6),
+                    Text(
+                      _phone,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (_whatsapp.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.chat_rounded, size: 14, color: Colors.white.withValues(alpha: 0.7)),
+                    const SizedBox(width: 6),
+                    Text(
+                      _whatsapp,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

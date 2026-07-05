@@ -23,6 +23,7 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _whatsappController = TextEditingController();
   final _usernameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _loading = false;
@@ -50,6 +51,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final userData = await context.read<FirestoreService>().getUser(fbUser.uid);
       if (userData != null && mounted) {
         _phoneController.text = userData.phone;
+        _whatsappController.text = userData.whatsapp ?? '';
         _usernameController.text = userData.username;
         _originalUsername = userData.username;
         if (userData.profileImage != null && userData.profileImage!.isNotEmpty) {
@@ -67,6 +69,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _whatsappController.dispose();
     _usernameController.dispose();
     super.dispose();
   }
@@ -134,15 +137,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       }
 
-      if (_nameController.text.trim() != (fbUser.displayName ?? '')) {
-        await auth.updateDisplayName(_nameController.text.trim());
-      }
+      try {
+        if (_nameController.text.trim() != (fbUser.displayName ?? '')) {
+          await auth.updateDisplayName(_nameController.text.trim());
+        }
+      } catch (_) {}
 
       await firestore.saveUser(AppUser(
         uid: fbUser.uid,
         fullName: _nameController.text.trim(),
         email: fbUser.email ?? '',
         phone: _phoneController.text.trim(),
+        whatsapp: _whatsappController.text.trim().isEmpty ? null : _whatsappController.text.trim(),
         profileImage: _photoURL,
         username: username,
       ));
@@ -350,6 +356,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               if (v == null || v.trim().isEmpty) return 'أدخل رقم الهاتف';
               return null;
             },
+          ),
+          const SizedBox(height: 20),
+          CustomTextField(
+            controller: _whatsappController,
+            label: 'رقم واتساب',
+            hint: 'أدخل رقم واتساب (اختياري)',
+            prefixIcon: Icons.chat_rounded,
+            keyboardType: TextInputType.phone,
           ),
         ],
       ),

@@ -39,6 +39,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   String _operationType = '';
   String _governorate = '';
   String _region = '';
+  String _deedType = '';
 
   bool _hasElevator = false;
   bool _hasParking = false;
@@ -156,6 +157,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         hasInternet: _hasInternet,
         hasGas: _hasGas,
         isFurnished: _isFurnished,
+        deedType: _deedType,
         isActive: true,
       );
 
@@ -341,6 +343,13 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       value: _operationType,
                       items: AppConstants.operationTypes,
                       onChanged: (v) => setState(() => _operationType = v),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDropdown(
+                      label: 'نوع الطابو',
+                      value: _deedType,
+                      items: const ['', 'طابو أخضر', 'ورثة', 'حط أنت التالي'],
+                      onChanged: (v) => setState(() => _deedType = v),
                     ),
                     const SizedBox(height: 16),
                     _buildDropdown(

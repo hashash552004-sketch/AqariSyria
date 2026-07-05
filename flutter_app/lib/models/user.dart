@@ -4,6 +4,7 @@ class AppUser {
   final String fullName;
   final String email;
   final String phone;
+  final String? whatsapp;
   final String? profileImage;
   final List<String> favorites;
   final String role;
@@ -15,6 +16,7 @@ class AppUser {
     required this.fullName,
     required this.email,
     required this.phone,
+    this.whatsapp,
     this.profileImage,
     this.favorites = const [],
     this.role = 'user',
@@ -28,6 +30,7 @@ class AppUser {
       fullName: data['fullName']?.toString() ?? '',
       email: data['email']?.toString() ?? '',
       phone: data['phone']?.toString() ?? '',
+      whatsapp: data['whatsapp']?.toString(),
       profileImage: data['profileImage']?.toString(),
       favorites:
           (data['favorites'] as List?)?.map((e) => e.toString()).toList() ??
@@ -43,6 +46,7 @@ class AppUser {
       'fullName': fullName,
       'email': email,
       'phone': phone,
+      'whatsapp': whatsapp,
       'profileImage': profileImage,
       'favorites': favorites,
       'role': role,
