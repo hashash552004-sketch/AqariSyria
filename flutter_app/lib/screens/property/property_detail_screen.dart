@@ -395,6 +395,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       children: [
         _badge(property.type, AppColors.primary),
         _badge(opLabel, property.operationType == 'rent' ? AppColors.success : AppColors.primary),
+        if (property.isSold) _badge('تم البيع', AppColors.error),
         if (property.isFeatured) _badge('مميز', AppColors.featuredBadge),
       ],
     );
@@ -549,18 +550,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 5,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-          ),
-          itemCount: amenities.length,
-          itemBuilder: (context, index) {
-            final entry = amenities[index];
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: amenities.map((entry) {
             final icon = amenityIcons[entry.key] ?? Icons.check_circle_rounded;
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -576,6 +569,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 ),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     icon,
@@ -593,7 +587,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 ],
               ),
             );
-          },
+          }).toList(),
         ),
       ],
     );
@@ -879,6 +873,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Widget _buildBottomBar(Property property) {
+    final firestore = context.read<FirestoreService>();
+    final auth = context.read<AuthService>();
+    final isOwner = auth.currentUser?.uid == property.ownerId;
+
     return Container(
       padding: EdgeInsets.only(
         left: 20,
@@ -898,6 +896,41 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       ),
       child: Row(
         children: [
+          if (isOwner)
+            GestureDetector(
+              onTap: () async {
+                await firestore.updateProperty(property.id, {
+                  'isSold': !property.isSold,
+                });
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(property.isSold ? 'تم إلغاء البيع' : 'تم تعليم العقار كمباع'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: Container(
+                height: 52,
+                margin: const EdgeInsets.only(left: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: property.isSold ? AppColors.warning : AppColors.error,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.sell_rounded, color: Colors.white, size: 20),
+                    const SizedBox(width: 6),
+                    Text(
+                      property.isSold ? 'إلغاء البيع' : 'تم البيع',
+                      style: AppTextStyles.button,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Expanded(
             child: GestureDetector(
               onTap: () => _launchUrl('https://wa.me/${property.ownerPhone}'),

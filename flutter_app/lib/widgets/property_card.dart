@@ -138,9 +138,24 @@ class PropertyCard extends StatelessWidget {
             ],
           ),
         ),
-        if (property.isFeatured)
+        if (property.isSold)
           Positioned(
             top: 12,
+            left: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.error,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text('تم البيع', style: AppTextStyles.labelSmall.copyWith(
+                color: Colors.white,
+              )),
+            ),
+          ),
+        if (property.isFeatured)
+          Positioned(
+            top: property.isSold ? 44 : 12,
             left: 12,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

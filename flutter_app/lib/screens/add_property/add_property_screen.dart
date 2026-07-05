@@ -158,6 +158,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         hasGas: _hasGas,
         isFurnished: _isFurnished,
         deedType: _deedType,
+        isSold: false,
         isActive: true,
       );
 
