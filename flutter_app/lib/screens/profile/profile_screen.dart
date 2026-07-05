@@ -6,6 +6,7 @@ import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import '../../services/notification_service.dart';
 import '../../models/app_settings.dart';
 import '../favorites/favorites_screen.dart';
 import '../my_properties/my_properties_screen.dart';
@@ -545,6 +546,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
           if (confirmed == true) {
+            NotificationService().deleteToken(auth.currentUser?.uid ?? '');
             await auth.signOut();
             if (!context.mounted) return;
             Navigator.pushAndRemoveUntil(

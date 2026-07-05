@@ -71,6 +71,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow write: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Contact messages
+    match /contact_messages/{messageId} {
+      allow create: if true;
+      allow read: if isModerator();
+    }
+    
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;

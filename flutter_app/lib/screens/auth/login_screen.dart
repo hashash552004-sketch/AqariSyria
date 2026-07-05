@@ -7,6 +7,7 @@ import '../../widgets/gradient_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/animated_widgets.dart';
 import '../../services/auth_service.dart';
+import '../../services/notification_service.dart';
 import '../home/home_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
@@ -42,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
       if (!mounted) return;
+      NotificationService().saveToken(_authService.currentUser?.uid ?? '');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),

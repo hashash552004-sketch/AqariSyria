@@ -5,6 +5,7 @@ import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import '../../services/notification_service.dart';
 import '../../widgets/animated_widgets.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../home/home_screen.dart';
@@ -43,6 +44,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (auth.currentUser != null) {
       final user = auth.currentUser!;
       context.read<FirestoreService>().ensureDefaultAdmin(user.uid, user.email ?? '');
+      NotificationService().saveToken(user.uid);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),

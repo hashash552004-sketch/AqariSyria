@@ -8,6 +8,7 @@ import '../../widgets/custom_text_field.dart';
 import '../../widgets/animated_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import '../../services/notification_service.dart';
 import '../../models/user.dart';
 import '../home/home_screen.dart';
 import 'login_screen.dart';
@@ -59,6 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: defaultUsername,
       );
       await firestore.saveUser(user);
+      NotificationService().saveToken(credential.user!.uid);
       if (!mounted) return;
       Navigator.pushReplacement(
         context,

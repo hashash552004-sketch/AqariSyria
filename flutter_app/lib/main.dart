@@ -7,6 +7,7 @@ import 'core/app_theme.dart';
 import 'providers/theme_provider.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_service.dart';
+import 'services/notification_service.dart';
 import 'screens/splash/splash_screen.dart';
 
 Future<void> main() async {
@@ -24,6 +25,9 @@ Future<void> main() async {
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
   final firebaseReady = await _initializeFirebase();
+  if (firebaseReady) {
+    await NotificationService().init();
+  }
   runApp(BaitAlOmrApp(firebaseReady: firebaseReady));
 }
 
