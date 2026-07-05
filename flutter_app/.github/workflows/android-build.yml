@@ -1,0 +1,33 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter (pin specific version to avoid channel resolution error)
+        uses: subosito/flutter-action@v2
+        with:
+          # Pin an explicit stable Flutter SDK version instead of the string 'stable'
+          # Using the project's detected version (adjust if you prefer another release)
+          flutter-version: '3.41.8'
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build APK (split per ABI)
+        run: |
+          flutter build apk --release --split-per-abi
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apks
+          path: build/app/outputs/apk/release/*.apk

@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Flutter APK
 
 on:
   workflow_dispatch:
@@ -15,6 +15,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Fix nested repo (flutter_app is a gitlink)
+        run: |
+          git rm --cached flutter_app || true
+          git checkout HEAD -- flutter_app/ 2>/dev/null || true
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: stable
+          channel: stable
+          cache: true
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -26,39 +38,37 @@ jobs:
           SDK_ROOT="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
           echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
           echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
-          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -f "$SDKMANAGER" ]; then
+          if [ -d "$SDK_ROOT/cmdline-tools/latest/bin" ]; then
+            SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          else
             SDKMANAGER="$SDK_ROOT/tools/bin/sdkmanager"
           fi
           yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
-          "$SDKMANAGER" --install "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1 || true
+          "$SDKMANAGER" --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1 || true
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
+      - name: Get Flutter packages
+        working-directory: flutter_app
+        run: flutter pub get
 
-      - name: Build APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Build release APKs
+        working-directory: flutter_app
+        run: flutter build apk --release --split-per-abi
 
-      - name: Upload APK
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Extract version
-        run: |
-          VERSION=$(grep versionName app/build.gradle | sed 's/.*"\(.*\)".*/\1/')
-          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Version: $VERSION"
+          name: app-release-abis
+          path: flutter_app/build/app/outputs/apk/release/*.apk
+          if-no-files-found: error
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.APP_VERSION }}-build-${{ github.run_number }}
-          name: Aqari Syria v${{ env.APP_VERSION }}
+          tag_name: v${{ github.run_number }}
+          name: Aqari Syria Build ${{ github.run_number }}
           body: |
-            آخر تحديث للتطبيق
-          files: app/build/outputs/apk/debug/app-debug.apk
+            Build created from GitHub Actions.
+          files: flutter_app/build/app/outputs/apk/release/*.apk
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

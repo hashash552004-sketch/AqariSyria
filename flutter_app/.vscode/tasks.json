@@ -1,0 +1,55 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "flutter-pub-get",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d c:\\Users\\asus\\Desktop\\AqariSyria\\flutter_app && flutter.bat pub get"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "flutter-analyze",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d c:\\Users\\asus\\Desktop\\AqariSyria\\flutter_app && flutter.bat analyze"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "check-flutter-cli",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d c:\\Users\\asus\\Desktop\\AqariSyria\\flutter_app && where flutter && where flutter.bat && flutter.bat --version"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "push-flutter-app-to-github",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d c:\\Users\\asus\\Desktop\\AqariSyria\\flutter_app && git init && git config user.name \"hashash552004-sketch\" && git config user.email \"hashash552004-sketch@users.noreply.github.com\" && git add . && git commit -m \"Initial Flutter app version\" && git branch -M main && git remote remove origin 2>nul || true && git remote add origin https://github.com/hashash552004-sketch/AqariSyria.git && git push -u origin main"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "init-and-push-github",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d c:\\Users\\asus\\Desktop\\AqariSyria\\flutter_app && git init && git config user.name \"hashash552004-sketch\" && git config user.email \"hashash552004-sketch@users.noreply.github.com\" && git add . && git commit -m \"Initial Flutter app version\" && git branch -M main && git remote remove origin 2>nul || true && git remote add origin https://github.com/hashash552004-sketch/AqariSyria.git && git push -u origin main"
+			],
+			"problemMatcher": []
+		}
+	]
+}
