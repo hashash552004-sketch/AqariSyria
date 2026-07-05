@@ -19,6 +19,28 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _loading = false;
+  int _totalProps = 0;
+  int _totalUsers = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final fs = context.read<FirestoreService>();
+    try {
+      final props = await fs.getAllPropertiesAdmin();
+      final users = await fs.streamUsers().first;
+      if (mounted) {
+        setState(() {
+          _totalProps = props.length;
+          _totalUsers = users.length;
+        });
+      }
+    } catch (_) {}
+  }
 
   Future<void> _confirmReset(String title, String msg, Future<void> Function() action) async {
     final confirmed = await showDialog<bool>(
@@ -39,6 +61,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     setState(() => _loading = true);
     try {
       await action();
+      _loadStats();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تم بنجاح'), behavior: SnackBarBehavior.floating),
@@ -67,7 +90,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 children: [
                   Text('لوحة التحكم', style: AppTextStyles.headlineMedium),
                   const SizedBox(height: 24),
-                  _buildStatsGrid(context),
+                  _buildStatsGrid(),
                   const SizedBox(height: 24),
                   _buildAdminActions(context),
                   const SizedBox(height: 24),
@@ -78,26 +101,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildStatsGrid(BuildContext context) {
-    final fs = context.read<FirestoreService>();
-    return StreamBuilder(
-      stream: fs.streamProperties(),
-      builder: (context, snap) {
-        final totalProps = snap.data?.length ?? 0;
-        return StreamBuilder(
-          stream: fs.streamUsers(),
-          builder: (context, userSnap) {
-            final totalUsers = userSnap.data?.length ?? 0;
-            return Row(
-              children: [
-                Expanded(child: _statCard('العقارات', '$totalProps', Icons.home_work_rounded, AppColors.primary)),
-                const SizedBox(width: 12),
-                Expanded(child: _statCard('المستخدمين', '$totalUsers', Icons.people_rounded, AppColors.success)),
-              ],
-            );
-          },
-        );
-      },
+  Widget _buildStatsGrid() {
+    return Row(
+      children: [
+        Expanded(child: _statCard('العقارات', '$_totalProps', Icons.home_work_rounded, AppColors.primary)),
+        const SizedBox(width: 12),
+        Expanded(child: _statCard('المستخدمين', '$_totalUsers', Icons.people_rounded, AppColors.success)),
+      ],
     );
   }
 

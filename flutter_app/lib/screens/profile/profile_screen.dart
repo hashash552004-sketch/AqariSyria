@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import '../../models/app_settings.dart';
 import '../favorites/favorites_screen.dart';
 import '../my_properties/my_properties_screen.dart';
 import '../compare/compare_properties_screen.dart';
@@ -97,6 +99,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 children: [
                   _buildStatsRow(context),
+                  const SizedBox(height: 24),
+                  _buildFollowUs(context),
                   const SizedBox(height: 24),
                   _buildMenuSection(context),
                   const SizedBox(height: 24),
@@ -363,6 +367,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildFollowUs(BuildContext context) {
+    return FutureBuilder<AppSettings>(
+      future: context.read<FirestoreService>().getSettings(),
+      builder: (context, snapshot) {
+        final s = snapshot.data;
+        if (s == null) return const SizedBox.shrink();
+        final defaultWhatsapp = '+963 900 000 000';
+        final defaultEmail = 'info@baitalomar.com';
+        final items = <_SocialItem>[];
+        if (s.instagram.isNotEmpty) items.add(_SocialItem('إنستغرام', Icons.camera_alt_rounded, const Color(0xFFE1306C), 'https://instagram.com/${s.instagram}'));
+        if (s.telegram.isNotEmpty) items.add(_SocialItem('تلغرام', Icons.send_rounded, const Color(0xFF0088CC), 'https://t.me/${s.telegram}'));
+        if (s.facebook.isNotEmpty) items.add(_SocialItem('فيسبوك', Icons.facebook_rounded, const Color(0xFF1877F2), 'https://facebook.com/${s.facebook}'));
+        if (s.whatsapp.isNotEmpty && s.whatsapp != defaultWhatsapp) items.add(_SocialItem('واتساب', Icons.chat_rounded, const Color(0xFF25D366), 'https://wa.me/${s.whatsapp}'));
+        if (s.email.isNotEmpty && s.email != defaultEmail) items.add(_SocialItem('بريد إلكتروني', Icons.email_rounded, AppColors.primary, 'mailto:${s.email}'));
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 4, bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4, height: 20,
+                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(2)),
+                  ),
+                  const SizedBox(width: 10),
+                  Text('تابعنا', style: AppTextStyles.titleLarge),
+                ],
+              ),
+            ),
+            Row(
+              children: items.map((item) => Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    final uri = Uri.tryParse(item.url);
+                    if (uri != null && await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: item.color.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: item.color.withValues(alpha: 0.15)),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(item.icon, color: item.color, size: 22),
+                        const SizedBox(height: 6),
+                        Text(item.label, style: AppTextStyles.caption.copyWith(color: item.color, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+              )).toList(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildMenuSection(BuildContext context) {
     final menuItems = [
       _MenuItem('عقاراتي', Icons.home_work_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPropertiesScreen()))),
@@ -517,4 +586,12 @@ class _MenuItem {
   final IconData icon;
   final VoidCallback onTap;
   const _MenuItem(this.title, this.icon, this.onTap);
+}
+
+class _SocialItem {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final String url;
+  const _SocialItem(this.label, this.icon, this.color, this.url);
 }

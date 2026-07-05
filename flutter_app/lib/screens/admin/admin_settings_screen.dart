@@ -46,15 +46,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final fs = context.read<FirestoreService>();
-    final settings = await fs.getSettings();
-    _whatsappController.text = settings.whatsapp;
-    _phoneController.text = settings.phone;
-    _emailController.text = settings.email;
-    _instagramController.text = settings.instagram;
-    _telegramController.text = settings.telegram;
-    _facebookController.text = settings.facebook;
-    _tiktokController.text = settings.tiktok;
+    try {
+      final fs = context.read<FirestoreService>();
+      final settings = await fs.getSettings();
+      _whatsappController.text = settings.whatsapp;
+      _phoneController.text = settings.phone;
+      _emailController.text = settings.email;
+      _instagramController.text = settings.instagram;
+      _telegramController.text = settings.telegram;
+      _facebookController.text = settings.facebook;
+      _tiktokController.text = settings.tiktok;
+    } catch (_) {}
     if (mounted) setState(() => _initialLoading = false);
   }
 

@@ -92,6 +92,23 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                        const SizedBox(height: 12),
+                        Text('حدث خطأ في تحميل المستخدمين', style: AppTextStyles.bodyMedium),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () => setState(() {}),
+                          child: Text('إعادة المحاولة', style: TextStyle(color: AppColors.primary)),
+                        ),
+                      ],
+                    ),
+                  );
+                }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return Center(child: Text('لا يوجد مستخدمين', style: AppTextStyles.bodyMedium));
                 }
