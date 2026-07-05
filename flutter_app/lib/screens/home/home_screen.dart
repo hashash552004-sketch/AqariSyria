@@ -8,6 +8,7 @@ import '../../core/constants.dart';
 import '../../models/property.dart';
 import '../../services/firestore_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/compare_service.dart';
 import '../../widgets/property_card.dart';
 import '../../widgets/loading_skeleton.dart';
 import '../search/search_screen.dart';
@@ -27,21 +28,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  final List<String> _compareIds = [];
 
   void _switchToHomeTab() {
     setState(() => _selectedIndex = 0);
   }
 
   void _handleCompare(String propertyId) {
-    final isAdding = !_compareIds.contains(propertyId);
-    setState(() {
-      if (isAdding) {
-        _compareIds.add(propertyId);
-      } else {
-        _compareIds.remove(propertyId);
-      }
-    });
+    CompareService.toggle(propertyId);
+    final isAdding = CompareService.isInCompare(propertyId);
+    setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(isAdding ? 'تمت الإضافة للمقارنة' : 'تمت الإزالة من المقارنة'),
@@ -65,13 +60,13 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _selectedIndex,
         children: screens,
       ),
-      floatingActionButton: _compareIds.length >= 2
+      floatingActionButton: CompareService.compareIds.length >= 2
           ? FloatingActionButton.extended(
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ComparePropertiesScreen()),
               ),
-              label: Text('مقارنة (${_compareIds.length})'),
+              label: Text('مقارنة (${CompareService.compareIds.length})'),
               icon: const Icon(Icons.compare_arrows),
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,

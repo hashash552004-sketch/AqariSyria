@@ -12,6 +12,8 @@ import '../../services/auth_service.dart';
 import '../../widgets/property_card.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../chat/chat_screen.dart';
+import '../compare/compare_properties_screen.dart';
+import '../../services/compare_service.dart';
 import 'full_gallery_screen.dart';
 import 'interactive_map_screen.dart';
 
@@ -91,7 +93,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       _toggleFavorite,
                       color: _isFavorite ? AppColors.error : null,
                     ),
-                    _buildIconButton(Icons.compare_arrows_rounded, _addToCompare),
+                    _buildIconButton(
+                      Icons.compare_arrows_rounded,
+                      _addToCompare,
+                      color: CompareService.isInCompare(widget.property.id) ? AppColors.primary : null,
+                    ),
                     _buildIconButton(Icons.ios_share_rounded, () => _shareProperty(context, p)),
                     _buildIconButton(Icons.flag_outlined, () => _showReportDialog(context, p)),
                   ],
@@ -209,11 +215,19 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   void _addToCompare() {
+    final p = widget.property;
+    CompareService.toggle(p.id, p);
+    final isIn = CompareService.isInCompare(p.id);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('تمت الإضافة للمقارنة'),
+      SnackBar(
+        content: Text(isIn ? 'تمت الإضافة للمقارنة' : 'تمت الإزالة من المقارنة'),
         behavior: SnackBarBehavior.floating,
       ),
+    );
+    if (mounted) setState(() {});
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ComparePropertiesScreen()),
     );
   }
 
@@ -988,16 +1002,24 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               child: Container(
                 height: 52,
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  gradient: LinearGradient(
+                    colors: [const Color(0xFF7B68EE), const Color(0xFF9B59B6)],
+                  ),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF7B68EE).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.chat_bubble_outline_rounded, color: AppColors.textPrimary, size: 20),
+                    Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 20),
                     const SizedBox(width: 8),
-                    Text('مراسلة', style: AppTextStyles.button.copyWith(color: AppColors.textPrimary)),
+                    Text('مراسلة', style: AppTextStyles.button),
                   ],
                 ),
               ),
