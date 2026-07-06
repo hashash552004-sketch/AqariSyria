@@ -224,7 +224,10 @@ class _HomeTabState extends State<_HomeTab> {
                 children: [
                   Text('عقارات حديثة', style: AppTextStyles.headlineSmall),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SearchScreen()),
+                    ),
                     child: Text('عرض الكل', style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
                   ),
                 ],
@@ -278,7 +281,7 @@ class _HomeTabState extends State<_HomeTab> {
                       )),
                       const SizedBox(height: 2),
                       Text(
-                        userName.isNotEmpty ? userName : 'بيت العمر',
+                        userName.isNotEmpty ? userName : 'عقار اونلاين',
                         style: AppTextStyles.headlineMedium.copyWith(color: Colors.white),
                       ),
                     ],
@@ -386,7 +389,10 @@ class _HomeTabState extends State<_HomeTab> {
               children: [
                 Text('عقارات مميزة', style: AppTextStyles.headlineSmall),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  ),
                   child: Text('عرض الكل', style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
                 ),
               ],

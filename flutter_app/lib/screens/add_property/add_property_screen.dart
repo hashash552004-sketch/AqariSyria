@@ -203,8 +203,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         await firestore.createNotification(
           userId: adminDoc.id,
           type: 'property',
-          title: 'عقار جديد',
-          message: 'تم إضافة عقار جديد: ${property.title}',
+          title: 'عقار جديد بحاجة للموافقة',
+          message: 'تم إضافة عقار جديد: ${property.title} - بحاجة للموافقة',
           targetId: property.id,
           senderId: property.ownerId,
         );

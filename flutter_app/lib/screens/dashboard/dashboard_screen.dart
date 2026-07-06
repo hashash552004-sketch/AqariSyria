@@ -5,6 +5,8 @@ import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../add_property/add_property_screen.dart';
+import '../reports/reports_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -111,9 +113,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _actionCard(Icons.add_home_work, 'إضافة عقار', AppColors.primary, () {})),
+            Expanded(child: _actionCard(Icons.add_home_work, 'إضافة عقار', AppColors.primary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddPropertyScreen())))),
             const SizedBox(width: 12),
-            Expanded(child: _actionCard(Icons.assessment, 'عرض التقارير', AppColors.warning, () {})),
+            Expanded(child: _actionCard(Icons.assessment, 'عرض التقارير', AppColors.warning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen())))),
           ],
         ),
       ],
