@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/app_colors.dart';
 import '../core/app_text_styles.dart';
 import '../core/constants.dart';
@@ -17,6 +18,11 @@ class PropertyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        try {
+          FirebaseFirestore.instance.collection('properties').doc(property.id).update({
+            'viewsCount': FieldValue.increment(1),
+          });
+        } catch (_) {}
         Navigator.push(
           context,
           PageRouteBuilder(

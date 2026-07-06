@@ -33,6 +33,7 @@ class Property {
   final bool isFeatured;
   final bool isUrgent;
   final bool isSold;
+  final String status;
   final String deedType;
   final int viewsCount;
   final DateTime? createdAt;
@@ -70,6 +71,7 @@ class Property {
     this.isFeatured = false,
     this.isUrgent = false,
     this.isSold = false,
+    this.status = 'approved',
     this.deedType = '',
     this.viewsCount = 0,
     this.createdAt,
@@ -111,6 +113,7 @@ class Property {
       isFeatured: data['isFeatured'] ?? false,
       isUrgent: data['isUrgent'] ?? false,
       isSold: data['isSold'] ?? false,
+      status: data['status']?.toString() ?? 'approved',
       deedType: data['deedType']?.toString() ?? '',
       viewsCount: (data['viewsCount'] as num?)?.toInt() ?? 0,
       createdAt: data['createdAt'] is Timestamp
@@ -152,6 +155,7 @@ class Property {
       'isFeatured': isFeatured,
       'isUrgent': isUrgent,
       'isSold': isSold,
+      'status': status,
       'deedType': deedType,
       'viewsCount': viewsCount,
     };

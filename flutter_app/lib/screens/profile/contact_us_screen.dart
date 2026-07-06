@@ -193,7 +193,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     } else if (item.label == 'اتصال') {
       url = 'tel:${_settings.phone}';
     } else {
-      url = 'mailto:${_settings.email}';
+      url = 'mailto:${_settings.email}?subject=استفسار من تطبيق عقارينا';
     }
     final uri = Uri.tryParse(url);
     if (uri != null && await canLaunchUrl(uri)) {

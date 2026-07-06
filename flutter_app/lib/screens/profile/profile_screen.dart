@@ -19,6 +19,7 @@ import '../reports/reports_screen.dart';
 import 'settings_screen.dart';
 import 'contact_us_screen.dart';
 import 'about_screen.dart';
+import '../chat/chat_screen.dart';
 import 'edit_profile_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../auth/login_screen.dart';
@@ -37,9 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _whatsapp = '';
   String? _profileImage;
   bool _loadingRole = true;
-  int _propertyCount = 0;
-  int _favoritesCount = 0;
-  int _totalViews = 0;
+
 
   @override
   void initState() {
@@ -57,14 +56,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     try {
       final userData = await fs.getUser(uid);
-      final props = await FirebaseFirestore.instance
-          .collection('properties')
-          .where('ownerId', isEqualTo: uid)
-          .get();
-      int views = 0;
-      for (final doc in props.docs) {
-        views += (doc.data()['viewsCount'] as num?)?.toInt() ?? 0;
-      }
       if (mounted) {
         setState(() {
           _userRole = userData?.role ?? 'user';
@@ -73,14 +64,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _whatsapp = userData?.whatsapp ?? '';
           final img = userData?.profileImage;
           _profileImage = (img != null && img.isNotEmpty) ? img : auth.currentUser?.photoURL;
-          _propertyCount = props.docs.length;
-          _favoritesCount = userData?.favorites.length ?? 0;
-          _totalViews = views;
           _loadingRole = false;
         });
       }
     } catch (_) {
       if (mounted) setState(() => _loadingRole = false);
+    }
+  }
+
+  Future<void> _startCustomerChat(BuildContext context) async {
+    final auth = context.read<AuthService>();
+    final firestore = context.read<FirestoreService>();
+    final user = auth.currentUser;
+    if (user == null) return;
+    final convId = 'support_${user.uid}';
+    try {
+      final convDoc = await FirebaseFirestore.instance.collection('conversations').doc(convId).get();
+      if (!convDoc.exists) {
+        final users = await FirebaseFirestore.instance.collection('users').get();
+        final admin = users.docs.firstWhere(
+          (doc) => doc.data()['role'] == 'admin',
+          orElse: () => users.docs.first,
+        );
+        await firestore.createDirectConversation(
+          convId,
+          user.uid,
+          user.displayName ?? 'مستخدم',
+          admin.id,
+          admin.data()['fullName'] ?? 'الدعم الفني',
+        );
+      }
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              conversationId: convId,
+              propertyTitle: 'خدمة العملاء',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('حدث خطأ'), behavior: SnackBarBehavior.floating),
+        );
+      }
     }
   }
 
@@ -99,8 +129,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  _buildStatsRow(context),
-                  const SizedBox(height: 24),
                   _buildFollowUs(context),
                   const SizedBox(height: 24),
                   _buildMenuSection(context),
@@ -313,61 +341,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatsRow(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: _buildStatCard('العقارات', '$_propertyCount', Icons.home_work_rounded, AppColors.primary)),
-        const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('المفضلة', '$_favoritesCount', Icons.favorite_rounded, AppColors.error)),
-        const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('المشاهدات', '$_totalViews', Icons.visibility_rounded, AppColors.warning)),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppColors.cards,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: AppTextStyles.headlineSmall.copyWith(
-              color: AppColors.textPrimary,
-              fontSize: 20,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: AppTextStyles.caption,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFollowUs(BuildContext context) {
     return FutureBuilder<AppSettings>(
       future: context.read<FirestoreService>().getSettings(),
@@ -380,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (s.instagram.isNotEmpty) items.add(_SocialItem('إنستغرام', Icons.camera_alt_rounded, const Color(0xFFE1306C), 'https://instagram.com/${s.instagram}'));
         if (s.telegram.isNotEmpty) items.add(_SocialItem('تلغرام', Icons.send_rounded, const Color(0xFF0088CC), 'https://t.me/${s.telegram}'));
         if (s.facebook.isNotEmpty) items.add(_SocialItem('فيسبوك', Icons.facebook_rounded, const Color(0xFF1877F2), 'https://facebook.com/${s.facebook}'));
-        if (s.whatsapp.isNotEmpty && s.whatsapp != defaultWhatsapp) items.add(_SocialItem('واتساب', Icons.chat_rounded, const Color(0xFF25D366), 'https://wa.me/${s.whatsapp}'));
+        if (s.whatsapp.isNotEmpty && s.whatsapp != defaultWhatsapp) items.add(_SocialItem('واتساب', Icons.chat_rounded, const Color(0xFF25D366), 'https://wa.me/${s.whatsapp.replaceAll(RegExp(r'[+\s]'), '')}'));
         if (s.email.isNotEmpty && s.email != defaultEmail) items.add(_SocialItem('بريد إلكتروني', Icons.email_rounded, AppColors.primary, 'mailto:${s.email}'));
         if (items.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -443,6 +416,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _MenuItem('الإشعارات', Icons.notifications_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
       _MenuItem('الإعدادات', Icons.settings_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
       _MenuItem('تواصل معنا', Icons.headset_mic_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactUsScreen()))),
+      _MenuItem('خدمة العملاء', Icons.support_agent_rounded, () => _startCustomerChat(context)),
       _MenuItem('حول التطبيق', Icons.info_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen()))),
     ];
 

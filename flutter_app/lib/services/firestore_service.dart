@@ -13,25 +13,33 @@ class FirestoreService {
     String? type,
     String? operationType,
   }) {
-    Query query = _firestore
-        .collection('properties');
+    return _firestore
+        .collection('properties')
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final bannedSnapshot = await _firestore
+          .collection('users')
+          .where('banned', isEqualTo: true)
+          .get();
+      final bannedIds = bannedSnapshot.docs.map((doc) => doc.id).toSet();
 
-    if (type != null && type.isNotEmpty) {
-      query = query.where('type', isEqualTo: type);
-    }
-    if (operationType != null && operationType.isNotEmpty) {
-      query = query.where('operationType', isEqualTo: operationType);
-    }
-
-    return query.snapshots().map((snapshot) {
-      final properties = snapshot.docs
+      var properties = snapshot.docs
           .map(
             (doc) => Property.fromFirestore(
               Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
               doc.id,
             ),
           )
+          .where((p) => !bannedIds.contains(p.ownerId))
           .toList();
+
+      if (type != null && type.isNotEmpty) {
+        properties = properties.where((p) => p.type == type).toList();
+      }
+      if (operationType != null && operationType.isNotEmpty) {
+        properties = properties.where((p) => p.operationType == operationType).toList();
+      }
+
       properties.sort((a, b) {
         final aTime = a.createdAt ?? DateTime(2000);
         final bTime = b.createdAt ?? DateTime(2000);
@@ -45,9 +53,10 @@ class FirestoreService {
     return _firestore
         .collection('properties')
         .where('isActive', isEqualTo: true)
+        .where('isFeatured', isEqualTo: true)
         .snapshots()
         .map((snapshot) {
-      final properties = snapshot.docs
+      return snapshot.docs
           .map(
             (doc) => Property.fromFirestore(
               Map<String, dynamic>.from(
@@ -57,12 +66,6 @@ class FirestoreService {
             ),
           )
           .toList();
-      properties.sort((a, b) {
-        final aViews = a.viewsCount ?? 0;
-        final bViews = b.viewsCount ?? 0;
-        return bViews.compareTo(aViews);
-      });
-      return properties.take(10).toList();
     });
   }
 
@@ -543,6 +546,15 @@ class FirestoreService {
 
   Future<void> _notifyAdminsReport(String propertyId, String reportedBy, String reason) async {
     try {
+      final propDoc = await _firestore.collection('properties').doc(propertyId).get();
+      final propData = propDoc.data();
+      final propTitle = propData?['title']?.toString() ?? 'غير معروف';
+      final propOwner = propData?['ownerName']?.toString() ?? 'غير معروف';
+      final propPrice = (propData?['price'] as num?)?.toDouble() ?? 0;
+      final propType = propData?['type']?.toString() ?? '';
+      final reporterDoc = await _firestore.collection('users').doc(reportedBy).get();
+      final reporterName = reporterDoc.data()?['fullName']?.toString() ?? 'مستخدم';
+
       final allUsersSnapshot = await _firestore.collection('users').get();
       final adminSnapshot = allUsersSnapshot.docs.where((doc) {
         final role = doc.data()['role']?.toString() ?? '';
@@ -552,8 +564,8 @@ class FirestoreService {
         await createNotification(
           userId: adminDoc.id,
           type: 'system',
-          title: 'بلاغ جديد',
-          message: 'تم تقديم بلاغ جديد عن عقار: $reason',
+          title: 'بلاغ جديد عن عقار',
+          message: 'تم الإبلاغ عن "$propTitle" (${propType}) بقيمة $propPrice ل.س - المالك: $propOwner - المبلغ: $reporterName - السبب: $reason',
           targetId: propertyId,
           senderId: reportedBy,
         );

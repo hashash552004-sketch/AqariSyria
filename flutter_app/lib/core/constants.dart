@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppConstants {
   AppConstants._();
 
-  static const String appName = 'بيت العمر';
+  static const String appName = 'عقار اونلاين';
   static const String currency = 'ل.س';
   static const String currencyUsd = 'USD';
 

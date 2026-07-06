@@ -81,64 +81,72 @@ class _ChatScreenState extends State<ChatScreen> {
     final currentUserId = auth.currentUser?.uid ?? '';
     final firestore = context.read<FirestoreService>();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(widget.propertyTitle ?? 'المحادثة'),
-        centerTitle: true,
-        backgroundColor: AppColors.cards,
-        elevation: 0.5,
-        titleTextStyle: AppTextStyles.titleMedium,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<List<ChatMessage>>(
-              stream: firestore.streamMessages(widget.conversationId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final messages = snapshot.data ?? [];
-                if (messages.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.chat_bubble_outline,
-                            size: 64,
-                            color: AppColors.textSecondary
-                                .withValues(alpha: 0.5)),
-                        const SizedBox(height: 12),
-                        Text('ابدأ المحادثة',
-                            style: AppTextStyles.titleMedium),
-                        const SizedBox(height: 4),
-                        Text('أرسل أول رسالة الآن',
-                            style: AppTextStyles.bodyMedium),
-                      ],
-                    ),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: Text(widget.propertyTitle ?? 'المحادثة'),
+          centerTitle: true,
+          backgroundColor: AppColors.cards,
+          elevation: 0.5,
+          titleTextStyle: AppTextStyles.titleMedium,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: StreamBuilder<List<ChatMessage>>(
+                stream: firestore.streamMessages(widget.conversationId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final messages = snapshot.data ?? [];
+                  if (messages.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.chat_bubble_outline,
+                              size: 64,
+                              color: AppColors.textSecondary
+                                  .withValues(alpha: 0.5)),
+                          const SizedBox(height: 12),
+                          Text('ابدأ المحادثة',
+                              style: AppTextStyles.titleMedium),
+                          const SizedBox(height: 4),
+                          Text('أرسل أول رسالة الآن',
+                              style: AppTextStyles.bodyMedium),
+                        ],
+                      ),
+                    );
+                  }
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _scrollToBottom();
+                  });
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = messages[index];
+                      final isMe = msg.senderId == currentUserId;
+                      return _buildMessageBubble(msg, isMe);
+                    },
                   );
-                }
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _scrollToBottom();
-                });
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[index];
-                    final isMe = msg.senderId == currentUserId;
-                    return _buildMessageBubble(msg, isMe);
-                  },
-                );
-              },
+                },
+              ),
             ),
-          ),
-          _buildInputBar(),
-        ],
+            _buildInputBar(),
+          ],
+        ),
       ),
     );
   }

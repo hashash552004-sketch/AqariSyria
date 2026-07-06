@@ -81,6 +81,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 _filterChip('مشرف', 2),
                 const SizedBox(width: 8),
                 _filterChip('مستخدم', 3),
+                const SizedBox(width: 8),
+                _filterChip('محظورين', 4),
               ],
             ),
           ),
@@ -131,6 +133,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   users = users.where((u) => u.role == 'moderator').toList();
                 } else if (_filterIndex == 3) {
                   users = users.where((u) => u.role == 'user').toList();
+                } else if (_filterIndex == 4) {
+                  users = users.where((u) => u.banned).toList();
                 }
                 if (_searchQuery.isNotEmpty) {
                   users = users.where((u) =>
@@ -150,7 +154,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   itemBuilder: (context, index) => _UserCard(
                     user: users[index],
                     onRoleChange: (newRole) => _handleRoleChange(users[index], newRole),
-                    onBanToggle: () => _handleBanToggle(users[index].uid),
+                    onBanToggle: () => _handleBanToggle(users[index].uid, users[index].banned),
                     onDelete: () => _handleDelete(users[index]),
                     onDeleteProperties: () => _handleDeleteProperties(users[index]),
                   ),
@@ -216,12 +220,19 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     }
   }
 
-  Future<void> _handleBanToggle(String uid) async {
+  Future<void> _handleBanToggle(String uid, bool currentlyBanned) async {
     try {
-      await _firestore.banUser(uid);
+      if (currentlyBanned) {
+        await _firestore.unbanUser(uid);
+      } else {
+        await _firestore.banUser(uid);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم حظر المستخدم'), behavior: SnackBarBehavior.floating),
+          SnackBar(
+            content: Text(currentlyBanned ? 'تم إلغاء حظر المستخدم' : 'تم حظر المستخدم'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } catch (e) {
@@ -355,6 +366,15 @@ class _UserCard extends StatelessWidget {
                           child: Text(user.fullName, style: AppTextStyles.titleMedium, overflow: TextOverflow.ellipsis),
                         ),
                         const SizedBox(width: 6),
+                        if (user.banned)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text('محظور', style: AppTextStyles.caption.copyWith(color: AppColors.error, fontSize: 10)),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -379,7 +399,7 @@ class _UserCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Expanded(child: _actionButton('حظر', AppColors.error, onBanToggle)),
+                Expanded(child: _actionButton(user.banned ? 'إلغاء الحظر' : 'حظر', user.banned ? AppColors.success : AppColors.error, onBanToggle)),
               ],
               if (isModerator) ...[
                 Expanded(
@@ -392,7 +412,7 @@ class _UserCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Expanded(child: _actionButton('حظر', AppColors.error, onBanToggle)),
+                Expanded(child: _actionButton(user.banned ? 'إلغاء الحظر' : 'حظر', user.banned ? AppColors.success : AppColors.error, onBanToggle)),
               ],
               if (isAdmin) ...[
                 Expanded(

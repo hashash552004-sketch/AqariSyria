@@ -9,6 +9,7 @@ class AppUser {
   final List<String> favorites;
   final String role;
   final String username;
+  final bool banned;
 
   AppUser({
     required this.uid,
@@ -21,6 +22,7 @@ class AppUser {
     this.favorites = const [],
     this.role = 'user',
     this.username = '',
+    this.banned = false,
   });
 
   factory AppUser.fromFirestore(Map<String, dynamic> data, String uid) {
@@ -37,6 +39,7 @@ class AppUser {
           const [],
       role: data['role']?.toString() ?? 'user',
       username: data['username']?.toString() ?? '',
+      banned: data['banned'] ?? false,
     );
   }
 
@@ -51,6 +54,7 @@ class AppUser {
       'favorites': favorites,
       'role': role,
       'username': username,
+      'banned': banned,
     };
   }
 }

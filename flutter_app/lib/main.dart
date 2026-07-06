@@ -52,7 +52,7 @@ class BaitAlOmrApp extends StatelessWidget {
     if (!firebaseReady) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'بيت العمر',
+        title: 'عقار اونلاين',
         home: FirebaseConfigScreen(),
       );
     }
@@ -65,7 +65,7 @@ class BaitAlOmrApp extends StatelessWidget {
       ],
       child: Consumer<ThemeProvider>(
         builder: (_, themeProvider, _) => MaterialApp(
-          title: 'بيت العمر',
+          title: 'عقار اونلاين',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,

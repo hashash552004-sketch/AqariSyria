@@ -16,8 +16,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Decode google-services.json
+        env:
+          JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 -d > flutter_app/android/app/google-services.json
+          printf '%s' "$JSON_B64" | base64 -d > flutter_app/android/app/google-services.json
+          if [ ! -s flutter_app/android/app/google-services.json ]; then
+            echo "ERROR: google-services.json is empty or decoding failed. Check your secret."
+            exit 1
+          fi
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2.16.0

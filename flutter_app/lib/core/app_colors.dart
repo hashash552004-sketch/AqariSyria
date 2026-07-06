@@ -15,11 +15,11 @@ class AppColors {
   static const Color warning = Color(0xFFF79009);
   static const Color error = Color(0xFFF04438);
 
-  static const Color darkBackground = Color(0xFF0D1117);
-  static const Color darkCards = Color(0xFF161B22);
+  static const Color darkBackground = Color(0xFF0A0A0F);
+  static const Color darkCards = Color(0xFF141422);
   static const Color darkTextPrimary = Color(0xFFF0F0F0);
   static const Color darkTextSecondary = Color(0xFF8B949E);
-  static const Color darkBorder = Color(0xFF30363D);
+  static const Color darkBorder = Color(0xFF1E1E3A);
 
   static const Color verifiedBadge = Color(0xFF12B76A);
   static const Color featuredBadge = Color(0xFFF79009);

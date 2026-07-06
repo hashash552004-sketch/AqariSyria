@@ -21,6 +21,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _loading = false;
   int _totalProps = 0;
   int _totalUsers = 0;
+  int _pendingProps = 0;
 
   @override
   void initState() {
@@ -37,6 +38,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         setState(() {
           _totalProps = props.length;
           _totalUsers = users.length;
+          _pendingProps = props.where((p) => p.status == 'pending').length;
         });
       }
     } catch (_) {}
@@ -107,6 +109,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         Expanded(child: _statCard('العقارات', '$_totalProps', Icons.home_work_rounded, AppColors.primary)),
         const SizedBox(width: 12),
         Expanded(child: _statCard('المستخدمين', '$_totalUsers', Icons.people_rounded, AppColors.success)),
+        const SizedBox(width: 12),
+        Expanded(child: _statCard('قيد المراجعة', '$_pendingProps', Icons.hourglass_empty_rounded, AppColors.warning)),
       ],
     );
   }

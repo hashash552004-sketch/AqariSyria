@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
-import '../../models/app_settings.dart';
-import '../../services/firestore_service.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/custom_app_bar.dart';
 
@@ -15,7 +11,6 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firestoreService = context.read<FirestoreService>();
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'حول التطبيق'),
@@ -30,15 +25,6 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 24),
             _buildDescription(),
             const SizedBox(height: 24),
-            FutureBuilder<AppSettings>(
-              future: firestoreService.getSettings(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return _buildSocialLinksPlaceholder();
-                }
-                return _buildSocialLinks(snapshot.data!);
-              },
-            ),
             const SizedBox(height: 24),
             _buildActionButtons(context),
             const SizedBox(height: 40),
@@ -163,7 +149,7 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'بيت العمر هو تطبيق عقاري سوري يهدف إلى تسهيل عملية البحث عن العقارات'
+            'عقار اونلاين هو تطبيق عقاري سوري يهدف إلى تسهيل عملية البحث عن العقارات'
             ' سواء للبيع أو الإيجار. نوفر لك أحدث العروض العقارية من جميع المحافظات'
             ' السورية مع إمكانية التواصل المباشر مع المالكين والوسطاء العقاريين.',
             style: AppTextStyles.bodyMedium.copyWith(
@@ -178,71 +164,6 @@ class AboutScreen extends StatelessWidget {
               color: AppColors.textSecondary,
               height: 1.7,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSocialLinksPlaceholder() {
-    return const SizedBox.shrink();
-  }
-
-  Widget _buildSocialLinks(AppSettings settings) {
-    final socials = <_SocialItem>[];
-    if (settings.whatsapp.isNotEmpty) {
-      socials.add(_SocialItem('واتساب', 'https://wa.me/${settings.whatsapp}', Icons.chat_rounded, AppColors.success));
-    }
-    if (settings.instagram.isNotEmpty) {
-      socials.add(_SocialItem('إنستغرام', 'https://instagram.com/${settings.instagram}', Icons.camera_alt_rounded, const Color(0xFFE4405F)));
-    }
-    if (settings.facebook.isNotEmpty) {
-      socials.add(_SocialItem('فيسبوك', 'https://facebook.com/${settings.facebook}', Icons.facebook_rounded, const Color(0xFF1877F2)));
-    }
-
-    if (socials.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.cards,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('تابعنا على', style: AppTextStyles.titleLarge),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: socials.map((s) {
-              return GestureDetector(
-                onTap: () => _launchUrl(s.url),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: s.color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(s.icon, color: s.color, size: 24),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(s.name, style: AppTextStyles.caption),
-                  ],
-                ),
-              );
-            }).toList(),
           ),
         ],
       ),
@@ -282,13 +203,6 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
   void _shareApp(BuildContext context) {
     Clipboard.setData(const ClipboardData(text: 'https://baitalomar.app'));
     ScaffoldMessenger.of(context).showSnackBar(
@@ -302,10 +216,3 @@ class AboutScreen extends StatelessWidget {
   }
 }
 
-class _SocialItem {
-  final String name;
-  final String url;
-  final IconData icon;
-  final Color color;
-  const _SocialItem(this.name, this.url, this.icon, this.color);
-}

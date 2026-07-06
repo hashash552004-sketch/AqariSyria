@@ -20,7 +20,7 @@ class _AdminPropertiesScreenState extends State<AdminPropertiesScreen>
   late TabController _tabController;
   String _searchQuery = '';
 
-  static const _tabs = ['الكل', 'نشط', 'محظور', 'معلّق'];
+  static const _tabs = ['الكل', 'نشط', 'محظور', 'قيد المراجعة', 'مرفوض'];
 
   @override
   void initState() {
@@ -141,8 +141,10 @@ class _PropertiesList extends StatelessWidget {
           properties = properties.where((p) => p.isActive).toList();
         } else if (filter == 'محظور') {
           properties = properties.where((p) => !p.isActive).toList();
-        } else if (filter == 'معلّق') {
-          properties = properties.where((p) => !p.isActive).toList();
+        } else if (filter == 'قيد المراجعة') {
+          properties = properties.where((p) => p.status == 'pending').toList();
+        } else if (filter == 'مرفوض') {
+          properties = properties.where((p) => p.status == 'rejected').toList();
         }
 
         if (searchQuery.isNotEmpty) {
@@ -163,6 +165,9 @@ class _PropertiesList extends StatelessWidget {
             property: properties[index],
             onDelete: () => _handleDelete(context, properties[index].id),
             onToggleActive: () => _handleToggleActive(context, properties[index]),
+            onToggleFeatured: () => _handleToggleFeatured(context, properties[index]),
+            onApprove: () => _handleApprove(context, properties[index].id),
+            onReject: () => _handleReject(context, properties[index].id),
           ),
         );
       },
@@ -222,17 +227,77 @@ class _PropertiesList extends StatelessWidget {
       }
     }
   }
+
+  Future<void> _handleToggleFeatured(BuildContext context, Property property) async {
+    try {
+      await FirestoreService().updateProperty(property.id, {'isFeatured': !property.isFeatured});
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(property.isFeatured ? 'تم إلغاء التميز' : 'تم التميز'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), behavior: SnackBarBehavior.floating),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleApprove(BuildContext context, String propertyId) async {
+    try {
+      await FirestoreService().updateProperty(propertyId, {'status': 'approved'});
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تمت الموافقة'), behavior: SnackBarBehavior.floating),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), behavior: SnackBarBehavior.floating),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleReject(BuildContext context, String propertyId) async {
+    try {
+      await FirestoreService().updateProperty(propertyId, {'status': 'rejected'});
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم الرفض'), behavior: SnackBarBehavior.floating),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), behavior: SnackBarBehavior.floating),
+        );
+      }
+    }
+  }
 }
 
 class _PropertyAdminCard extends StatelessWidget {
   final Property property;
   final VoidCallback onDelete;
   final VoidCallback onToggleActive;
+  final VoidCallback onToggleFeatured;
+  final VoidCallback onApprove;
+  final VoidCallback onReject;
 
   const _PropertyAdminCard({
     required this.property,
     required this.onDelete,
     required this.onToggleActive,
+    required this.onToggleFeatured,
+    required this.onApprove,
+    required this.onReject,
   });
 
   @override
@@ -327,7 +392,24 @@ class _PropertyAdminCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: SizedBox(
+                          height: 32,
+                          child: OutlinedButton.icon(
+                            onPressed: onToggleFeatured,
+                            icon: Icon(property.isFeatured ? Icons.star : Icons.star_border, size: 14),
+                            label: Text(property.isFeatured ? 'مميز' : 'تحديد مميز', style: AppTextStyles.labelSmall),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: property.isFeatured ? const Color(0xFFD4AF37) : AppColors.textSecondary,
+                              side: BorderSide(color: (property.isFeatured ? const Color(0xFFD4AF37) : AppColors.textSecondary).withValues(alpha: 0.3)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
                       Expanded(
                         child: SizedBox(
                           height: 32,
@@ -346,6 +428,46 @@ class _PropertyAdminCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (property.status == 'pending') ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 32,
+                            child: OutlinedButton.icon(
+                              onPressed: onApprove,
+                              icon: const Icon(Icons.check_circle, size: 14),
+                              label: Text('موافقة', style: AppTextStyles.labelSmall),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.success,
+                                side: BorderSide(color: AppColors.success.withValues(alpha: 0.3)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: SizedBox(
+                            height: 32,
+                            child: OutlinedButton.icon(
+                              onPressed: onReject,
+                              icon: const Icon(Icons.cancel, size: 14),
+                              label: Text('رفض', style: AppTextStyles.labelSmall),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.error,
+                                side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
