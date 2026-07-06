@@ -126,7 +126,7 @@ class _PropertiesList extends StatelessWidget {
     final firestore = FirestoreService();
 
     return StreamBuilder<List<Property>>(
-      stream: firestore.streamProperties(),
+      stream: firestore.streamProperties(adminView: true),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

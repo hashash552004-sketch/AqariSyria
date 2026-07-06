@@ -836,16 +836,25 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => _launchUrl('https://wa.me/${property.ownerPhone}'),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.chat_bubble_rounded, color: AppColors.success, size: 20),
-                      ),
+                    FutureBuilder<DocumentSnapshot>(
+                      future: context.read<FirestoreService>().getUserDoc(property.ownerId),
+                      builder: (context, snap) {
+                        final data = snap.data?.data() as Map<String, dynamic>?;
+                        final ownerWhatsapp = data?['whatsapp']?.toString().isNotEmpty == true
+                            ? data!['whatsapp'].toString()
+                            : property.ownerPhone;
+                        return GestureDetector(
+                          onTap: () => _launchUrl('https://wa.me/$ownerWhatsapp'),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.chat_bubble_rounded, color: AppColors.success, size: 20),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),

@@ -113,7 +113,7 @@ class Property {
       isFeatured: data['isFeatured'] ?? false,
       isUrgent: data['isUrgent'] ?? false,
       isSold: data['isSold'] ?? false,
-      status: data['status']?.toString() ?? 'approved',
+      status: data['status']?.toString() ?? 'pending',
       deedType: data['deedType']?.toString() ?? '',
       viewsCount: (data['viewsCount'] as num?)?.toInt() ?? 0,
       createdAt: data['createdAt'] is Timestamp

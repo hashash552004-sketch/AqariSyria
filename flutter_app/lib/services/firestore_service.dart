@@ -12,6 +12,7 @@ class FirestoreService {
   Stream<List<Property>> streamProperties({
     String? type,
     String? operationType,
+    bool adminView = false,
   }) {
     return _firestore
         .collection('properties')
@@ -30,8 +31,14 @@ class FirestoreService {
               doc.id,
             ),
           )
-          .where((p) => !bannedIds.contains(p.ownerId))
           .toList();
+
+      if (!adminView) {
+        properties = properties
+            .where((p) => !bannedIds.contains(p.ownerId))
+            .where((p) => p.status == 'approved')
+            .toList();
+      }
 
       if (type != null && type.isNotEmpty) {
         properties = properties.where((p) => p.type == type).toList();
@@ -53,10 +60,13 @@ class FirestoreService {
     return _firestore
         .collection('properties')
         .where('isActive', isEqualTo: true)
-        .where('isFeatured', isEqualTo: true)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs
+          .where((doc) {
+            final data = doc.data();
+            return data['isFeatured'] == true;
+          })
           .map(
             (doc) => Property.fromFirestore(
               Map<String, dynamic>.from(
@@ -88,8 +98,8 @@ class FirestoreService {
         await createNotification(
           userId: adminDoc.id,
           type: 'property',
-          title: 'عقار جديد',
-          message: 'تم إضافة عقار جديد: ${property.title}',
+          title: 'عقار جديد بحاجة للموافقة',
+          message: 'تم إضافة عقار جديد: ${property.title} - بحاجة للموافقة',
           targetId: propertyId,
           senderId: property.ownerId,
         );
