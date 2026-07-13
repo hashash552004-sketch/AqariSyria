@@ -196,12 +196,48 @@ class FirestoreService {
   }
 
   Future<void> deleteUser(String uid) async {
-    await _firestore.collection('users').doc(uid).delete();
-    final props = await _firestore.collection('properties').where('ownerId', isEqualTo: uid).get();
     final batch = _firestore.batch();
+    batch.delete(_firestore.collection('users').doc(uid));
+
+    final props = await _firestore.collection('properties').where('ownerId', isEqualTo: uid).get();
     for (final doc in props.docs) {
       batch.delete(doc.reference);
     }
+
+    final convs = await _firestore.collection('conversations')
+      .where('ownerId', isEqualTo: uid).get();
+    final convs2 = await _firestore.collection('conversations')
+      .where('interestedUserId', isEqualTo: uid).get();
+    final allConvIds = {...convs.docs.map((d) => d.id), ...convs2.docs.map((d) => d.id)};
+    for (final convId in allConvIds) {
+      final msgs = await _firestore.collection('conversations').doc(convId).collection('messages').get();
+      for (final msg in msgs.docs) {
+        batch.delete(msg.reference);
+      }
+      batch.delete(_firestore.collection('conversations').doc(convId));
+    }
+
+    final reports = await _firestore.collection('reports').where('reportedBy', isEqualTo: uid).get();
+    for (final doc in reports.docs) {
+      batch.delete(doc.reference);
+    }
+
+    final notifications = await _firestore.collection('notifications').where('userId', isEqualTo: uid).get();
+    for (final doc in notifications.docs) {
+      batch.delete(doc.reference);
+    }
+
+    final users = await _firestore.collection('users').get();
+    for (final doc in users.docs) {
+      final favs = (doc.data()['favorites'] as List?)?.map((e) => e.toString()).toList() ?? <String>[];
+      final propsOwned = props.docs.map((d) => d.id).toList();
+      final toRemove = favs.where((f) => propsOwned.contains(f)).toList();
+      if (toRemove.isNotEmpty) {
+        final updated = favs.where((f) => !toRemove.contains(f)).toList();
+        batch.update(doc.reference, {'favorites': updated});
+      }
+    }
+
     await batch.commit();
   }
 
@@ -378,7 +414,7 @@ class FirestoreService {
   }
 
   Stream<List<Conversation>> streamConversations(String userId) {
-    final controller = StreamController<List<Conversation>>();
+    final controller = StreamController<List<Conversation>>.broadcast();
 
     QuerySnapshot? lastInterested;
     QuerySnapshot? lastOwner;
@@ -575,7 +611,7 @@ class FirestoreService {
           userId: adminDoc.id,
           type: 'system',
           title: 'بلاغ جديد عن عقار',
-          message: 'تم الإبلاغ عن "$propTitle" (${propType}) بقيمة $propPrice ل.س - المالك: $propOwner - المبلغ: $reporterName - السبب: $reason',
+          message: 'تم الإبلاغ عن "$propTitle" ($propType) بقيمة $propPrice ل.س - المالك: $propOwner - المبلغ: $reporterName - السبب: $reason',
           targetId: propertyId,
           senderId: reportedBy,
         );

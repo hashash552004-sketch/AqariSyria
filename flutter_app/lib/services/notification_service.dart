@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -69,7 +70,15 @@ class NotificationService {
     );
   }
 
-  void _onNotificationTap(NotificationResponse response) {}
+  void _onNotificationTap(NotificationResponse response) {
+    _navigateToTarget(response.payload);
+  }
 
-  void _handleNotificationData(RemoteMessage message) {}
+  void _handleNotificationData(RemoteMessage message) {
+    _navigateToTarget(message.data['targetId']);
+  }
+
+  void _navigateToTarget(String? targetId) {
+    debugPrint('Notification tapped: $targetId');
+  }
 }

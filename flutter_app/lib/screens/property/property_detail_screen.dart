@@ -355,7 +355,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${property.price.toStringAsFixed(0)}',
+              property.price.toStringAsFixed(0),
               style: AppTextStyles.price,
             ),
             const SizedBox(width: 6),

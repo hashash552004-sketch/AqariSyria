@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
@@ -23,7 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final _authService = AuthService();
   bool _loading = false;
   bool _googleLoading = false;
 
@@ -38,12 +38,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await _authService.signInEmailPassword(
+      final auth = context.read<AuthService>();
+      await auth.signInEmailPassword(
         _emailController.text.trim(),
         _passwordController.text,
       );
       if (!mounted) return;
-      NotificationService().saveToken(_authService.currentUser?.uid ?? '');
+      NotificationService().saveToken(auth.currentUser?.uid ?? '');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -90,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _googleSignIn() async {
     setState(() => _googleLoading = true);
     try {
-      await _authService.signInWithGoogle();
+      await context.read<AuthService>().signInWithGoogle();
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
