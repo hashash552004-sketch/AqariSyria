@@ -70,6 +70,7 @@ class BaitAlOmrApp extends StatelessWidget {
         builder: (_, tp, _) => MaterialApp(
           title: 'عقار اونلاين',
           debugShowCheckedModeBanner: false,
+          navigatorKey: NotificationService.navigatorKey,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: tp.isDarkMode ? ThemeMode.dark : ThemeMode.light,

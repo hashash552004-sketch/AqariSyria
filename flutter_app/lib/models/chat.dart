@@ -6,8 +6,11 @@ class ChatMessage {
   final String senderId;
   final String senderName;
   final String message;
+  final String type;       // 'text', 'image', 'system'
+  final String? imageUrl;
   final DateTime timestamp;
   final bool isRead;
+  final bool isDeleted;
 
   ChatMessage({
     this.id = '',
@@ -15,8 +18,11 @@ class ChatMessage {
     this.senderId = '',
     this.senderName = '',
     this.message = '',
+    this.type = 'text',
+    this.imageUrl,
     DateTime? timestamp,
     this.isRead = false,
+    this.isDeleted = false,
   }) : timestamp = timestamp ?? DateTime.now();
 
   factory ChatMessage.fromFirestore(Map<String, dynamic> data, String id) {
@@ -26,8 +32,11 @@ class ChatMessage {
       senderId: data['senderId']?.toString() ?? '',
       senderName: data['senderName']?.toString() ?? '',
       message: data['message']?.toString() ?? '',
+      type: data['type']?.toString() ?? 'text',
+      imageUrl: data['imageUrl']?.toString(),
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isRead: data['isRead'] ?? false,
+      isDeleted: data['isDeleted'] ?? false,
     );
   }
 
@@ -37,8 +46,11 @@ class ChatMessage {
       'senderId': senderId,
       'senderName': senderName,
       'message': message,
+      'type': type,
+      'imageUrl': imageUrl,
       'timestamp': Timestamp.fromDate(timestamp),
       'isRead': isRead,
+      'isDeleted': isDeleted,
     };
   }
 }
@@ -78,8 +90,7 @@ class Conversation {
       interestedUserId: data['interestedUserId']?.toString() ?? '',
       interestedUserName: data['interestedUserName']?.toString() ?? '',
       lastMessage: data['lastMessage']?.toString() ?? '',
-      lastMessageTime:
-          (data['lastMessageTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastMessageTime: (data['lastMessageTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
       unreadCount: (data['unreadCount'] as num?)?.toInt() ?? 0,
     );
   }
@@ -98,3 +109,4 @@ class Conversation {
     };
   }
 }
+

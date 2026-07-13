@@ -402,8 +402,11 @@ class FirestoreService {
       'senderId': senderId,
       'senderName': senderName,
       'message': message,
+      'type': 'text',
+      'imageUrl': null,
       'timestamp': FieldValue.serverTimestamp(),
       'isRead': false,
+      'isDeleted': false,
     });
 
     await _firestore.collection('conversations').doc(conversationId).update({
@@ -418,6 +421,14 @@ class FirestoreService {
       final interestedUserId = convData['interestedUserId']?.toString() ?? '';
       final recipientId = senderId == ownerId ? interestedUserId : ownerId;
       if (recipientId.isNotEmpty && recipientId != senderId) {
+        await _firestore.collection('conversations').doc(conversationId).collection('messages')
+            .where('senderId', isEqualTo: recipientId)
+            .where('isRead', isEqualTo: false)
+            .get().then((snap) {
+          for (final doc in snap.docs) {
+            doc.reference.update({'isRead': true});
+          }
+        });
         await createNotification(
           userId: recipientId,
           type: 'message',
@@ -428,6 +439,34 @@ class FirestoreService {
         );
       }
     }
+  }
+
+  Future<void> sendImageMessage(
+    String conversationId,
+    String senderId,
+    String senderName,
+    String imageUrl,
+  ) async {
+    await _firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .add({
+      'conversationId': conversationId,
+      'senderId': senderId,
+      'senderName': senderName,
+      'message': '📷 صورة',
+      'type': 'image',
+      'imageUrl': imageUrl,
+      'timestamp': FieldValue.serverTimestamp(),
+      'isRead': false,
+      'isDeleted': false,
+    });
+
+    await _firestore.collection('conversations').doc(conversationId).update({
+      'lastMessage': '📷 صورة',
+      'lastMessageTime': FieldValue.serverTimestamp(),
+    });
   }
 
   Stream<List<ChatMessage>> streamMessages(String conversationId) {
@@ -444,6 +483,73 @@ class FirestoreService {
           doc.id,
         );
       }).toList();
+    });
+  }
+
+  Future<List<ChatMessage>> getMessagesPaginated(String conversationId, {DocumentSnapshot? lastDoc, int limit = 20}) async {
+    var query = _firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .limit(limit);
+
+    if (lastDoc != null) {
+      query = query.startAfterDocument(lastDoc);
+    }
+
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) {
+      return ChatMessage.fromFirestore(
+        Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
+        doc.id,
+      );
+    }).toList();
+  }
+
+  Stream<bool> streamTyping(String conversationId, String userId) {
+    return _firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .snapshots()
+        .map((snap) {
+      final data = snap.data();
+      if (data == null) return false;
+      final typingUserId = data['typingUserId']?.toString() ?? '';
+      final typingTimestamp = (data['typingTimestamp'] as Timestamp?)?.toDate();
+      if (typingUserId.isEmpty || typingUserId == userId || typingTimestamp == null) return false;
+      return DateTime.now().difference(typingTimestamp).inSeconds < 3;
+    });
+  }
+
+  Future<void> setTyping(String conversationId, String userId) async {
+    await _firestore.collection('conversations').doc(conversationId).update({
+      'typingUserId': userId,
+      'typingTimestamp': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> markAllMessagesRead(String conversationId, String userId) async {
+    final snap = await _firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .where('senderId', isNotEqualTo: userId)
+        .where('isRead', isEqualTo: false)
+        .get();
+    final batch = _firestore.batch();
+    for (final doc in snap.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+    await batch.commit();
+    await _firestore.collection('conversations').doc(conversationId).update({
+      'unreadCount': 0,
+    });
+  }
+
+  Future<void> updateLastSeen(String userId) async {
+    await _firestore.collection('users').doc(userId).update({
+      'lastSeen': FieldValue.serverTimestamp(),
     });
   }
 

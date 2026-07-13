@@ -1,0 +1,38 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "archive-old-native-project",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"$root='c:/Users/asus/Desktop/AqariSyria'; $backup=Join-Path $root 'old_project_backup'; New-Item -ItemType Directory -Force -Path $backup | Out-Null; $items=@('app','build.gradle','database.rules.json','firebase.json','firestore.rules','firestore_rules_copy.txt','get_logs.ps1','gradle','gradle.properties','gradlew','gradlew.bat','settings.gradle','storage.rules'); foreach ($item in $items) { $path=Join-Path $root $item; if (Test-Path $path) { Move-Item -LiteralPath $path -Destination $backup -Force } }; Write-Host 'Archived old project files.'; Get-ChildItem $root | Select-Object Name"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "backup-and-remove-old-native-files",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"-c",
+				"import os, shutil, pathlib\nroot = pathlib.Path(r'c:/Users/asus/Desktop/AqariSyria')\nbackup = root / 'old_project_backup'\nbackup.mkdir(exist_ok=True)\nitems = ['.firebaserc','app','build.gradle','database.rules.json','firebase.json','firestore.rules','firestore_rules_copy.txt','get_logs.ps1','gradle','gradle.properties','gradlew','gradlew.bat','settings.gradle','storage.rules']\nfor name in items:\n    src = root / name\n    if src.exists() and src.is_dir():\n        dst = backup / name\n        if dst.exists():\n            shutil.rmtree(dst)\n        shutil.move(str(src), str(dst))\n    elif src.exists():\n        dst = backup / name\n        if dst.exists():\n            dst.unlink()\n        shutil.move(str(src), str(dst))\nprint('Archived old project files to', backup)\nfor p in sorted(root.iterdir()):\n    print(p.name)"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "archive-native-files-cmd",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"c:\\Users\\asus\\Desktop\\AqariSyria\\archive_old_project.bat"
+			],
+			"problemMatcher": []
+		}
+	]
+}

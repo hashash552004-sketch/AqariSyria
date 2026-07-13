@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#2196F3</color>
+    <color name="primary_dark">#1976D2</color>
+    <color name="primary_light">#BBDEFB</color>
+    <color name="primary_container">#BBDEFB</color>
+    <color name="on_primary_container">#0D47A1</color>
+    <color name="secondary">#64B5F6</color>
+    <color name="secondary_light">#BBDEFB</color>
+
+    <color name="accent">#2196F3</color>
+    <color name="accent_light">#BBDEFB</color>
+    <color name="accent_container">#E3F2FD</color>
+
+    <color name="background">#F8FAFC</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="surface_variant">#F1F5F9</color>
+    <color name="status_bar">#E3F2FD</color>
+
+    <color name="text_primary">#1F2937</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_hint">#9CA3AF</color>
+    <color name="text_white">#FFFFFF</color>
+
+    <color name="error">#EF4444</color>
+    <color name="success">#22C55E</color>
+    <color name="warning">#F59E0B</color>
+
+    <color name="border">#E2E8F0</color>
+    <color name="divider">#E2E8F0</color>
+    <color name="outline">#CBD5E1</color>
+
+    <color name="overlay">#80000000</color>
+    <color name="scrim">#52000000</color>
+
+    <color name="tag_sell">#E3F2FD</color>
+    <color name="tag_rent">#F3E5F5</color>
+    <color name="tag_invest">#FFF3E0</color>
+    <color name="tag_sell_text">#1565C0</color>
+    <color name="tag_rent_text">#7B1FA2</color>
+    <color name="tag_invest_text">#E65100</color>
+
+    <color name="whatsapp">#25D366</color>
+
+    <color name="gradient_start">#1565C0</color>
+    <color name="gradient_end">#2196F3</color>
+
+    <color name="shimmer">#E2E8F0</color>
+
+    <color name="dark_background">#0F172A</color>
+    <color name="dark_surface">#1E293B</color>
+    <color name="dark_card">#334155</color>
+    <color name="dark_text">#E2E8F0</color>
+    <color name="dark_status_bar">#0F172A</color>
+
+    <color name="icon_default">#64748B</color>
+    <color name="icon_favorite_active">#F44336</color>
+    <color name="icon_compare_active">#4CAF50</color>
+    <color name="badge_new">#FF9800</color>
+    <color name="badge_featured">#F59E0B</color>
+    <color name="badge_urgent">#EF4444</color>
+    <color name="white_alpha_10">#1AFFFFFF</color>
+    <color name="white_alpha_40">#66FFFFFF</color>
+    <color name="white_alpha_60">#99FFFFFF</color>
+    <color name="white_alpha_70">#B3FFFFFF</color>
+    <color name="white_alpha_80">#CCFFFFFF</color>
+    <color name="white_alpha_90">#E6FFFFFF</color>
+    <color name="sky_blue">#0EA5E9</color>
+    <color name="white_alpha_00">#00FFFFFF</color>
+    <color name="black_alpha_60">#99000000</color>
+    <color name="btn_gradient_start">#38BDF8</color>
+    <color name="btn_gradient_end">#0284C7</color>
+    <color name="notification_circle_bg">#FFE8F5E9</color>
+    <color name="placeholder_bg">#FFE8F5F3</color>
+    <color name="shimmer_bg">#E0E0E0</color>
+    <color name="online_dot">#4CAF50</color>
+
+    <!-- Colors matching specific layout hex values -->
+    <color name="dark_navy">#0F172A</color>
+
+    <!-- Vector drawable icon colors -->
+    <color name="icon_black">#FF000000</color>
+    <color name="icon_teal">#FF1A7A6E</color>
+    <color name="icon_gray">#FF757575</color>
+    <color name="icon_gray_light">#FFBDBDBD</color>
+    <color name="icon_dark_green">#FF2E7D32</color>
+    <color name="icon_red">#FFF44336</color>
+    <color name="icon_blue">#FF1E88E5</color>
+    <color name="icon_error">#FFE53935</color>
+    <color name="icon_green">#FF43A047</color>
+    <color name="icon_orange">#FFFB8C00</color>
+    <color name="icon_amber">#FFC107</color>
+    <color name="icon_deep_orange">#FF3D00</color>
+
+    <color name="sky_blue_alpha_06">#100EA5E9</color>
+    <color name="sky_blue_alpha_12">#200EA5E9</color>
+    <color name="text_muted">#64748B</color>
+</resources>

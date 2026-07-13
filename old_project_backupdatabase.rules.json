@@ -1,0 +1,25 @@
+{
+  "rules": {
+    "chats": {
+      "$chatId": {
+        "metadata": {
+          ".read": "auth != null && root.child('userChats').child(auth.uid).child($chatId).exists()",
+          ".write": "auth != null && root.child('userChats').child(auth.uid).child($chatId).exists()"
+        },
+        "messages": {
+          ".read": "auth != null && root.child('userChats').child(auth.uid).child($chatId).exists()",
+          "$messageId": {
+            ".write": "auth != null && root.child('userChats').child(auth.uid).child($chatId).exists() && newData.child('senderId').val() == auth.uid"
+          },
+          ".indexOn": ["timestamp"]
+        }
+      }
+    },
+    "userChats": {
+      "$userId": {
+        ".read": "$userId === auth.uid",
+        ".write": "$userId === auth.uid"
+      }
+    }
+  }
+}

@@ -18,6 +18,7 @@ import '../../services/compare_service.dart';
 import '../../widgets/star_rating.dart';
 import 'full_gallery_screen.dart';
 import 'interactive_map_screen.dart';
+import 'package:share_plus/share_plus.dart' as share_plus;
 import '../visit/request_visit_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
@@ -1149,13 +1150,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   void _shareProperty(BuildContext context, Property p) {
     final text =
         '${p.title}\n${p.price.toStringAsFixed(0)} ${AppConstants.currency}\n\nللتسعير والتفاصيل: https://baitalomr.app/property/${p.id}';
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('تم نسخ الرابط'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    share_plus.Share.share(text);
   }
 
   void _showReportDialog(BuildContext context, Property p) {
@@ -1258,6 +1253,19 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         currentUserId,
         userName,
       );
+
+      final convDoc = await firestore.getConversationDoc(convId);
+      if (convDoc != null && convDoc.exists) {
+        final convData = convDoc.data() as Map<String, dynamic>?;
+        if (convData != null && (convData['lastMessage']?.toString() ?? '').isEmpty) {
+          await firestore.sendMessage(
+            convId,
+            currentUserId,
+            userName,
+            'مرحباً، أنا مهتم بـ "${p.title}"\n\nhttps://baitalomr.app/property/${p.id}',
+          );
+        }
+      }
 
       if (context.mounted) {
         Navigator.push(
