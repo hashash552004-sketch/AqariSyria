@@ -353,6 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (s.instagram.isNotEmpty) items.add(_SocialItem('إنستغرام', Icons.camera_alt_rounded, const Color(0xFFE1306C), 'https://instagram.com/${s.instagram}'));
         if (s.telegram.isNotEmpty) items.add(_SocialItem('تلغرام', Icons.send_rounded, const Color(0xFF0088CC), 'https://t.me/${s.telegram}'));
         if (s.facebook.isNotEmpty) items.add(_SocialItem('فيسبوك', Icons.facebook_rounded, const Color(0xFF1877F2), 'https://facebook.com/${s.facebook}'));
+        if (s.tiktok.isNotEmpty) items.add(_SocialItem('تيك توك', Icons.music_note_rounded, const Color(0xFF000000), 'https://tiktok.com/@${s.tiktok}'));
         if (s.whatsapp.isNotEmpty && s.whatsapp != defaultWhatsapp) items.add(_SocialItem('واتساب', Icons.chat_rounded, const Color(0xFF25D366), 'https://wa.me/${s.whatsapp.replaceAll(RegExp(r'[+\s]'), '')}'));
         if (s.email.isNotEmpty && s.email != defaultEmail) items.add(_SocialItem('بريد إلكتروني', Icons.email_rounded, AppColors.primary, 'mailto:${s.email}'));
         if (items.isEmpty) return const SizedBox.shrink();
