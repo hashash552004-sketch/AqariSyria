@@ -20,9 +20,9 @@ class FavoritesScreen extends StatelessWidget {
     final uid = auth.currentUser?.uid;
 
     return PopScope(
-      canPop: true,
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
+        if (!didPop && Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
         }
       },

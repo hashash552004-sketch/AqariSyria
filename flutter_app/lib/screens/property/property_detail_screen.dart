@@ -1202,8 +1202,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('حدث خطأ، حاول مرة أخرى'),
+          SnackBar(
+            content: Text('$e'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -1215,6 +1215,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يمكن فتح الرابط'), behavior: SnackBarBehavior.floating),
+      );
     }
   }
 }

@@ -76,22 +76,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = context.read<AuthService>();
     final firestore = context.read<FirestoreService>();
     final user = auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('سجل دخول أولاً'), behavior: SnackBarBehavior.floating),
+        );
+      }
+      return;
+    }
     final convId = 'support_${user.uid}';
     try {
       final convDoc = await FirebaseFirestore.instance.collection('conversations').doc(convId).get();
       if (!convDoc.exists) {
         final users = await FirebaseFirestore.instance.collection('users').get();
+        if (users.docs.isEmpty) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('لا يوجد مشرفون متاحون'), behavior: SnackBarBehavior.floating),
+            );
+          }
+          return;
+        }
         final admin = users.docs.firstWhere(
           (doc) => doc.data()['role'] == 'admin',
           orElse: () => users.docs.first,
         );
+        final adminData = admin.data();
         await firestore.createDirectConversation(
           convId,
           user.uid,
           user.displayName ?? 'مستخدم',
           admin.id,
-          admin.data()['fullName'] ?? 'الدعم الفني',
+          adminData['fullName']?.toString() ?? 'الدعم الفني',
         );
       }
       if (context.mounted) {
@@ -108,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('حدث خطأ'), behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text('حدث خطأ: $e'), behavior: SnackBarBehavior.floating),
         );
       }
     }
@@ -380,6 +396,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     final uri = Uri.tryParse(item.url);
                     if (uri != null && await canLaunchUrl(uri)) {
                       await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } else if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('لا يمكن فتح الرابط، تأكد من تثبيت التطبيق'), behavior: SnackBarBehavior.floating),
+                      );
                     }
                   },
                   child: Container(

@@ -404,8 +404,8 @@ class FirestoreService {
         }
       }
       all.sort((a, b) {
-        final aTime = a.lastMessageTime ?? DateTime(2000);
-        final bTime = b.lastMessageTime ?? DateTime(2000);
+        final aTime = a.lastMessageTime;
+        final bTime = b.lastMessageTime;
         return bTime.compareTo(aTime);
       });
       controller.add(all);

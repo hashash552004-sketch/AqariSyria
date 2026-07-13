@@ -47,7 +47,6 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   Future<void> _searchUsers(String query) async {
     setState(() => _searching = true);
     try {
-      final firestore = context.read<FirestoreService>();
       final snapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('username', isGreaterThanOrEqualTo: query)
