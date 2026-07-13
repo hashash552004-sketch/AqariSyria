@@ -15,8 +15,10 @@ import '../../widgets/custom_app_bar.dart';
 import '../chat/chat_screen.dart';
 import '../compare/compare_properties_screen.dart';
 import '../../services/compare_service.dart';
+import '../../widgets/star_rating.dart';
 import 'full_gallery_screen.dart';
 import 'interactive_map_screen.dart';
+import '../visit/request_visit_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final Property property;
@@ -387,6 +389,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         ),
         const SizedBox(height: 8),
         Text(property.title, style: AppTextStyles.headlineSmall),
+        if (property.rating > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: StarRating(rating: property.rating, reviewsCount: property.reviewsCount, size: 18),
+          ),
       ],
     );
   }
@@ -969,7 +976,43 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!isOwner)
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RequestVisitScreen(
+                    propertyId: property.id,
+                    propertyTitle: property.title,
+                    ownerId: property.ownerId,
+                    ownerName: property.ownerName,
+                  ),
+                ),
+              ),
+              child: Container(
+                width: double.infinity,
+                height: 44,
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.secondary],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                    const SizedBox(width: 8),
+                    Text('طلب معاينة', style: AppTextStyles.button),
+                  ],
+                ),
+              ),
+            ),
+          Row(
         children: [
           if (isOwner)
             GestureDetector(
@@ -1096,6 +1139,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ),
         ],
       ),
+      ],
+    ),
     );
         },
     );

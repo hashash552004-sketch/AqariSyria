@@ -8,13 +8,15 @@ import '../core/constants.dart';
 import '../models/property.dart';
 import '../services/firestore_service.dart';
 import '../screens/property/property_detail_screen.dart';
+import 'star_rating.dart';
 
 class PropertyCard extends StatelessWidget {
   final Property property;
   final VoidCallback? onFavorite;
   final VoidCallback? onCompare;
+  final bool isFavorite;
 
-  const PropertyCard({super.key, required this.property, this.onFavorite, this.onCompare});
+  const PropertyCard({super.key, required this.property, this.onFavorite, this.onCompare, this.isFavorite = false});
 
   @override
   Widget build(BuildContext context) {
@@ -119,8 +121,8 @@ class PropertyCard extends StatelessWidget {
                     border: Border.all(color: AppColors.glassBorder),
                   ),
                   child: Icon(
-                    Icons.favorite_border,
-                    color: Colors.white,
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? AppColors.error : Colors.white,
                     size: 20,
                   ),
                 ),
@@ -276,6 +278,11 @@ class PropertyCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
+          if (property.rating > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: StarRating(rating: property.rating, reviewsCount: property.reviewsCount, size: 14),
+            ),
           Row(
             children: [
               Icon(Icons.location_on, size: 14, color: AppColors.textSecondary),

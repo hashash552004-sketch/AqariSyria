@@ -91,8 +91,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _googleSignIn() async {
     setState(() => _googleLoading = true);
     try {
-      await context.read<AuthService>().signInWithGoogle();
+      final auth = context.read<AuthService>();
+      await auth.signInWithGoogle();
       if (!mounted) return;
+      NotificationService().saveToken(auth.currentUser?.uid ?? '');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),

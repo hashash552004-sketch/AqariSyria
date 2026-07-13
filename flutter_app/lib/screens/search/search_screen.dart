@@ -8,6 +8,7 @@ import '../../models/property.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/property_card.dart';
 import '../../widgets/loading_skeleton.dart';
+import '../../widgets/empty_state_widget.dart';
 import 'advanced_filters_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -24,6 +25,12 @@ class _SearchScreenState extends State<SearchScreen> {
   String _operationFilter = 'الكل';
   String _governorateFilter = 'الكل';
   String? _priceFilter;
+  double? _minArea;
+  double? _maxArea;
+  int? _roomsFilter;
+  int? _bathroomsFilter;
+  int? _floorFilter;
+  Set<String> _amenities = {};
   final bool _showFilters = true;
 
   @override
@@ -119,6 +126,15 @@ class _SearchScreenState extends State<SearchScreen> {
                       if (result['governorate'] != null) _governorateFilter = result['governorate'] as String;
                       final price = result['price'] as String?;
                       _priceFilter = (price != null && price.isNotEmpty) ? price : null;
+                      _minArea = result['minArea'] as double?;
+                      _maxArea = result['maxArea'] as double?;
+                      _roomsFilter = result['rooms'] as int?;
+                      _bathroomsFilter = result['bathrooms'] as int?;
+                      _floorFilter = result['floor'] as int?;
+                      _amenities = {};
+                      for (final key in ['hasElevator', 'hasParking', 'hasAC', 'hasHeating', 'hasGarden', 'hasPool', 'hasBalcony', 'hasInternet', 'hasGas', 'isFurnished']) {
+                        if (result[key] == true) _amenities.add(key);
+                      }
                     });
                   }
                 },
@@ -182,13 +198,19 @@ class _SearchScreenState extends State<SearchScreen> {
           children: [
             Text('نتائج البحث', style: AppTextStyles.labelMedium),
             const Spacer(),
-            if (_typeFilter != 'الكل' || _operationFilter != 'الكل' || _governorateFilter != 'الكل' || _priceFilter != null)
+            if (_typeFilter != 'الكل' || _operationFilter != 'الكل' || _governorateFilter != 'الكل' || _priceFilter != null || _roomsFilter != null || _bathroomsFilter != null || _floorFilter != null || _minArea != null || _amenities.isNotEmpty)
               GestureDetector(
                 onTap: () => setState(() {
                   _typeFilter = 'الكل';
                   _operationFilter = 'الكل';
                   _governorateFilter = 'الكل';
                   _priceFilter = null;
+                  _roomsFilter = null;
+                  _bathroomsFilter = null;
+                  _floorFilter = null;
+                  _minArea = null;
+                  _maxArea = null;
+                  _amenities = {};
                 }),
                 child: Text('إعادة تعيين', style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
               ),
@@ -307,6 +329,31 @@ class _SearchScreenState extends State<SearchScreen> {
             results = results.where((p) => p.price <= maxPrice).toList();
           }
         }
+        if (_roomsFilter != null && _roomsFilter! > 0) {
+          results = results.where((p) => p.rooms >= _roomsFilter!).toList();
+        }
+        if (_bathroomsFilter != null && _bathroomsFilter! > 0) {
+          results = results.where((p) => p.bathrooms >= _bathroomsFilter!).toList();
+        }
+        if (_floorFilter != null && _floorFilter! > 0) {
+          results = results.where((p) => p.floor >= _floorFilter!).toList();
+        }
+        if (_minArea != null && _minArea! > 0) {
+          results = results.where((p) => p.area >= _minArea!).toList();
+        }
+        if (_maxArea != null && _maxArea! < 1000) {
+          results = results.where((p) => p.area <= _maxArea!).toList();
+        }
+        if (_amenities.contains('hasElevator')) results = results.where((p) => p.hasElevator).toList();
+        if (_amenities.contains('hasParking')) results = results.where((p) => p.hasParking).toList();
+        if (_amenities.contains('hasAC')) results = results.where((p) => p.hasAC).toList();
+        if (_amenities.contains('hasHeating')) results = results.where((p) => p.hasHeating).toList();
+        if (_amenities.contains('hasGarden')) results = results.where((p) => p.hasGarden).toList();
+        if (_amenities.contains('hasPool')) results = results.where((p) => p.hasPool).toList();
+        if (_amenities.contains('hasBalcony')) results = results.where((p) => p.hasBalcony).toList();
+        if (_amenities.contains('hasInternet')) results = results.where((p) => p.hasInternet).toList();
+        if (_amenities.contains('hasGas')) results = results.where((p) => p.hasGas).toList();
+        if (_amenities.contains('isFurnished')) results = results.where((p) => p.isFurnished).toList();
 
         if (results.isEmpty) {
           return _buildEmptyState('لا توجد نتائج للبحث');
@@ -331,20 +378,10 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildEmptyState(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off_rounded, size: 80, color: AppColors.textSecondary.withValues(alpha: 0.4)),
-            const SizedBox(height: 20),
-            Text(message, style: AppTextStyles.titleMedium),
-            const SizedBox(height: 8),
-            Text('حاول تعديل معايير البحث', style: AppTextStyles.bodyMedium),
-          ],
-        ),
-      ),
+    return EmptyStateWidget(
+      icon: Icons.search_off_rounded,
+      title: message,
+      subtitle: 'حاول تعديل معايير البحث',
     );
   }
 }

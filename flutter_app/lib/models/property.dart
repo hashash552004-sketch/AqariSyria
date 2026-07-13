@@ -36,6 +36,8 @@ class Property {
   final String status;
   final String deedType;
   final int viewsCount;
+  final double rating;
+  final int reviewsCount;
   final DateTime? createdAt;
 
   Property({
@@ -74,6 +76,8 @@ class Property {
     this.status = 'pending',
     this.deedType = '',
     this.viewsCount = 0,
+    this.rating = 0,
+    this.reviewsCount = 0,
     this.createdAt,
   });
 
@@ -116,6 +120,8 @@ class Property {
       status: data['status']?.toString() ?? 'approved',
       deedType: data['deedType']?.toString() ?? '',
       viewsCount: (data['viewsCount'] as num?)?.toInt() ?? 0,
+      rating: (data['rating'] as num?)?.toDouble() ?? 0,
+      reviewsCount: (data['reviewsCount'] as num?)?.toInt() ?? 0,
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
           : null,

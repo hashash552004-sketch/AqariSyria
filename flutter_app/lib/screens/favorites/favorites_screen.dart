@@ -95,6 +95,7 @@ class FavoritesScreen extends StatelessWidget {
                       _toggleFavorite(context, uid, property.id),
                   child: PropertyCard(
                     property: property,
+                    isFavorite: true,
                     onFavorite: () =>
                         _toggleFavorite(context, uid, property.id),
                   ),

@@ -10,6 +10,7 @@ import '../../services/auth_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_skeleton.dart';
+import '../../widgets/empty_state_widget.dart';
 import '../../models/chat.dart';
 import 'chat_screen.dart';
 
@@ -92,18 +93,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           else
             Expanded(
               child: userId == null
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.chat_bubble_outline,
-                              size: 80,
-                              color: AppColors.textSecondary.withValues(alpha: 0.5)),
-                          const SizedBox(height: 16),
-                          Text('سجل دخول لعرض المحادثات',
-                              style: AppTextStyles.titleMedium),
-                        ],
-                      ),
+                  ? const EmptyStateWidget(
+                      icon: Icons.chat_bubble_outline,
+                      title: 'سجل دخول لعرض المحادثات',
                     )
                   : StreamBuilder<List<Conversation>>(
                       stream: firestore.streamConversations(userId),
@@ -113,21 +105,10 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         }
                         final conversations = snapshot.data ?? [];
                         if (conversations.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.chat_bubble_outline,
-                                    size: 80,
-                                    color: AppColors.textSecondary.withValues(alpha: 0.5)),
-                                const SizedBox(height: 16),
-                                Text('لا توجد محادثات',
-                                    style: AppTextStyles.titleMedium),
-                                const SizedBox(height: 8),
-                                Text('يمكنك البحث عن مستخدمين لبدء محادثة',
-                                    style: AppTextStyles.bodyMedium),
-                              ],
-                            ),
+                          return const EmptyStateWidget(
+                            icon: Icons.chat_bubble_outline,
+                            title: 'لا توجد محادثات',
+                            subtitle: 'يمكنك البحث عن مستخدمين لبدء محادثة',
                           );
                         }
                         return ListView.builder(

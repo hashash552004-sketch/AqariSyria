@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +11,7 @@ import '../../services/auth_service.dart';
 import '../../services/compare_service.dart';
 import '../../widgets/property_card.dart';
 import '../../widgets/loading_skeleton.dart';
+import '../../widgets/empty_state_widget.dart';
 import '../search/search_screen.dart';
 import '../favorites/favorites_screen.dart';
 import '../add_property/add_property_screen.dart';
@@ -134,14 +136,24 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'إضافة',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_rounded, size: 26),
+              icon: StreamBuilder<int>(
+                stream: context.read<FirestoreService>().streamUnreadConversationCount(context.read<AuthService>().currentUser?.uid ?? ''),
+                builder: (context, snap) {
+                  final count = snap.data ?? 0;
+                  return Badge(
+                    isLabelVisible: count > 0,
+                    label: Text('$count', style: const TextStyle(fontSize: 10, color: Colors.white)),
+                    child: const Icon(Icons.chat_bubble_rounded, size: 26),
+                  );
+                },
+              ),
               activeIcon: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.chat_bubble_rounded, size: 26, color: AppColors.primary),
+                child: const Icon(Icons.chat_bubble_rounded, size: 26, color: AppColors.primary),
               ),
               label: 'الرسائل',
             ),
@@ -176,6 +188,32 @@ class _HomeTab extends StatefulWidget {
 class _HomeTabState extends State<_HomeTab> {
   String _selectedCategory = 'الكل';
   final List<String> _categories = ['الكل', 'شقة', 'فيلا', 'منزل', 'أرض'];
+  Set<String> _favoriteIds = {};
+  StreamSubscription? _favSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  @override
+  void dispose() {
+    _favSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _loadFavorites() {
+    final auth = context.read<AuthService>();
+    final firestore = context.read<FirestoreService>();
+    final user = auth.currentUser;
+    if (user == null) return;
+    _favSubscription = firestore.streamUserFavorites(user.uid).listen((snap) {
+      final data = snap.data() as Map<String, dynamic>?;
+      final ids = (data?['favorites'] as List?)?.map((e) => e.toString()).toSet() ?? <String>{};
+      if (mounted) setState(() => _favoriteIds = ids);
+    });
+  }
 
   Future<void> _toggleFavorite(Property property) async {
     try {
@@ -217,34 +255,39 @@ class _HomeTabState extends State<_HomeTab> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: _buildPremiumHeader(userName, user?.uid ?? '')),
-          SliverToBoxAdapter(child: _buildFeaturedSection(firestore)),
-          SliverToBoxAdapter(child: _buildCategoryChips()),
-          SliverPadding(
-            padding: AppConstants.screenHorizontalPadding,
-            sliver: SliverToBoxAdapter(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('عقارات حديثة', style: AppTextStyles.headlineSmall),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SearchScreen()),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {});
+        },
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildPremiumHeader(userName, user?.uid ?? '')),
+            SliverToBoxAdapter(child: _buildFeaturedSection(firestore)),
+            SliverToBoxAdapter(child: _buildCategoryChips()),
+            SliverPadding(
+              padding: AppConstants.screenHorizontalPadding,
+              sliver: SliverToBoxAdapter(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('عقارات حديثة', style: AppTextStyles.headlineSmall),
+                    TextButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SearchScreen()),
+                      ),
+                      child: Text('عرض الكل', style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
                     ),
-                    child: Text('عرض الكل', style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: EdgeInsets.only(bottom: 24),
-            sliver: _buildRecentProperties(firestore),
-          ),
-        ],
+            SliverPadding(
+              padding: EdgeInsets.only(bottom: 24),
+              sliver: _buildRecentProperties(firestore),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -516,15 +559,10 @@ class _HomeTabState extends State<_HomeTab> {
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.home_work_outlined, size: 64, color: AppColors.textSecondary.withValues(alpha: 0.4)),
-                  const SizedBox(height: 12),
-                  Text('لا توجد عقارات', style: AppTextStyles.titleMedium),
-                ],
-              ),
+            child: EmptyStateWidget(
+              icon: Icons.home_work_outlined,
+              title: 'لا توجد عقارات',
+              subtitle: 'ستظهر العقارات هنا عند توفرها',
             ),
           );
         }
@@ -536,6 +574,7 @@ class _HomeTabState extends State<_HomeTab> {
                 padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: PropertyCard(
                   property: properties[index],
+                  isFavorite: _favoriteIds.contains(properties[index].id),
                   onFavorite: () => _toggleFavorite(properties[index]),
                 ),
               );

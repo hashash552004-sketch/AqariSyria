@@ -9,6 +9,40 @@ import '../models/app_settings.dart';
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  Future<Map<String, dynamic>> getPropertiesPaginated({
+    DocumentSnapshot? lastDoc,
+    int limitCount = 10,
+    String? type,
+    String? operationType,
+  }) async {
+    var query = _firestore
+        .collection('properties')
+        .orderBy('createdAt', descending: true)
+        .limit(limitCount);
+
+    if (lastDoc != null) {
+      query = query.startAfterDocument(lastDoc);
+    }
+
+    final snapshot = await query.get();
+    final lastVisible = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+
+    final properties = <Property>[];
+    for (final doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      if (data['status'] != 'approved') continue;
+      if (type != null && data['type'] != type) continue;
+      if (operationType != null && data['operationType'] != operationType) continue;
+      properties.add(Property.fromFirestore(Map<String, dynamic>.from(data), doc.id));
+    }
+
+    return {
+      'properties': properties,
+      'lastDoc': lastVisible,
+      'hasMore': snapshot.docs.length == limitCount,
+    };
+  }
+
   Stream<List<Property>> streamProperties({
     String? type,
     String? operationType,
@@ -479,6 +513,50 @@ class FirestoreService {
     });
   }
 
+  Stream<int> streamUnreadConversationCount(String userId) {
+    if (userId.isEmpty) return Stream.value(0);
+    final controller = StreamController<int>.broadcast();
+    int lastInterested = 0;
+    int lastOwner = 0;
+
+    void emit() {
+      controller.add(lastInterested + lastOwner);
+    }
+
+    final sub1 = _firestore
+        .collection('conversations')
+        .where('interestedUserId', isEqualTo: userId)
+        .snapshots()
+        .listen((s) {
+      lastInterested = 0;
+      for (final doc in s.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        lastInterested += (data['unreadCount'] as num?)?.toInt() ?? 0;
+      }
+      emit();
+    });
+
+    final sub2 = _firestore
+        .collection('conversations')
+        .where('ownerId', isEqualTo: userId)
+        .snapshots()
+        .listen((s) {
+      lastOwner = 0;
+      for (final doc in s.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        lastOwner += (data['unreadCount'] as num?)?.toInt() ?? 0;
+      }
+      emit();
+    });
+
+    controller.onCancel = () {
+      sub1.cancel();
+      sub2.cancel();
+    };
+
+    return controller.stream;
+  }
+
   Future<int> getUnreadCount(String userId) async {
     final snapshot = await _firestore
         .collection('conversations')
@@ -742,5 +820,60 @@ class FirestoreService {
         .collection('properties')
         .where('ownerId', isEqualTo: uid)
         .snapshots();
+  }
+
+  Future<void> requestVisit({
+    required String propertyId,
+    required String propertyTitle,
+    required String ownerId,
+    required String requesterId,
+    required String requesterName,
+    required String requesterPhone,
+    required DateTime preferredDate,
+    required String message,
+  }) async {
+    await _firestore.collection('visit_requests').add({
+      'propertyId': propertyId,
+      'propertyTitle': propertyTitle,
+      'ownerId': ownerId,
+      'requesterId': requesterId,
+      'requesterName': requesterName,
+      'requesterPhone': requesterPhone,
+      'preferredDate': Timestamp.fromDate(preferredDate),
+      'message': message,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    await createNotification(
+      userId: ownerId,
+      type: 'visit_request',
+      title: 'طلب معاينة جديد',
+      message: 'لديك طلب معاينة من $requesterName',
+      targetId: propertyId,
+      senderId: requesterId,
+    );
+  }
+
+  Stream<List<Map<String, dynamic>>> streamVisitRequests(String userId) {
+    return _firestore
+        .collection('visit_requests')
+        .where('ownerId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList());
+  }
+
+  Future<Property?> getPropertyById(String propertyId) async {
+    try {
+      final doc = await _firestore.collection('properties').doc(propertyId).get();
+      if (!doc.exists) return null;
+      return Property.fromFirestore(Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>), doc.id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> deleteNotification(String notificationId) async {
+    await _firestore.collection('notifications').doc(notificationId).delete();
   }
 }
