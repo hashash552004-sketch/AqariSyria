@@ -1214,7 +1214,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 }
