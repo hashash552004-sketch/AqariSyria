@@ -7,10 +7,11 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:aqari_syria/main.dart';
+import 'package:aqari_syria/providers/theme_provider.dart';
 
 void main() {
   testWidgets('app loads', (WidgetTester tester) async {
-    await tester.pumpWidget(const BaitAlOmrApp(firebaseReady: true));
+    await tester.pumpWidget(BaitAlOmrApp(firebaseReady: true, themeProvider: ThemeProvider()));
     expect(find.text('بيت العمر'), findsOneWidget);
   });
 }

@@ -198,6 +198,13 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     final uri = Uri.tryParse(url);
     if (uri != null && await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(item.label == 'واتساب' ? 'تأكد من تثبيت واتساب' : 'لا يمكن فتح الرابط'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -341,6 +348,10 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                 final uri = Uri.tryParse(item.url);
                 if (uri != null && await canLaunchUrl(uri)) {
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('لا يمكن فتح الرابط، تأكد من تثبيت التطبيق'), behavior: SnackBarBehavior.floating),
+                  );
                 }
               });
             }).toList(),

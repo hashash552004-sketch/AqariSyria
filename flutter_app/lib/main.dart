@@ -28,7 +28,9 @@ Future<void> main() async {
   if (firebaseReady) {
     await NotificationService().init();
   }
-  runApp(BaitAlOmrApp(firebaseReady: firebaseReady));
+  final themeProvider = ThemeProvider();
+  await themeProvider.loadPreferences();
+  runApp(BaitAlOmrApp(firebaseReady: firebaseReady, themeProvider: themeProvider));
 }
 
 Future<bool> _initializeFirebase() async {
@@ -43,9 +45,10 @@ Future<bool> _initializeFirebase() async {
 }
 
 class BaitAlOmrApp extends StatelessWidget {
-  const BaitAlOmrApp({super.key, required this.firebaseReady});
+  const BaitAlOmrApp({super.key, required this.firebaseReady, required this.themeProvider});
 
   final bool firebaseReady;
+  final ThemeProvider themeProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -61,15 +64,16 @@ class BaitAlOmrApp extends StatelessWidget {
       providers: [
         Provider<AuthService>(create: (_) => AuthService()),
         Provider<FirestoreService>(create: (_) => FirestoreService()),
-        ChangeNotifierProvider<ThemeProvider>(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
       ],
       child: Consumer<ThemeProvider>(
-        builder: (_, themeProvider, _) => MaterialApp(
+        builder: (_, tp, _) => MaterialApp(
           title: 'عقار اونلاين',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
-          themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          themeMode: tp.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          locale: tp.locale,
           home: const SplashScreen(),
         ),
       ),

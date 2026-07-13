@@ -37,10 +37,7 @@ class FavoritesScreen extends StatelessWidget {
 
   Widget _buildBody(BuildContext context, String uid) {
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .snapshots(),
+      stream: context.read<FirestoreService>().streamUserFavorites(uid),
       builder: (context, userSnapshot) {
         if (userSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
@@ -67,7 +66,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _loadingRole = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('_loadUserData error: $e');
       if (mounted) setState(() => _loadingRole = false);
     }
   }
@@ -86,10 +86,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     final convId = 'support_${user.uid}';
     try {
-      final convDoc = await FirebaseFirestore.instance.collection('conversations').doc(convId).get();
-      if (!convDoc.exists) {
-        final users = await FirebaseFirestore.instance.collection('users').get();
-        if (users.docs.isEmpty) {
+      final convDoc = await firestore.getConversationDoc(convId);
+      if (convDoc == null || !convDoc.exists) {
+        final adminId = await firestore.getAdminId();
+        if (adminId == null) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('لا يوجد مشرفون متاحون'), behavior: SnackBarBehavior.floating),
@@ -97,17 +97,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
           return;
         }
-        final admin = users.docs.firstWhere(
-          (doc) => doc.data()['role'] == 'admin',
-          orElse: () => users.docs.first,
-        );
-        final adminData = admin.data();
+        final adminName = await firestore.getUserName(adminId) ?? 'الدعم الفني';
         await firestore.createDirectConversation(
           convId,
           user.uid,
           user.displayName ?? 'مستخدم',
-          admin.id,
-          adminData['fullName']?.toString() ?? 'الدعم الفني',
+          adminId,
+          adminName,
         );
       }
       if (context.mounted) {
@@ -361,6 +357,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return FutureBuilder<AppSettings>(
       future: context.read<FirestoreService>().getSettings(),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          debugPrint('_buildFollowUs error: ${snapshot.error}');
+          return const SizedBox.shrink();
+        }
         final s = snapshot.data;
         if (s == null) return const SizedBox.shrink();
         final defaultWhatsapp = '+963 900 000 000';

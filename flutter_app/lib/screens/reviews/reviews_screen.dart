@@ -90,7 +90,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             text: 'إضافة تقييم',
             icon: Icons.add,
             width: double.infinity,
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('ميزة إضافة تقييم ستتوفر قريباً'), behavior: SnackBarBehavior.floating),
+              );
+            },
           ),
           const SizedBox(height: 20),
         ],

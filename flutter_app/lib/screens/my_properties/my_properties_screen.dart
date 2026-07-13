@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_colors.dart';
+import '../../services/firestore_service.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../models/property.dart';
@@ -11,6 +12,7 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/gradient_button.dart';
 import 'edit_property_screen.dart';
 import 'property_statistics_screen.dart';
+import '../add_property/add_property_screen.dart';
 
 class MyPropertiesScreen extends StatefulWidget {
   const MyPropertiesScreen({super.key});
@@ -117,10 +119,7 @@ class _PropertiesList extends StatelessWidget {
     final statusEn = statusMap[status] ?? 'published';
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('properties')
-          .where('ownerId', isEqualTo: uid)
-          .snapshots(),
+      stream: context.read<FirestoreService>().streamUserProperties(uid),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -255,10 +254,8 @@ class _PropertiesList extends StatelessWidget {
     );
     if (confirmed == true) {
       try {
-        await FirebaseFirestore.instance
-            .collection('properties')
-            .doc(propertyId)
-            .delete();
+        final fs = context.read<FirestoreService>();
+        await fs.deleteProperty(propertyId);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -549,7 +546,12 @@ class _EmptyMyProperties extends StatelessWidget {
               child: GradientButton(
                 text: 'إضافة عقار',
                 icon: Icons.add,
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddPropertyScreen()),
+                  );
+                },
               ),
             ),
           ],

@@ -316,15 +316,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.pop(ctx);
               }),
               _languageOption('English', themeProvider.languageCode == 'en', () {
+                themeProvider.setLanguage('en');
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('قريباً'),
-                    backgroundColor: AppColors.primary,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
               }),
               const SizedBox(height: 20),
             ],

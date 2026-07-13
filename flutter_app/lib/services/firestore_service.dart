@@ -688,4 +688,59 @@ class FirestoreService {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+
+  Future<DocumentSnapshot?> getConversationDoc(String convId) async {
+    try {
+      return await _firestore.collection('conversations').doc(convId).get();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> getAdminId() async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'admin')
+          .limit(1)
+          .get();
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.first.id;
+      }
+      final allUsers = await _firestore.collection('users').limit(1).get();
+      return allUsers.docs.isNotEmpty ? allUsers.docs.first.id : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Stream<DocumentSnapshot> streamUserFavorites(String uid) {
+    return _firestore.collection('users').doc(uid).snapshots();
+  }
+
+  Future<void> notifyAdminsNewProperty(Property property) async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'admin')
+          .get();
+      for (final adminDoc in snapshot.docs) {
+        await createNotification(
+          userId: adminDoc.id,
+          type: 'property',
+          title: 'عقار جديد بحاجة للموافقة',
+          message: 'تم إضافة عقار جديد: ${property.title} - بحاجة للموافقة',
+          targetId: property.id,
+          senderId: property.ownerId,
+        );
+      }
+    } catch (_) {}
+  }
+
+  Stream<QuerySnapshot> streamUserProperties(String uid) {
+    return _firestore
+        .collection('properties')
+        .where('ownerId', isEqualTo: uid)
+        .snapshots();
+  }
 }

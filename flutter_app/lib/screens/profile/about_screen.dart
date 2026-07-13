@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart' show Share;
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
@@ -177,7 +178,16 @@ class AboutScreen extends StatelessWidget {
           text: 'تقييم التطبيق',
           width: double.infinity,
           icon: Icons.star_rounded,
-          onPressed: () {},
+          onPressed: () async {
+            final uri = Uri.parse('https://play.google.com/store/apps/details?id=com.baitalomar.app');
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            } else if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('لا يمكن فتح متجر التطبيقات'), behavior: SnackBarBehavior.floating),
+              );
+            }
+          },
         ),
         const SizedBox(height: 14),
         SizedBox(
@@ -204,15 +214,7 @@ class AboutScreen extends StatelessWidget {
   }
 
   void _shareApp(BuildContext context) {
-    Clipboard.setData(const ClipboardData(text: 'https://baitalomar.app'));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('تم نسخ رابط التطبيق'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+    Share.share('حمّل تطبيق ${AppConstants.appName} عبر الرابط: https://baitalomar.app');
   }
 }
 

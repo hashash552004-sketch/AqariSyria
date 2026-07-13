@@ -46,18 +46,20 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Future<void> _loadFavoriteStatus() async {
-    final auth = context.read<AuthService>();
-    final user = auth.currentUser;
-    if (user == null) return;
-    final uid = user.uid;
-    final firestore = context.read<FirestoreService>();
-    final appUser = await firestore.getUser(uid);
-    if (appUser != null && mounted) {
-      setState(() {
-        _userId = uid;
-        _isFavorite = appUser.favorites.contains(widget.property.id);
-      });
-    }
+    try {
+      final auth = context.read<AuthService>();
+      final user = auth.currentUser;
+      if (user == null) return;
+      final uid = user.uid;
+      final firestore = context.read<FirestoreService>();
+      final appUser = await firestore.getUser(uid);
+      if (appUser != null && mounted) {
+        setState(() {
+          _userId = uid;
+          _isFavorite = appUser.favorites.contains(widget.property.id);
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -202,16 +204,24 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       );
       return;
     }
-    final firestore = context.read<FirestoreService>();
-    await firestore.toggleFavorite(_userId!, widget.property.id);
-    setState(() => _isFavorite = !_isFavorite);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isFavorite ? 'تمت الإضافة للمفضلة' : 'تمت الإزالة من المفضلة'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    try {
+      final firestore = context.read<FirestoreService>();
+      await firestore.toggleFavorite(_userId!, widget.property.id);
+      setState(() => _isFavorite = !_isFavorite);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isFavorite ? 'تمت الإضافة للمفضلة' : 'تمت الإزالة من المفضلة'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ: $e'), behavior: SnackBarBehavior.floating),
+        );
+      }
     }
   }
 
@@ -964,16 +974,24 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           if (isOwner)
             GestureDetector(
               onTap: () async {
-                await firestore.updateProperty(property.id, {
-                  'isSold': !property.isSold,
-                });
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(property.isSold ? 'تم إلغاء البيع' : 'تم تعليم العقار كمباع'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                try {
+                  await firestore.updateProperty(property.id, {
+                    'isSold': !property.isSold,
+                  });
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(property.isSold ? 'تم إلغاء البيع' : 'تم تعليم العقار كمباع'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('خطأ: $e'), behavior: SnackBarBehavior.floating),
+                    );
+                  }
                 }
               },
               child: Container(
@@ -1129,14 +1147,22 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     );
                     return;
                   }
-                  await firestore.reportProperty(p.id, userId, reason);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('تم الإبلاغ، شكراً لك'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                  try {
+                    await firestore.reportProperty(p.id, userId, reason);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('تم الإبلاغ، شكراً لك'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('خطأ: $e'), behavior: SnackBarBehavior.floating),
+                      );
+                    }
                   }
                 },
               ),

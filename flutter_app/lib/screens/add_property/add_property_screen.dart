@@ -194,21 +194,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   Future<void> _notifyAdminsNewProperty(Property property) async {
     try {
       final firestore = context.read<FirestoreService>();
-      final allUsers = await FirebaseFirestore.instance.collection('users').get();
-      final admins = allUsers.docs.where((doc) {
-        final role = doc.data()['role']?.toString() ?? '';
-        return role == 'admin';
-      });
-      for (final adminDoc in admins) {
-        await firestore.createNotification(
-          userId: adminDoc.id,
-          type: 'property',
-          title: 'عقار جديد بحاجة للموافقة',
-          message: 'تم إضافة عقار جديد: ${property.title} - بحاجة للموافقة',
-          targetId: property.id,
-          senderId: property.ownerId,
-        );
-      }
+      await firestore.notifyAdminsNewProperty(property);
     } catch (_) {}
   }
 

@@ -16,7 +16,7 @@ class AgentProfileScreen extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(),
-          SliverToBoxAdapter(child: _buildProfileContent()),
+          SliverToBoxAdapter(child: _buildProfileContent(context)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
@@ -116,7 +116,7 @@ class AgentProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileContent() {
+  Widget _buildProfileContent(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
@@ -177,7 +177,11 @@ class AgentProfileScreen extends StatelessWidget {
                   child: GradientButton(
                     text: 'اتصال',
                     icon: Icons.phone,
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('رقم الهاتف غير متاح حالياً'), behavior: SnackBarBehavior.floating),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -186,7 +190,11 @@ class AgentProfileScreen extends StatelessWidget {
                     text: 'واتساب',
                     icon: Icons.chat,
                     gradientColors: [const Color(0xFF25D366), const Color(0xFF128C7E)],
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('واتساب غير متاح حالياً'), behavior: SnackBarBehavior.floating),
+                      );
+                    },
                   ),
                 ),
               ],

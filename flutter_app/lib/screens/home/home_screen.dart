@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
@@ -179,26 +178,33 @@ class _HomeTabState extends State<_HomeTab> {
   final List<String> _categories = ['الكل', 'شقة', 'فيلا', 'منزل', 'أرض'];
 
   Future<void> _toggleFavorite(Property property) async {
-    final auth = context.read<AuthService>();
-    final firestore = context.read<FirestoreService>();
-    final user = auth.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى تسجيل الدخول'), behavior: SnackBarBehavior.floating),
-      );
-      return;
-    }
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-    final favorites = (userDoc.data()?['favorites'] as List?)?.map((e) => e.toString()).toList() ?? <String>[];
-    final wasFav = favorites.contains(property.id);
-    await firestore.toggleFavorite(user.uid, property.id);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(wasFav ? 'تمت الإزالة من المفضلة' : 'تمت الإضافة إلى المفضلة'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    try {
+      final auth = context.read<AuthService>();
+      final firestore = context.read<FirestoreService>();
+      final user = auth.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يرجى تسجيل الدخول'), behavior: SnackBarBehavior.floating),
+        );
+        return;
+      }
+      final appUser = await firestore.getUser(user.uid);
+      final wasFav = appUser?.favorites.contains(property.id) ?? false;
+      await firestore.toggleFavorite(user.uid, property.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(wasFav ? 'تمت الإزالة من المفضلة' : 'تمت الإضافة إلى المفضلة'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ: $e'), behavior: SnackBarBehavior.floating),
+        );
+      }
     }
   }
 
