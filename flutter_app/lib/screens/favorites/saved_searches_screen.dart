@@ -7,6 +7,7 @@ import '../../core/constants.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/gradient_button.dart';
+import '../search/search_screen.dart';
 
 class SavedSearch {
   final String id;
@@ -130,10 +131,18 @@ class SavedSearchesScreen extends StatelessWidget {
   }
 
   void _viewResults(BuildContext context, SavedSearch search) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('جاري عرض نتائج "$search.query"'),
-        behavior: SnackBarBehavior.floating,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SearchScreen(
+          initialQuery: search.query,
+          initialType:
+              search.propertyType.isEmpty ? null : search.propertyType,
+          initialOperation:
+              search.operationType.isEmpty ? null : search.operationType,
+          initialGovernorate:
+              search.governorate.isEmpty ? null : search.governorate,
+        ),
       ),
     );
   }

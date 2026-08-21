@@ -6,13 +6,26 @@ import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../models/property.dart';
 import '../../services/firestore_service.dart';
+import '../../services/auth_service.dart';
+import '../../core/snackbar_helper.dart';
 import '../../widgets/property_card.dart';
 import '../../widgets/loading_skeleton.dart';
 import '../../widgets/empty_state_widget.dart';
 import 'advanced_filters_screen.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final String? initialQuery;
+  final String? initialType;
+  final String? initialOperation;
+  final String? initialGovernorate;
+
+  const SearchScreen({
+    super.key,
+    this.initialQuery,
+    this.initialType,
+    this.initialOperation,
+    this.initialGovernorate,
+  });
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -32,6 +45,24 @@ class _SearchScreenState extends State<SearchScreen> {
   int? _floorFilter;
   Set<String> _amenities = {};
   final bool _showFilters = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
+      _query = widget.initialQuery!.toLowerCase();
+      _searchController.text = widget.initialQuery!;
+    }
+    if (widget.initialType != null && widget.initialType!.isNotEmpty) {
+      _typeFilter = widget.initialType!;
+    }
+    if (widget.initialOperation != null && widget.initialOperation!.isNotEmpty) {
+      _operationFilter = widget.initialOperation!;
+    }
+    if (widget.initialGovernorate != null && widget.initialGovernorate!.isNotEmpty) {
+      _governorateFilter = widget.initialGovernorate!;
+    }
+  }
 
   @override
   void dispose() {
@@ -76,37 +107,34 @@ class _SearchScreenState extends State<SearchScreen> {
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.border),
+                child: Container(
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    textDirection: TextDirection.rtl,
+                    style: GoogleFonts.cairo(fontSize: 15, color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'ابحث عن عقار...',
+                      hintStyle: GoogleFonts.cairo(fontSize: 15, color: AppColors.textSecondary),
+                      prefixIcon: Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 22),
+                      suffixIcon: _query.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(Icons.close, color: AppColors.textSecondary, size: 20),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _query = '');
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      textDirection: TextDirection.rtl,
-                      style: GoogleFonts.cairo(fontSize: 15, color: AppColors.textPrimary),
-                      decoration: InputDecoration(
-                        hintText: 'ابحث عن عقار...',
-                        hintStyle: GoogleFonts.cairo(fontSize: 15, color: AppColors.textSecondary),
-                        prefixIcon: Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 22),
-                        suffixIcon: _query.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(Icons.close, color: AppColors.textSecondary, size: 20),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _query = '');
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onChanged: (value) => setState(() => _query = value.toLowerCase()),
-                    ),
+                    onChanged: (value) => setState(() => _query = value.toLowerCase()),
                   ),
                 ),
               ),
@@ -157,6 +185,21 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: Icon(Icons.tune_rounded, color: Colors.white, size: 22),
                 ),
               ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _saveCurrentSearch,
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppColors.cards,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Icon(Icons.bookmark_add_outlined,
+                      color: AppColors.primary, size: 22),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -169,6 +212,29 @@ class _SearchScreenState extends State<SearchScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _saveCurrentSearch() async {
+    final uid = context.read<AuthService>().currentUser?.uid;
+    if (uid == null || uid.isEmpty) {
+      showSnackBar(context, 'سجّل الدخول أولاً لحفظ البحث',
+          backgroundColor: AppColors.error);
+      return;
+    }
+    try {
+      await context.read<FirestoreService>().saveSearch(
+            userId: uid,
+            query: _query,
+            propertyType: _typeFilter == 'الكل' ? '' : _typeFilter,
+            operationType: _operationFilter == 'الكل' ? '' : _operationFilter,
+            governorate: _governorateFilter == 'الكل' ? '' : _governorateFilter,
+          );
+      if (mounted) showSnackBar(context, 'تم حفظ البحث بنجاح');
+    } catch (_) {
+      if (mounted) {
+        showSnackBar(context, 'تعذر حفظ البحث', backgroundColor: AppColors.error);
+      }
+    }
   }
 
   Widget _buildFilterChips() {

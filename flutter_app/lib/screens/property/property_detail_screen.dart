@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,6 +19,7 @@ import 'full_gallery_screen.dart';
 import 'interactive_map_screen.dart';
 import 'package:share_plus/share_plus.dart' as share_plus;
 import '../visit/request_visit_screen.dart';
+import '../reviews/reviews_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final Property property;
@@ -390,11 +390,34 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         ),
         const SizedBox(height: 8),
         Text(property.title, style: AppTextStyles.headlineSmall),
-        if (property.rating > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: StarRating(rating: property.rating, reviewsCount: property.reviewsCount, size: 18),
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ReviewsScreen(
+                  propertyId: property.id,
+                  propertyTitle: property.title,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                StarRating(rating: property.rating, reviewsCount: property.reviewsCount, size: 18),
+                if (property.reviewsCount == 0) ...[
+                  Icon(Icons.star_border_rounded, size: 18, color: AppColors.warning),
+                  const SizedBox(width: 6),
+                  Text('أضف تقييماً', style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary)),
+                ],
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_left_rounded, size: 18, color: AppColors.textSecondary),
+              ],
+            ),
           ),
+        ),
       ],
     );
   }

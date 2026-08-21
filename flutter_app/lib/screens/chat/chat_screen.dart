@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
@@ -33,23 +34,49 @@ class _ChatScreenState extends State<ChatScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _sending = false;
   Timer? _typingTimer;
+  DateTime? _lastTypingWrite;
+  int _messageLimit = 50;
+  bool _loadingMore = false;
+  double _preserveBottomOffset = -1;
+  int _lastMsgCount = -1;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _markRead());
+  }
+
+  void _markRead() {
+    final uid = context.read<AuthService>().currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      context.read<FirestoreService>().markConversationRead(widget.conversationId, uid);
+    }
   }
 
   @override
   void dispose() {
+    _typingTimer?.cancel();
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (uid.isNotEmpty) {
+        FirestoreService().clearTyping(widget.conversationId, uid);
+      }
+    } catch (_) {}
     _messageController.dispose();
     _scrollController.dispose();
-    _typingTimer?.cancel();
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels <= 40) {
+    if (!_scrollController.hasClients || _loadingMore) return;
+    if (_scrollController.position.pixels <= 60 && _messageLimit < 500) {
+      _preserveBottomOffset =
+          _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
+      setState(() {
+        _loadingMore = true;
+        _messageLimit += 50;
+      });
     }
   }
 
@@ -66,11 +93,20 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _onTyping() {
-    _typingTimer?.cancel();
     final auth = context.read<AuthService>();
     final uid = auth.currentUser?.uid ?? '';
-    context.read<FirestoreService>().setTyping(widget.conversationId, uid);
-    _typingTimer = Timer(const Duration(seconds: 2), () {});
+    if (uid.isEmpty) return;
+    final now = DateTime.now();
+    if (_lastTypingWrite == null ||
+        now.difference(_lastTypingWrite!).inMilliseconds > 2000) {
+      _lastTypingWrite = now;
+      context.read<FirestoreService>().setTyping(widget.conversationId, uid);
+    }
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(seconds: 4), () {
+      context.read<FirestoreService>().clearTyping(widget.conversationId, uid);
+      _lastTypingWrite = null;
+    });
   }
 
   Future<void> _pickImage() async {
@@ -90,7 +126,8 @@ class _ChatScreenState extends State<ChatScreen> {
       final url = await ref.getDownloadURL();
       await context.read<FirestoreService>().sendImageMessage(widget.conversationId, uid, name, url);
     } catch (e) {
-      if (mounted) showSnackBar(context, 'فشل إرسال الصورة', backgroundColor: AppColors.error);
+      if (!mounted) return;
+      showSnackBar(context, 'فشل إرسال الصورة', backgroundColor: AppColors.error);
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -109,7 +146,8 @@ class _ChatScreenState extends State<ChatScreen> {
       _messageController.clear();
       _scrollToBottom();
     } catch (e) {
-      if (mounted) showSnackBar(context, 'فشل إرسال الرسالة', backgroundColor: AppColors.error);
+      if (!mounted) return;
+      showSnackBar(context, 'فشل إرسال الرسالة', backgroundColor: AppColors.error);
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -140,13 +178,20 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             Expanded(
               child: StreamBuilder<List<ChatMessage>>(
-                stream: firestore.streamMessages(widget.conversationId),
+                stream: firestore.streamMessages(widget.conversationId, limit: _messageLimit),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   final messages = snapshot.data ?? [];
+                  final hasIncomingUnread = messages.any(
+                    (m) => m.senderId != currentUserId && !m.isRead,
+                  );
+                  if (hasIncomingUnread) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) => _markRead());
+                  }
                   if (messages.isEmpty) {
+                    _lastMsgCount = 0;
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -168,7 +213,20 @@ class _ChatScreenState extends State<ChatScreen> {
                     );
                   }
 
-                  WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted || !_scrollController.hasClients) return;
+                    if (_preserveBottomOffset >= 0) {
+                      final newMax = _scrollController.position.maxScrollExtent;
+                      _scrollController.jumpTo(
+                        (newMax - _preserveBottomOffset).clamp(0.0, newMax),
+                      );
+                      _preserveBottomOffset = -1;
+                      _loadingMore = false;
+                    } else if (messages.length != _lastMsgCount) {
+                      _lastMsgCount = messages.length;
+                      _scrollToBottom();
+                    }
+                  });
 
                   return ListView.builder(
                     controller: _scrollController,
@@ -223,9 +281,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final now = DateTime.now();
     final diff = now.difference(date);
     String label;
-    if (diff.inDays == 0) label = 'اليوم';
-    else if (diff.inDays == 1) label = 'أمس';
-    else label = DateFormat('d MMMM y', 'ar').format(date);
+    if (diff.inDays == 0) {
+      label = 'اليوم';
+    } else if (diff.inDays == 1) {
+      label = 'أمس';
+    } else {
+      label = DateFormat('d MMMM y', 'ar').format(date);
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),

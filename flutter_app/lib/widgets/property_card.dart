@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/app_colors.dart';
 import '../core/app_text_styles.dart';
 import '../core/constants.dart';
 import '../models/property.dart';
 import '../services/firestore_service.dart';
+import '../services/auth_service.dart';
 import '../screens/property/property_detail_screen.dart';
 import 'star_rating.dart';
 
@@ -23,9 +23,8 @@ class PropertyCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         try {
-          context.read<FirestoreService>().updateProperty(property.id, {
-            'viewsCount': FieldValue.increment(1),
-          });
+          final uid = context.read<AuthService>().currentUser?.uid;
+          context.read<FirestoreService>().recordPropertyView(property.id, uid);
         } catch (_) {}
         Navigator.push(
           context,

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/property.dart';
 import '../models/user.dart';
 import '../models/chat.dart';
+import '../models/review.dart';
 import '../models/report.dart';
 import '../models/app_settings.dart';
 
@@ -29,7 +31,7 @@ class FirestoreService {
 
     final properties = <Property>[];
     for (final doc in snapshot.docs) {
-      final data = doc.data() as Map<String, dynamic>;
+      final data = doc.data();
       if (data['status'] != 'approved') continue;
       if (type != null && data['type'] != type) continue;
       if (operationType != null && data['operationType'] != operationType) continue;
@@ -157,11 +159,18 @@ class FirestoreService {
   Future<void> ensureDefaultAdmin(String uid, String email) async {
     const adminEmail = 'hashash552004@gmail.com';
     if (email != adminEmail) return;
+    // Only promote a verified account – matches the security rules.
+    final current = FirebaseAuth.instance.currentUser;
+    if (current == null || !current.emailVerified) return;
     final doc = await _firestore.collection('users').doc(uid).get();
     if (!doc.exists) return;
     final role = doc.data()?['role']?.toString() ?? 'user';
     if (role != 'admin') {
-      await _firestore.collection('users').doc(uid).update({'role': 'admin'});
+      try {
+        await _firestore.collection('users').doc(uid).update({'role': 'admin'});
+      } catch (_) {
+        // Rules may reject if email is not verified yet.
+      }
     }
   }
 
@@ -412,6 +421,7 @@ class FirestoreService {
     await _firestore.collection('conversations').doc(conversationId).update({
       'lastMessage': message,
       'lastMessageTime': FieldValue.serverTimestamp(),
+      'unreadCount': FieldValue.increment(1),
     });
 
     final convDoc = await _firestore.collection('conversations').doc(conversationId).get();
@@ -419,15 +429,12 @@ class FirestoreService {
     if (convData != null) {
       final ownerId = convData['ownerId']?.toString() ?? '';
       final interestedUserId = convData['interestedUserId']?.toString() ?? '';
-      final recipientId = senderId == ownerId ? interestedUserId : ownerId;
+      final senderIsOwner = senderId == ownerId;
+      final recipientId = senderIsOwner ? interestedUserId : ownerId;
       if (recipientId.isNotEmpty && recipientId != senderId) {
-        await _firestore.collection('conversations').doc(conversationId).collection('messages')
-            .where('senderId', isEqualTo: recipientId)
-            .where('isRead', isEqualTo: false)
-            .get().then((snap) {
-          for (final doc in snap.docs) {
-            doc.reference.update({'isRead': true});
-          }
+        await _firestore.collection('conversations').doc(conversationId).update({
+          senderIsOwner ? 'interestedUnreadCount' : 'ownerUnreadCount':
+              FieldValue.increment(1),
         });
         await createNotification(
           userId: recipientId,
@@ -466,15 +473,40 @@ class FirestoreService {
     await _firestore.collection('conversations').doc(conversationId).update({
       'lastMessage': '📷 صورة',
       'lastMessageTime': FieldValue.serverTimestamp(),
+      'unreadCount': FieldValue.increment(1),
     });
+
+    final convDoc = await _firestore.collection('conversations').doc(conversationId).get();
+    final convData = convDoc.data();
+    if (convData != null) {
+      final ownerId = convData['ownerId']?.toString() ?? '';
+      final interestedUserId = convData['interestedUserId']?.toString() ?? '';
+      final senderIsOwner = senderId == ownerId;
+      final recipientId = senderIsOwner ? interestedUserId : ownerId;
+      if (recipientId.isNotEmpty && recipientId != senderId) {
+        await _firestore.collection('conversations').doc(conversationId).update({
+          senderIsOwner ? 'interestedUnreadCount' : 'ownerUnreadCount':
+              FieldValue.increment(1),
+        });
+        await createNotification(
+          userId: recipientId,
+          type: 'message',
+          title: 'صورة جديدة',
+          message: 'أرسل لك $senderName صورة',
+          targetId: conversationId,
+          senderId: senderId,
+        );
+      }
+    }
   }
 
-  Stream<List<ChatMessage>> streamMessages(String conversationId) {
+  Stream<List<ChatMessage>> streamMessages(String conversationId, {int limit = 200}) {
     return _firestore
         .collection('conversations')
         .doc(conversationId)
         .collection('messages')
         .orderBy('timestamp', descending: false)
+        .limitToLast(limit)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -523,34 +555,68 @@ class FirestoreService {
   }
 
   Future<void> setTyping(String conversationId, String userId) async {
+    if (userId.isEmpty) return;
     await _firestore.collection('conversations').doc(conversationId).update({
       'typingUserId': userId,
       'typingTimestamp': FieldValue.serverTimestamp(),
     });
   }
 
-  Future<void> markAllMessagesRead(String conversationId, String userId) async {
-    final snap = await _firestore
-        .collection('conversations')
-        .doc(conversationId)
-        .collection('messages')
-        .where('senderId', isNotEqualTo: userId)
-        .where('isRead', isEqualTo: false)
-        .get();
-    final batch = _firestore.batch();
-    for (final doc in snap.docs) {
-      batch.update(doc.reference, {'isRead': true});
-    }
-    await batch.commit();
-    await _firestore.collection('conversations').doc(conversationId).update({
-      'unreadCount': 0,
-    });
+  Future<void> clearTyping(String conversationId, String userId) async {
+    if (userId.isEmpty) return;
+    try {
+      final doc = await _firestore.collection('conversations').doc(conversationId).get();
+      final data = doc.data();
+      if (data != null && data['typingUserId']?.toString() == userId) {
+        await doc.reference.update({'typingUserId': ''});
+      }
+    } catch (_) {}
+  }
+
+  /// Marks the conversation as read for [userId]:
+  /// - marks all messages sent by the OTHER party as read (enables ✓✓ seen ticks),
+  /// - resets both the legacy counter and the per-role counter.
+  Future<void> markConversationRead(String conversationId, String userId) async {
+    if (conversationId.isEmpty || userId.isEmpty) return;
+    final docRef = _firestore.collection('conversations').doc(conversationId);
+
+    try {
+      final snap = await docRef
+          .collection('messages')
+          .where('isRead', isEqualTo: false)
+          .get();
+      final others = snap.docs.where((d) => d.data()['senderId']?.toString() != userId).toList();
+      if (others.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (final d in others) {
+          batch.update(d.reference, {'isRead': true});
+        }
+        await batch.commit();
+      }
+    } catch (_) {}
+
+    try {
+      final doc = await docRef.get();
+      final data = doc.data();
+      if (data == null) return;
+      final isOwner = data['ownerId']?.toString() == userId;
+      await docRef.update({
+        'unreadCount': 0,
+        isOwner ? 'ownerUnreadCount' : 'interestedUnreadCount': 0,
+      });
+    } catch (_) {}
   }
 
   Future<void> updateLastSeen(String userId) async {
     await _firestore.collection('users').doc(userId).update({
       'lastSeen': FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Per-role unread count with fallback to the legacy shared counter.
+  int _unreadFor(Map<String, dynamic> data, {required bool asOwner}) {
+    final legacy = (data['unreadCount'] as num?)?.toInt() ?? 0;
+    return (data[asOwner ? 'ownerUnreadCount' : 'interestedUnreadCount'] as num?)?.toInt() ?? legacy;
   }
 
   Stream<List<Conversation>> streamConversations(String userId) {
@@ -568,6 +634,10 @@ class FirestoreService {
           all.add(Conversation.fromFirestore(
             Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
             doc.id,
+            unreadForViewer: _unreadFor(
+              Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
+              asOwner: false,
+            ),
           ));
         }
       }
@@ -576,6 +646,10 @@ class FirestoreService {
           all.add(Conversation.fromFirestore(
             Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
             doc.id,
+            unreadForViewer: _unreadFor(
+              Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
+              asOwner: true,
+            ),
           ));
         }
       }
@@ -613,12 +687,6 @@ class FirestoreService {
     return controller.stream;
   }
 
-  Future<void> markConversationRead(String conversationId, String userId) async {
-    await _firestore.collection('conversations').doc(conversationId).update({
-      'unreadCount': 0,
-    });
-  }
-
   Stream<int> streamUnreadConversationCount(String userId) {
     if (userId.isEmpty) return Stream.value(0);
     final controller = StreamController<int>.broadcast();
@@ -636,7 +704,7 @@ class FirestoreService {
         .listen((s) {
       lastInterested = 0;
       for (final doc in s.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
         lastInterested += (data['unreadCount'] as num?)?.toInt() ?? 0;
       }
       emit();
@@ -649,7 +717,7 @@ class FirestoreService {
         .listen((s) {
       lastOwner = 0;
       for (final doc in s.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
         lastOwner += (data['unreadCount'] as num?)?.toInt() ?? 0;
       }
       emit();
@@ -928,6 +996,18 @@ class FirestoreService {
         .snapshots();
   }
 
+  /// Typed stream of a user's published properties (used by agent profile).
+  Stream<List<Property>> streamPropertiesByOwner(String ownerId) {
+    return _firestore
+        .collection('properties')
+        .where('ownerId', isEqualTo: ownerId)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((d) => Property.fromFirestore(
+                Map<String, dynamic>.from(d.data() as Map<dynamic, dynamic>), d.id))
+            .toList());
+  }
+
   Future<void> requestVisit({
     required String propertyId,
     required String propertyTitle,
@@ -967,6 +1047,182 @@ class FirestoreService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList());
+  }
+
+  /// Owner accepts/rejects an incoming visit request.
+  Future<void> updateVisitRequestStatus(String requestId, String status) async {
+    final docRef = _firestore.collection('visit_requests').doc(requestId);
+    await docRef.update({'status': status});
+
+    final doc = await docRef.get();
+    final data = doc.data();
+    if (data == null) return;
+    final requesterId = data['requesterId']?.toString() ?? '';
+    final propertyTitle = data['propertyTitle']?.toString() ?? '';
+    if (requesterId.isEmpty || status == 'pending') return;
+    final title = status == 'accepted' ? 'تم قبول طلب المعاينة' : 'تم رفض طلب المعاينة';
+    final body = status == 'accepted'
+        ? 'تم قبول طلب معاينة "$propertyTitle". تواصل مع المالك لتحديد الموعد.'
+        : 'نعتذر، تم رفض طلب المعاينة لـ "$propertyTitle".';
+    await createNotification(
+      userId: requesterId,
+      type: 'visit_request',
+      title: title,
+      message: body,
+      targetId: data['propertyId']?.toString(),
+      senderId: data['ownerId']?.toString(),
+    );
+  }
+
+  /// Requester cancels their own pending request.
+  Future<void> cancelVisitRequest(String requestId, String requesterId) async {
+    final docRef = _firestore.collection('visit_requests').doc(requestId);
+    final doc = await docRef.get();
+    final data = doc.data();
+    if (data == null) return;
+    if (data['requesterId']?.toString() != requesterId) return;
+    await docRef.update({'status': 'cancelled'});
+  }
+
+  Stream<List<Map<String, dynamic>>> streamMyVisitRequests(String userId) {
+    return _firestore
+        .collection('visit_requests')
+        .where('requesterId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList());
+  }
+
+  // ---- Saved Searches ----
+
+  Future<void> saveSearch({
+    required String userId,
+    required String query,
+    String propertyType = '',
+    String operationType = '',
+    String governorate = '',
+    double? minPrice,
+    double? maxPrice,
+  }) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('savedSearches')
+        .add({
+      'query': query,
+      'propertyType': propertyType,
+      'operationType': operationType,
+      'governorate': governorate,
+      'minPrice': minPrice,
+      'maxPrice': maxPrice,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // ---- Property Reviews ----
+
+  Stream<List<Review>> streamPropertyReviews(String propertyId) {
+    return _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('reviews')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((d) => Review.fromFirestore(
+                Map<String, dynamic>.from(d.data() as Map<dynamic, dynamic>), d.id))
+            .toList());
+  }
+
+  /// Creates or updates the current user's review (doc id == uid).
+  Future<void> submitReview({
+    required String propertyId,
+    required String userId,
+    required String userName,
+    required int rating,
+    required String comment,
+  }) async {
+    await _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('reviews')
+        .doc(userId)
+        .set({
+      'propertyId': propertyId,
+      'userId': userId,
+      'userName': userName,
+      'rating': rating.clamp(1, 5),
+      'comment': comment,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    await _recalcPropertyRating(propertyId);
+  }
+
+  Future<void> deleteReview(String propertyId, String userId) async {
+    await _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('reviews')
+        .doc(userId)
+        .delete();
+    await _recalcPropertyRating(propertyId);
+  }
+
+  Future<void> _recalcPropertyRating(String propertyId) async {
+    try {
+      final snap = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('reviews')
+          .get();
+      if (snap.docs.isEmpty) {
+        await _firestore.collection('properties').doc(propertyId).update({
+          'rating': 0.0,
+          'reviewsCount': 0,
+        });
+        return;
+      }
+      double sum = 0;
+      for (final doc in snap.docs) {
+        sum += ((doc.data()['rating'] as num?)?.toDouble()) ?? 0;
+      }
+      final avg = sum / snap.docs.length;
+      await _firestore.collection('properties').doc(propertyId).update({
+        'rating': double.parse(avg.toStringAsFixed(1)),
+        'reviewsCount': snap.docs.length,
+      });
+    } catch (_) {}
+  }
+
+  /// Records a property view: increments viewsCount and stores
+  /// it in the user's recentlyViewed list (max 20, most recent first).
+  Future<void> recordPropertyView(String propertyId, String? userId) async {
+    if (propertyId.isEmpty) return;
+    try {
+      await _firestore.collection('properties').doc(propertyId).update({
+        'viewsCount': FieldValue.increment(1),
+      });
+    } catch (_) {}
+    if (userId == null || userId.isEmpty) return;
+    try {
+      final userRef = _firestore.collection('users').doc(userId);
+      final snap = await userRef.get();
+      final data = snap.data();
+      final List<dynamic> existing =
+          data?['recentlyViewed'] as List<dynamic>? ?? [];
+      final entries = existing
+          .whereType<Map>()
+          .where((e) => e['propertyId']?.toString() != propertyId)
+          .take(19)
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+      entries.insert(0, {
+        'propertyId': propertyId,
+        'viewedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+      await userRef.set({'recentlyViewed': entries}, SetOptions(merge: true));
+    } catch (_) {}
   }
 
   Future<Property?> getPropertyById(String propertyId) async {

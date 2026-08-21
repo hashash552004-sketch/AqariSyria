@@ -1,90 +1,193 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
+
+    // ==================== Helper Functions ====================
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isAdmin() {
-      return isAuthenticated() && 
+      return isAuthenticated() &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
-    
+
     function isModerator() {
-      return isAuthenticated() && 
+      return isAuthenticated() &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'moderator'];
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
-    // Users collection
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // The one bootstrap path for the app owner's admin account.
+    // Only this exact verified email may set its own role to admin.
+    function isSelfAdminBootstrap(userId) {
+      return isOwner(userId)
+        && changedKeys().hasOnly(['role'])
+        && request.resource.data.role == 'admin'
+        && request.auth.token.email == 'hashash552004@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function isSafeUserProfileUpdate() {
+      return !changedKeys().hasAny(['role', 'banned']);
+    }
+
+    // ==================== Users ====================
+
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.role == 'user'
+        && request.resource.data.banned == false;
+      allow update: if isAdmin()
+        || (isOwner(userId) && isSafeUserProfileUpdate())
+        || isSelfAdminBootstrap(userId);
       allow delete: if isAdmin();
+
+      // Saved searches – strictly private to their owner.
+      match /savedSearches/{searchId} {
+        allow read, write: if isOwner(userId);
+      }
     }
-    
-    // Properties collection
+
+    // ==================== Properties ====================
+
     match /properties/{propertyId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isModerator());
-      allow delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.get('isFeatured', false) == false;
+
+      allow update: if isAuthenticated() && (
+        // Property owner: normal edits, but never moderation/sensitive fields.
+        (resource.data.ownerId == request.auth.uid
+          && !changedKeys().hasAny(['ownerId', 'isFeatured', 'status', 'createdAt', 'viewsCount']))
+        // Rating recalculation (from submitting a review).
+        || (changedKeys().hasOnly(['rating', 'reviewsCount'])
+          && request.resource.data.rating is number
+          && request.resource.data.rating >= 0
+          && request.resource.data.rating <= 5
+          && request.resource.data.reviewsCount is number
+          && request.resource.data.reviewsCount >= 0)
+        // View counter increments only.
+        || (changedKeys().hasOnly(['viewsCount'])
+          && request.resource.data.viewsCount is number
+          && request.resource.data.viewsCount >= resource.data.viewsCount)
+        // Moderators/admins: full control.
+        || isModerator()
+      );
+
+      allow delete: if resource.data.ownerId == request.auth.uid || isAdmin();
+
+      // Property reviews – one review per user (doc id == uid).
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if isAuthenticated()
+          && reviewId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5;
+        allow update, delete: if isAuthenticated() && reviewId == request.auth.uid;
+      }
     }
-    
-    // Conversations collection
+
+    // ==================== Conversations / Chat ====================
+
     match /conversations/{conversationId} {
-      allow read: if isAuthenticated() && 
+      allow read: if isAuthenticated() &&
         (resource.data.ownerId == request.auth.uid || resource.data.interestedUserId == request.auth.uid);
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && 
+      allow create: if isAuthenticated()
+        && (request.resource.data.ownerId == request.auth.uid
+            || request.resource.data.interestedUserId == request.auth.uid);
+      allow update: if isAuthenticated() &&
         (resource.data.ownerId == request.auth.uid || resource.data.interestedUserId == request.auth.uid);
       allow delete: if false;
-      
+
       match /messages/{messageId} {
-        allow read: if isAuthenticated() && 
-          (get(/databases/$(database)/documents/conversations/$(conversationId)).data.ownerId == request.auth.uid ||
-           get(/databases/$(database)/documents/conversations/$(conversationId)).data.interestedUserId == request.auth.uid);
-        allow create: if isAuthenticated() && 
-          (get(/databases/$(database)/documents/conversations/$(conversationId)).data.ownerId == request.auth.uid ||
-           get(/databases/$(database)/documents/conversations/$(conversationId)).data.interestedUserId == request.auth.uid);
-        allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+        function isConversationParticipant() {
+          return isAuthenticated() &&
+            (get(/databases/$(database)/documents/conversations/$(conversationId)).data.ownerId == request.auth.uid ||
+             get(/databases/$(database)/documents/conversations/$(conversationId)).data.interestedUserId == request.auth.uid);
+        }
+        allow read: if isConversationParticipant();
+        allow create: if isConversationParticipant()
+          && request.resource.data.senderId == request.auth.uid;
+        allow update: if isConversationParticipant()
+          && changedKeys().hasOnly(['isRead']);
         allow delete: if false;
       }
     }
-    
-    // Reports collection
+
+    // ==================== Visit Requests ====================
+
+    match /visit_requests/{requestId} {
+      function isPropertyOwner() {
+        return isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      }
+      function isRequester() {
+        return isAuthenticated() && resource.data.requesterId == request.auth.uid;
+      }
+
+      allow read: if isPropertyOwner() || isRequester() || isAdmin();
+      allow create: if isAuthenticated()
+        && request.resource.data.requesterId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if (
+        isPropertyOwner()
+        && changedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['accepted', 'rejected']
+      ) || (
+        isRequester()
+        && changedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'cancelled'
+      ) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ==================== Reports ====================
+
     match /reports/{reportId} {
       allow read: if isModerator();
       allow create: if isAuthenticated();
       allow update: if isModerator();
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
-    
-    // Settings collection
+
+    // ==================== Settings ====================
+
     match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
-    // Notifications collection
+
+    // ==================== Notifications ====================
+
     match /notifications/{notificationId} {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow create: if isAuthenticated();
-      allow write: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
-    
-    // Contact messages
+
+    // ==================== Contact Messages ====================
+
     match /contact_messages/{messageId} {
       allow create: if true;
       allow read: if isModerator();
+      allow delete: if isAdmin();
     }
-    
-    // Deny everything else
+
+    // ==================== Deny everything else ====================
+
     match /{document=**} {
       allow read, write: if false;
     }

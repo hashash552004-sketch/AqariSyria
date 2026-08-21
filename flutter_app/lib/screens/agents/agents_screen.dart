@@ -3,7 +3,63 @@ import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../widgets/loading_skeleton.dart';
+import '../../services/firestore_service.dart';
+import '../../models/property.dart';
 import 'agent_profile_screen.dart';
+
+class _AgentData {
+  final String id;
+  final String name;
+  final String phone;
+  final double rating;
+  final int reviewsCount;
+  final int propertiesCount;
+  final int totalViews;
+  final String governorate;
+  final String specialty;
+
+  const _AgentData({
+    required this.id,
+    required this.name,
+    required this.phone,
+    required this.rating,
+    required this.reviewsCount,
+    required this.propertiesCount,
+    required this.totalViews,
+    required this.governorate,
+    required this.specialty,
+  });
+}
+
+_AgentData? _aggregate(String ownerId, List<Property> owned) {
+  if (owned.isEmpty) return null;
+  final rated = owned.where((p) => p.reviewsCount > 0).toList();
+  final avgRating = rated.isEmpty
+      ? 0.0
+      : rated.map((p) => p.rating * p.reviewsCount).reduce((a, b) => a + b) /
+          rated.map((p) => p.reviewsCount).reduce((a, b) => a + b);
+  final reviews = rated.fold<int>(0, (sum, p) => sum + p.reviewsCount);
+  final views = owned.fold<int>(0, (sum, p) => sum + p.viewsCount);
+  final govCounts = <String, int>{};
+  for (final p in owned) {
+    govCounts[p.governorate] = (govCounts[p.governorate] ?? 0) + 1;
+  }
+  final topGov = govCounts.entries
+      .reduce((a, b) => b.value > a.value ? b : a)
+      .key;
+  return _AgentData(
+    id: ownerId,
+    name: owned.first.ownerName.isNotEmpty ? owned.first.ownerName : 'مستخدم',
+    phone: owned.first.ownerPhone,
+    rating: avgRating,
+    reviewsCount: reviews,
+    propertiesCount: owned.length,
+    totalViews: views,
+    governorate: topGov,
+    specialty: owned.first.type,
+  );
+}
 
 class AgentsScreen extends StatefulWidget {
   const AgentsScreen({super.key});
@@ -14,75 +70,7 @@ class AgentsScreen extends StatefulWidget {
 
 class _AgentsScreenState extends State<AgentsScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String? _selectedCategory;
   String? _selectedGovernorate;
-  String? _selectedSpecialty;
-
-  final List<String> _categories = ['الكل', 'وكيل معتمد', 'وكيل عادي', 'مكتب عقاري'];
-  final List<String> _specialties = ['الكل', 'شقق', 'فلل', 'أراضي', 'عقارات تجارية', 'مزارع'];
-
-  final List<_AgentData> _agents = [
-    _AgentData(
-      name: 'أحمد الخطيب',
-      image: null,
-      rating: 4.9,
-      propertiesCount: 48,
-      category: 'وكيل معتمد',
-      governorate: 'دمشق',
-      specialty: 'شقق',
-      phone: '0933123456',
-    ),
-    _AgentData(
-      name: 'سلمى حديد',
-      image: null,
-      rating: 4.8,
-      propertiesCount: 36,
-      category: 'وكيل معتمد',
-      governorate: 'حلب',
-      specialty: 'فلل',
-      phone: '0944123456',
-    ),
-    _AgentData(
-      name: 'خالد ديب',
-      image: null,
-      rating: 4.6,
-      propertiesCount: 29,
-      category: 'وكيل عادي',
-      governorate: 'اللاذقية',
-      specialty: 'أراضي',
-      phone: '0955123456',
-    ),
-    _AgentData(
-      name: 'نور الأسعد',
-      image: null,
-      rating: 4.9,
-      propertiesCount: 52,
-      category: 'وكيل معتمد',
-      governorate: 'دمشق',
-      specialty: 'عقارات تجارية',
-      phone: '0966123456',
-    ),
-    _AgentData(
-      name: 'محمود الصالح',
-      image: null,
-      rating: 4.5,
-      propertiesCount: 22,
-      category: 'وكيل عادي',
-      governorate: 'حمص',
-      specialty: 'شقق',
-      phone: '0977123456',
-    ),
-    _AgentData(
-      name: 'رنا القاسم',
-      image: null,
-      rating: 4.7,
-      propertiesCount: 41,
-      category: 'وكيل معتمد',
-      governorate: 'طرطوس',
-      specialty: 'مزارع',
-      phone: '0988123456',
-    ),
-  ];
 
   @override
   void dispose() {
@@ -90,90 +78,122 @@ class _AgentsScreenState extends State<AgentsScreen> {
     super.dispose();
   }
 
+  List<_AgentData> _buildAgents(List<Property> properties) {
+    final byOwner = <String, List<Property>>{};
+    for (final p in properties) {
+      if (p.ownerId.isEmpty) continue;
+      byOwner.putIfAbsent(p.ownerId, () => []).add(p);
+    }
+    final agents = byOwner.entries
+        .map((e) => _aggregate(e.key, e.value))
+        .whereType<_AgentData>()
+        .toList();
+    agents.sort((a, b) => b.propertiesCount.compareTo(a.propertiesCount));
+    return agents;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(title: 'الوكلاء العقاريون'),
-      body: ListView(
-        padding: AppConstants.screenPadding,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.cards,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _searchController,
-              textDirection: TextDirection.rtl,
-              decoration: InputDecoration(
-                hintText: 'بحث عن وكيل...',
-                hintStyle: AppTextStyles.bodyMedium,
-                prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      body: StreamBuilder<List<Property>>(
+        stream: FirestoreService().streamProperties(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return ListView.builder(
+              padding: AppConstants.screenPadding,
+              itemCount: 5,
+              itemBuilder: (_, __) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: PropertyCardSkeleton(),
               ),
-              onChanged: (_) => setState(() {}),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildFilters(),
-          const SizedBox(height: 20),
-          ..._agents.map((agent) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: _buildAgentCard(agent),
-          )),
-        ],
-      ),
-    );
-  }
+            );
+          }
+          final agents = _buildAgents(snapshot.data ?? []);
+          final query = _searchController.text.trim();
+          var filtered = agents;
+          if (query.isNotEmpty) {
+            filtered = filtered.where((a) => a.name.contains(query)).toList();
+          }
+          if (_selectedGovernorate != null && _selectedGovernorate != 'الكل') {
+            filtered =
+                filtered.where((a) => a.governorate == _selectedGovernorate).toList();
+          }
 
-  Widget _buildFilters() {
-    return Row(
-      children: [
-        Expanded(child: _buildDropdown('التصنيف', _categories, _selectedCategory, (v) {
-          setState(() => _selectedCategory = v);
-        })),
-        const SizedBox(width: 8),
-        Expanded(child: _buildDropdown('المحافظة', ['الكل', ...AppConstants.governorates], _selectedGovernorate, (v) {
-          setState(() => _selectedGovernorate = v);
-        })),
-        const SizedBox(width: 8),
-        Expanded(child: _buildDropdown('التخصص', _specialties, _selectedSpecialty, (v) {
-          setState(() => _selectedSpecialty = v);
-        })),
-      ],
-    );
-  }
-
-  Widget _buildDropdown(String label, List<String> items, String? selected, ValueChanged<String?> onChanged) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cards,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selected,
-          hint: Text(label, style: AppTextStyles.caption),
-          isExpanded: true,
-          icon: Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.textSecondary),
-          style: AppTextStyles.labelMedium,
-          items: items.map((item) => DropdownMenuItem(
-            value: item,
-            child: Text(item, style: AppTextStyles.labelMedium),
-          )).toList(),
-          onChanged: onChanged,
-        ),
+          return ListView(
+            padding: AppConstants.screenPadding,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.cards,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  textDirection: TextDirection.rtl,
+                  decoration: InputDecoration(
+                    hintText: 'بحث عن وكيل...',
+                    hintStyle: AppTextStyles.bodyMedium,
+                    prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
+                    border: InputBorder.none,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 48,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: ['الكل', ...AppConstants.governorates].map((g) {
+                    final selected = _selectedGovernorate ?? 'الكل';
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: ChoiceChip(
+                        label: Text(g),
+                        selected: selected == g,
+                        selectedColor: AppColors.primary,
+                        labelStyle: TextStyle(
+                          color: selected == g ? Colors.white : AppColors.textPrimary,
+                        ),
+                        onSelected: (_) => setState(() => _selectedGovernorate = g),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              if (filtered.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 60),
+                  child: Column(
+                    children: [
+                      Icon(Icons.people_outline,
+                          size: 56, color: AppColors.textSecondary),
+                      const SizedBox(height: 12),
+                      Text('لا يوجد وكلاء مطابقون',
+                          style: AppTextStyles.titleMedium),
+                    ],
+                  ),
+                )
+              else
+                ...filtered.map((agent) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _buildAgentCard(agent),
+                    )),
+            ],
+          );
+        },
       ),
     );
   }
@@ -182,7 +202,13 @@ class _AgentsScreenState extends State<AgentsScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const AgentProfileScreen()),
+        MaterialPageRoute(
+          builder: (_) => AgentProfileScreen(
+            agentId: agent.id,
+            agentName: agent.name,
+            phone: agent.phone,
+          ),
+        ),
       ),
       child: Container(
         padding: AppConstants.cardPadding,
@@ -204,65 +230,63 @@ class _AgentsScreenState extends State<AgentsScreen> {
         ),
         child: Row(
           children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  child: Text(
-                    agent.name[0],
-                    style: AppTextStyles.displaySmall.copyWith(color: AppColors.primary, fontSize: 28),
-                  ),
-                ),
-
-              ],
+            CircleAvatar(
+              radius: 36,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              child: Text(
+                agent.name.isNotEmpty ? agent.name[0] : '؟',
+                style: AppTextStyles.displaySmall.copyWith(
+                    color: AppColors.primary, fontSize: 28),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(agent.name, style: AppTextStyles.titleMedium),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(agent.category, style: AppTextStyles.caption.copyWith(color: AppColors.primary)),
-                      ),
-                    ],
-                  ),
+                  Text(agent.name, style: AppTextStyles.titleMedium),
                   const SizedBox(height: 6),
                   Row(
                     children: [
                       ...List.generate(5, (i) => Icon(
-                        i < agent.rating.floor() ? Icons.star : Icons.star_border,
-                        color: AppColors.warning,
-                        size: 14,
-                      )),
+                            i < agent.rating.floor()
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: AppColors.warning,
+                            size: 14,
+                          )),
                       const SizedBox(width: 4),
-                      Text(agent.rating.toString(), style: AppTextStyles.labelSmall),
+                      Text(
+                        agent.reviewsCount > 0
+                            ? agent.rating.toStringAsFixed(1)
+                            : 'جديد',
+                        style: AppTextStyles.labelSmall,
+                      ),
                       const SizedBox(width: 12),
-                      Icon(Icons.location_on, size: 12, color: AppColors.textSecondary),
+                      Icon(Icons.location_on,
+                          size: 12, color: AppColors.textSecondary),
                       const SizedBox(width: 2),
-                      Text(agent.governorate, style: AppTextStyles.caption),
+                      Expanded(
+                        child: Text(agent.governorate,
+                            style: AppTextStyles.caption,
+                            overflow: TextOverflow.ellipsis),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(Icons.home_work, size: 14, color: AppColors.textSecondary),
+                      Icon(Icons.home_work,
+                          size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
-                      Text('${agent.propertiesCount} عقار', style: AppTextStyles.caption),
+                      Text('${agent.propertiesCount} عقار',
+                          style: AppTextStyles.caption),
                       const SizedBox(width: 16),
-                      Icon(Icons.business, size: 14, color: AppColors.textSecondary),
+                      Icon(Icons.visibility,
+                          size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
-                      Text(agent.specialty, style: AppTextStyles.caption),
+                      Text('${agent.totalViews} مشاهدة',
+                          style: AppTextStyles.caption),
                     ],
                   ),
                 ],
@@ -273,25 +297,4 @@ class _AgentsScreenState extends State<AgentsScreen> {
       ),
     );
   }
-}
-
-class _AgentData {
-  final String name;
-  final String? image;
-  final double rating;
-  final int propertiesCount;
-  final String category;
-  final String governorate;
-  final String specialty;
-  final String phone;
-  const _AgentData({
-    required this.name,
-    this.image,
-    required this.rating,
-    required this.propertiesCount,
-    required this.category,
-    required this.governorate,
-    required this.specialty,
-    required this.phone,
-  });
 }

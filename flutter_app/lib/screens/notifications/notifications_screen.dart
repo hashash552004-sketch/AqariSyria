@@ -9,7 +9,6 @@ import '../../services/firestore_service.dart';
 import '../../models/notification.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/empty_state_widget.dart';
-import '../../models/property.dart';
 import '../property/property_detail_screen.dart';
 import '../chat/chat_screen.dart';
 

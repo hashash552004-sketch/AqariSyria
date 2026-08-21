@@ -9,6 +9,7 @@ import '../../services/notification_service.dart';
 import '../../models/app_settings.dart';
 import '../favorites/favorites_screen.dart';
 import '../my_properties/my_properties_screen.dart';
+import '../visit/visit_requests_screen.dart';
 import '../compare/compare_properties_screen.dart';
 import '../favorites/saved_searches_screen.dart';
 import '../recently_viewed/recently_viewed_screen.dart';
@@ -430,6 +431,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildMenuSection(BuildContext context) {
     final menuItems = [
       _MenuItem('عقاراتي', Icons.home_work_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPropertiesScreen()))),
+      _MenuItem('طلبات المعاينة', Icons.event_available_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VisitRequestsScreen()))),
       _MenuItem('المفضلة', Icons.favorite_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FavoritesScreen()))),
       _MenuItem('العقارات المقترحة', Icons.compare_arrows_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ComparePropertiesScreen()))),
       _MenuItem('عمليات البحث المحفوظة', Icons.search_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedSearchesScreen()))),

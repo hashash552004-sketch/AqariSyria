@@ -5,6 +5,7 @@ import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../models/property.dart';
 import '../../services/firestore_service.dart';
+import '../../services/compare_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/gradient_button.dart';
 
@@ -18,6 +19,12 @@ class ComparePropertiesScreen extends StatefulWidget {
 
 class _ComparePropertiesScreenState extends State<ComparePropertiesScreen> {
   final List<Property> _properties = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _properties.addAll(CompareService.compareProperties);
+  }
 
   Future<void> _addProperty() async {
     final firestore = context.read<FirestoreService>();
@@ -47,11 +54,18 @@ class _ComparePropertiesScreenState extends State<ComparePropertiesScreen> {
 
     if (selected != null && mounted) {
       setState(() => _properties.add(selected));
+      if (!CompareService.isInCompare(selected.id)) {
+        CompareService.toggle(selected.id, selected);
+      }
     }
   }
 
   void _removeProperty(int index) {
+    final property = _properties[index];
     setState(() => _properties.removeAt(index));
+    if (CompareService.isInCompare(property.id)) {
+      CompareService.toggle(property.id);
+    }
   }
 
   @override

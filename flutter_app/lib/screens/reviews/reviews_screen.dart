@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
+import '../../models/review.dart';
+import '../../services/firestore_service.dart';
+import '../../services/auth_service.dart';
+import '../../core/snackbar_helper.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/gradient_button.dart';
 
 class ReviewsScreen extends StatefulWidget {
-  const ReviewsScreen({super.key});
+  final String propertyId;
+  final String propertyTitle;
+
+  const ReviewsScreen({
+    super.key,
+    required this.propertyId,
+    this.propertyTitle = '',
+  });
 
   @override
   State<ReviewsScreen> createState() => _ReviewsScreenState();
@@ -16,93 +27,205 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   String _selectedFilter = 'الكل';
   final List<String> _filters = ['الكل', 'الأحدث', 'الأعلى تقييماً'];
 
-  final List<_ReviewData> _reviews = [
-    _ReviewData(
-      name: 'أحمد المحمد',
-      avatar: null,
-      rating: 5,
-      date: '2024-12-15',
-      text: 'تعاملت معهم لشراء فيلا في دمشق، كانوا محترفين جداً وساعدوني في اختيار أفضل عقار. أنصح بالتعامل معهم.',
-      likes: 24,
-    ),
-    _ReviewData(
-      name: 'سارة الحسن',
-      avatar: null,
-      rating: 4,
-      date: '2024-11-20',
-      text: 'خدمة ممتازة وفريق متعاون. العقار كان مطابقاً للوصف تماماً. أنصح بالتعامل معهم.',
-      likes: 18,
-    ),
-    _ReviewData(
-      name: 'خالد عمر',
-      avatar: null,
-      rating: 5,
-      date: '2024-10-05',
-      text: 'أفضل مكتب عقاري تعاملت معه. الصدق والأمانة هما عنوان عملهم. سهلوا عليّ عملية شراء منزلي الأول.',
-      likes: 31,
-    ),
-    _ReviewData(
-      name: 'نور البيطار',
-      avatar: null,
-      rating: 3,
-      date: '2024-09-12',
-      text: 'تجربة جيدة بشكل عام، لكن التأخير في الرد على الاستفسارات كان مزعجاً بعض الشيء.',
-      likes: 7,
-    ),
-    _ReviewData(
-      name: 'محمود ديب',
-      avatar: null,
-      rating: 5,
-      date: '2024-08-28',
-      text: 'احترافية عالية وتعامل راقي. قاموا بتأجير شقتي في وقت قياسي وبأفضل سعر. شكراً لكم.',
-      likes: 15,
-    ),
-    _ReviewData(
-      name: 'ليلى جابر',
-      avatar: null,
-      rating: 4,
-      date: '2024-07-14',
-      text: 'فريق ممتاز ومكتب منظم. يوجد مجال لتحسين عملية التواصل لكن بشكل عام تجربة رائعة.',
-      likes: 11,
-    ),
-  ];
+  List<Review> _applyFilter(List<Review> reviews) {
+    switch (_selectedFilter) {
+      case 'الأحدث':
+        return [...reviews]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      case 'الأعلى تقييماً':
+        return [...reviews]..sort((a, b) => b.rating.compareTo(a.rating));
+      default:
+        return reviews;
+    }
+  }
+
+  Future<void> _openReviewEditor({Review? existing}) async {
+    final auth = context.read<AuthService>();
+    if (auth.currentUser == null) {
+      showSnackBar(context, 'يجب تسجيل الدخول لإضافة تقييم',
+          backgroundColor: AppColors.error);
+      return;
+    }
+    int rating = existing?.rating ?? 5;
+    final commentController = TextEditingController(text: existing?.comment ?? '');
+
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(existing == null ? 'إضافة تقييم' : 'تعديل تقييمك',
+                    style: AppTextStyles.titleLarge),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (i) {
+                    return IconButton(
+                      onPressed: () => setSheetState(() => rating = i + 1),
+                      icon: Icon(
+                        i < rating ? Icons.star_rounded : Icons.star_border_rounded,
+                        color: AppColors.warning,
+                        size: 38,
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: commentController,
+                  maxLines: 4,
+                  maxLength: 500,
+                  decoration: InputDecoration(
+                    hintText: 'شاركنا تجربتك مع هذا العقار...',
+                    filled: true,
+                    fillColor: AppColors.cards,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    onPressed: () => Navigator.pop(sheetContext, true),
+                    child: Text(existing == null ? 'نشر التقييم' : 'حفظ التعديل'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (saved != true) return;
+    final uid = auth.currentUser!.uid;
+    final name = auth.currentUser!.displayName ?? 'مستخدم';
+    try {
+      await context.read<FirestoreService>().submitReview(
+            propertyId: widget.propertyId,
+            userId: uid,
+            userName: name,
+            rating: rating,
+            comment: commentController.text.trim(),
+          );
+      if (mounted) showSnackBar(context, 'شكراً لك، تم حفظ تقييمك');
+    } catch (_) {
+      if (!mounted) return;
+      showSnackBar(context, 'تعذر حفظ التقييم، حاول مجدداً',
+          backgroundColor: AppColors.error);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(title: 'التقييمات'),
-      body: ListView(
-        padding: AppConstants.screenPadding,
-        children: [
-          _buildOverallRating(),
-          const SizedBox(height: 24),
-          _buildRatingBars(),
-          const SizedBox(height: 24),
-          _buildFilterChips(),
-          const SizedBox(height: 16),
-          ..._reviews.map((r) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: _buildReviewCard(r),
-          )),
-          const SizedBox(height: 16),
-          GradientButton(
-            text: 'إضافة تقييم',
-            icon: Icons.add,
-            width: double.infinity,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('ميزة إضافة تقييم ستتوفر قريباً'), behavior: SnackBarBehavior.floating),
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-        ],
+      appBar: CustomAppBar(title: widget.propertyTitle.isEmpty
+          ? 'التقييمات'
+          : 'تقييمات: ${widget.propertyTitle}'),
+      body: StreamBuilder<List<Review>>(
+        stream:
+            context.read<FirestoreService>().streamPropertyReviews(widget.propertyId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final reviews = snapshot.data ?? [];
+          final avg = reviews.isEmpty
+              ? 0.0
+              : reviews.map((r) => r.rating).reduce((a, b) => a + b) / reviews.length;
+          final distribution = <int, int>{};
+          for (final r in reviews) {
+            distribution[r.rating] = (distribution[r.rating] ?? 0) + 1;
+          }
+
+          return ListView(
+            padding: AppConstants.screenPadding,
+            children: [
+              _buildOverallRating(avg, reviews.length),
+              const SizedBox(height: 24),
+              _buildRatingBars(distribution, reviews.length),
+              const SizedBox(height: 24),
+              _buildFilterChips(),
+              const SizedBox(height: 16),
+              if (_applyFilter(reviews).isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Column(
+                    children: [
+                      Icon(Icons.rate_review_outlined,
+                          size: 56, color: AppColors.textSecondary),
+                      const SizedBox(height: 12),
+                      Text('لا توجد تقييمات بعد',
+                          style: AppTextStyles.titleMedium),
+                      const SizedBox(height: 6),
+                      Text('كن أول من يقيّم هذا العقار',
+                          style: AppTextStyles.bodyMedium
+                              .copyWith(color: AppColors.textSecondary)),
+                    ],
+                  ),
+                )
+              else
+                ..._applyFilter(reviews).map((r) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _buildReviewCard(r),
+                    )),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: reviews.any((r) =>
+                          r.userId == context.read<AuthService>().currentUser?.uid)
+                      ? () => _openReviewEditor(
+                          existing: reviews.firstWhere((r) =>
+                              r.userId ==
+                              context.read<AuthService>().currentUser!.uid))
+                      : () => _openReviewEditor(),
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: Text(reviews.any((r) =>
+                          r.userId == context.read<AuthService>().currentUser?.uid)
+                      ? 'تعديل تقييمك'
+                      : 'إضافة تقييم'),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildOverallRating() {
+  Widget _buildOverallRating(double avg, int count) {
     return Container(
       padding: AppConstants.cardPadding,
       decoration: BoxDecoration(
@@ -123,39 +246,40 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       ),
       child: Column(
         children: [
-          const Text('4.3', style: TextStyle(
-            fontSize: 56,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            height: 1.1,
-          )),
+          Text(count == 0 ? '-' : avg.toStringAsFixed(1),
+              style: const TextStyle(
+                fontSize: 56,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                height: 1.1,
+              )),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (i) => Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
               child: Icon(
-                i < 4 ? Icons.star : Icons.star_half,
+                i < avg.round() ? Icons.star : Icons.star_border,
                 color: AppColors.warning,
                 size: 28,
               ),
             )),
           ),
           const SizedBox(height: 8),
-          Text('من أصل 126 تقييم', style: AppTextStyles.bodyMedium),
+          Text(count == 0 ? 'لا توجد تقييمات' : 'من أصل $count تقييم',
+              style: AppTextStyles.bodyMedium),
         ],
       ),
     );
   }
 
-  Widget _buildRatingBars() {
-    final bars = [
-      _RatingBarData(stars: 5, percentage: 0.55),
-      _RatingBarData(stars: 4, percentage: 0.25),
-      _RatingBarData(stars: 3, percentage: 0.12),
-      _RatingBarData(stars: 2, percentage: 0.05),
-      _RatingBarData(stars: 1, percentage: 0.03),
-    ];
+  Widget _buildRatingBars(Map<int, int> distribution, int total) {
+    final bars = [5, 4, 3, 2, 1]
+        .map((stars) => (
+              stars: stars,
+              percentage: total == 0 ? 0.0 : (distribution[stars] ?? 0) / total,
+            ))
+        .toList();
 
     return Container(
       padding: AppConstants.cardPadding,
@@ -186,7 +310,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   child: LinearProgressIndicator(
                     value: bar.percentage,
                     backgroundColor: AppColors.shimmerBase,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.warning),
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.warning),
                     minHeight: 10,
                   ),
                 ),
@@ -244,7 +368,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     );
   }
 
-  Widget _buildReviewCard(_ReviewData review) {
+  Widget _buildReviewCard(Review review) {
+    final currentUid = context.read<AuthService>().currentUser?.uid;
+    final isMine = review.userId == currentUid;
     return Container(
       padding: AppConstants.cardPadding,
       decoration: BoxDecoration(
@@ -267,7 +393,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 radius: 24,
                 backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 child: Text(
-                  review.name[0],
+                  review.userName.isNotEmpty ? review.userName[0] : 'م',
                   style: AppTextStyles.titleMedium.copyWith(color: AppColors.primary),
                 ),
               ),
@@ -276,7 +402,23 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(review.name, style: AppTextStyles.titleSmall),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(review.userName, style: AppTextStyles.titleSmall),
+                        ),
+                        if (isMine)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text('تقييمك',
+                                style: AppTextStyles.caption.copyWith(color: AppColors.primary)),
+                          ),
+                      ],
+                    ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -286,51 +428,55 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                           size: 16,
                         )),
                         const SizedBox(width: 8),
-                        Text(review.date, style: AppTextStyles.caption),
+                        Text(_formatDate(review.createdAt), style: AppTextStyles.caption),
                       ],
                     ),
                   ],
                 ),
               ),
+              if (isMine)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.error),
+                  tooltip: 'حذف تقييمي',
+                  onPressed: () => _confirmDelete(review),
+                ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(review.text, style: AppTextStyles.bodyMedium),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(Icons.thumb_up_alt_outlined, size: 16, color: AppColors.textSecondary),
-              const SizedBox(width: 4),
-              Text('${review.likes}', style: AppTextStyles.caption),
-              const Spacer(),
-              Text('مفيد', style: AppTextStyles.caption.copyWith(color: AppColors.primary)),
-            ],
-          ),
+          Text(review.comment.isEmpty ? 'بدون تعليق' : review.comment,
+              style: AppTextStyles.bodyMedium),
         ],
       ),
     );
   }
-}
 
-class _ReviewData {
-  final String name;
-  final String? avatar;
-  final int rating;
-  final String date;
-  final String text;
-  final int likes;
-  const _ReviewData({
-    required this.name,
-    this.avatar,
-    required this.rating,
-    required this.date,
-    required this.text,
-    required this.likes,
-  });
-}
+  String _formatDate(DateTime date) {
+    return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
+  }
 
-class _RatingBarData {
-  final int stars;
-  final double percentage;
-  const _RatingBarData({required this.stars, required this.percentage});
+  Future<void> _confirmDelete(Review review) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف التقييم'),
+        content: const Text('هل تريد حذف تقييمك لهذا العقار؟'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('حذف', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await context.read<FirestoreService>().deleteReview(widget.propertyId, review.id);
+      if (mounted) showSnackBar(context, 'تم حذف تقييمك');
+    } catch (_) {
+      if (mounted) {
+        showSnackBar(context, 'تعذر الحذف', backgroundColor: AppColors.error);
+      }
+    }
+  }
 }

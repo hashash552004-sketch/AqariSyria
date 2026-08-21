@@ -80,7 +80,7 @@ class Conversation {
     this.unreadCount = 0,
   }) : lastMessageTime = lastMessageTime ?? DateTime.now();
 
-  factory Conversation.fromFirestore(Map<String, dynamic> data, String id) {
+  factory Conversation.fromFirestore(Map<String, dynamic> data, String id, {int? unreadForViewer}) {
     return Conversation(
       id: id,
       propertyId: data['propertyId']?.toString() ?? '',
@@ -91,7 +91,7 @@ class Conversation {
       interestedUserName: data['interestedUserName']?.toString() ?? '',
       lastMessage: data['lastMessage']?.toString() ?? '',
       lastMessageTime: (data['lastMessageTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      unreadCount: (data['unreadCount'] as num?)?.toInt() ?? 0,
+      unreadCount: unreadForViewer ?? (data['unreadCount'] as num?)?.toInt() ?? 0,
     );
   }
 
