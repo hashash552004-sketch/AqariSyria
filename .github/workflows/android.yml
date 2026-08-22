@@ -25,6 +25,27 @@ jobs:
             exit 1
           fi
 
+      - name: Setup release signing (optional, from secrets)
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "WARNING: signing secrets not set – building with debug signing (NOT for Play Store)."
+            echo "Add repo secrets: KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_PASSWORD, KEY_ALIAS."
+            exit 0
+          fi
+          printf '%s' "$KEYSTORE_B64" | base64 -d > flutter_app/android/app/upload-keystore.jks
+          cat > flutter_app/android/key.properties <<EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=${KEY_PASSWORD:-$KEYSTORE_PASSWORD}
+          keyAlias=${KEY_ALIAS:-upload}
+          storeFile=upload-keystore.jks
+          EOF
+          echo "Release signing configured from secrets."
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2.16.0
         with:

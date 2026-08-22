@@ -11,9 +11,23 @@ pluginManagement {
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
+        // Regional mirror first: some ISPs block dl.google.com entirely.
+        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+        maven { url = uri("https://maven.aliyun.com/repository/public") }
         google()
         mavenCentral()
         gradlePluginPortal()
+    }
+
+    resolutionStrategy {
+        eachPlugin {
+            // The plugin marker for google-services is missing from regional
+            // mirrors – map it straight to the real artifact instead.
+            if (requested.id.id == "com.google.gms.google-services") {
+                useModule("com.google.gms:google-services:4.4.2")
+            }
+        }
     }
 }
 

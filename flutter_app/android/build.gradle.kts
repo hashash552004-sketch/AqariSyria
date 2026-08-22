@@ -1,7 +1,22 @@
 allprojects {
     repositories {
+        // Regional mirror first: some ISPs block dl.google.com entirely.
+        maven(url = "https://maven.aliyun.com/repository/google")
         google()
         mavenCentral()
+    }
+}
+
+// Some legacy Flutter plugins (e.g. firebase_storage) declare their own
+// buildscript repositories – make sure the regional mirror is visible there
+// too, otherwise AGP resolution fails on networks that block dl.google.com.
+subprojects {
+    buildscript {
+        repositories {
+            maven(url = "https://maven.aliyun.com/repository/google")
+            google()
+            mavenCentral()
+        }
     }
 }
 

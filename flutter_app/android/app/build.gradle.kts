@@ -59,16 +59,21 @@ android {
     buildTypes {
         release {
             val storeFilePath = keystoreProperties.getProperty("storeFile")
-            if (storeFilePath == null) {
-                throw GradleException(
-                    "Release signing not configured. Create android/key.properties " +
-                    "from android/key.properties.example and place upload-keystore.jks in android/app/."
+            if (storeFilePath != null) {
+                // Real release signing (local machine or CI with secrets).
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                // Fallback for CI/preview builds only. Do NOT publish these to
+                // Google Play – configure android/key.properties (see
+                // key.properties.example) for a real signed release.
+                println(
+                    "WARNING: android/key.properties not found – falling back to debug signing. " +
+                    "This build must NOT be published to Google Play."
                 )
+                signingConfig = signingConfigs.getByName("debug")
             }
-            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }
