@@ -156,6 +156,26 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: AppConstants.screenPadding,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
+                    const SizedBox(height: 12),
+                    Text('حدث خطأ في تحميل التقييمات', style: AppTextStyles.titleMedium),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => setState(() {}),
+                      child: Text('إعادة المحاولة', style: TextStyle(color: AppColors.primary)),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
           final reviews = snapshot.data ?? [];
           final avg = reviews.isEmpty
               ? 0.0

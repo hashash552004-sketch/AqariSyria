@@ -11,8 +11,17 @@ import '../../widgets/property_card.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/loading_skeleton.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
+
+  @override
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  List<String> _favoriteIds = [];
+  List<Property> _properties = [];
+  bool _isLoading = true;
 
   @override
   Widget build(BuildContext context) {
@@ -28,76 +37,97 @@ class FavoritesScreen extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context, String uid) {
+    final firestore = context.read<FirestoreService>();
+
     return StreamBuilder<DocumentSnapshot>(
-      stream: context.read<FirestoreService>().streamUserFavorites(uid),
+      stream: firestore.streamUserFavorites(uid),
       builder: (context, userSnapshot) {
-        if (userSnapshot.connectionState == ConnectionState.waiting) {
+        if (userSnapshot.connectionState == ConnectionState.waiting && _favoriteIds.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
-        final data =
-            userSnapshot.data?.data() as Map<String, dynamic>?;
-        final favoriteIds = (data?['favorites'] as List?)
-                ?.map((e) => e.toString())
-                .toList() ??
-            <String>[];
+
+        final data = userSnapshot.data?.data() as Map<String, dynamic>?;
+        final favoriteIds =
+            (data?['favorites'] as List?)?.map((e) => e.toString()).toList() ??
+                <String>[];
 
         if (favoriteIds.isEmpty) {
+          if (_favoriteIds.isNotEmpty) {
+            setState(() {
+              _favoriteIds = [];
+              _properties = [];
+            });
+          }
           return const _EmptyFavorites();
         }
 
-        return StreamBuilder<List<Property>>(
-          stream: context.read<FirestoreService>().streamProperties(),
-          builder: (context, propSnapshot) {
-            if (propSnapshot.connectionState == ConnectionState.waiting) {
-              return GridView.builder(
-                padding: AppConstants.screenPadding,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount:
-                      MediaQuery.of(context).size.width > 600 ? 2 : 1,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: 4,
-                itemBuilder: (_, __) => const PropertyCardSkeleton(),
-              );
-            }
-            final allProperties = propSnapshot.data ?? [];
-            final favorites =
-                allProperties.where((p) => favoriteIds.contains(p.id)).toList();
+        if (favoriteIds != _favoriteIds) {
+          _favoriteIds = favoriteIds;
+          _fetchProperties(context, firestore, favoriteIds);
+        }
 
-            if (favorites.isEmpty) {
-              return const _EmptyFavorites();
-            }
+        if (_isLoading) {
+          return GridView.builder(
+            padding: AppConstants.screenPadding,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: 4,
+            itemBuilder: (_, __) => const PropertyCardSkeleton(),
+          );
+        }
 
-            return GridView.builder(
-              padding: AppConstants.screenPadding,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount:
-                    MediaQuery.of(context).size.width > 600 ? 2 : 1,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-              ),
-              itemCount: favorites.length,
-              itemBuilder: (context, index) {
-                final property = favorites[index];
-                return GestureDetector(
-                  onLongPress: () =>
+        if (_properties.isEmpty) {
+          return const _EmptyFavorites();
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => _fetchProperties(context, firestore, _favoriteIds),
+          child: GridView.builder(
+            padding: AppConstants.screenPadding,
+            physics: const AlwaysScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: _properties.length,
+            itemBuilder: (context, index) {
+              final property = _properties[index];
+              return GestureDetector(
+                onLongPress: () =>
+                    _toggleFavorite(context, uid, property.id),
+                child: PropertyCard(
+                  property: property,
+                  isFavorite: true,
+                  onFavorite: () =>
                       _toggleFavorite(context, uid, property.id),
-                  child: PropertyCard(
-                    property: property,
-                    isFavorite: true,
-                    onFavorite: () =>
-                        _toggleFavorite(context, uid, property.id),
-                  ),
-                );
-              },
-            );
-          },
+                ),
+              );
+            },
+          ),
         );
       },
     );
+  }
+
+  Future<void> _fetchProperties(
+    BuildContext context,
+    FirestoreService firestore,
+    List<String> ids,
+  ) async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    final properties = await firestore.getPropertiesByIds(ids);
+    if (!mounted) return;
+    setState(() {
+      _properties = properties;
+      _isLoading = false;
+    });
   }
 
   Future<void> _toggleFavorite(

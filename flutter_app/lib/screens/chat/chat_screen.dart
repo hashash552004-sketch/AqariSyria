@@ -29,9 +29,11 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
   final ImagePicker _picker = ImagePicker();
   bool _sending = false;
   Timer? _typingTimer;
@@ -40,11 +42,29 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _loadingMore = false;
   double _preserveBottomOffset = -1;
   int _lastMsgCount = -1;
+  late AnimationController _sendButtonController;
+  late AnimationController _inputBarController;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _sendButtonController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _inputBarController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    )..forward();
+    _messageController.addListener(() {
+      final hasText = _messageController.text.trim().isNotEmpty;
+      if (hasText) {
+        _sendButtonController.forward();
+      } else {
+        _sendButtonController.reverse();
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _markRead());
   }
 
@@ -66,6 +86,9 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (_) {}
     _messageController.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
+    _sendButtonController.dispose();
+    _inputBarController.dispose();
     super.dispose();
   }
 
@@ -125,6 +148,7 @@ class _ChatScreenState extends State<ChatScreen> {
           .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
       await ref.putFile(File(picked.path));
       final url = await ref.getDownloadURL();
+      if (!mounted) return;
       await context.read<FirestoreService>().sendImageMessage(widget.conversationId, uid, name, url);
     } catch (e) {
       if (!mounted) return;
@@ -145,6 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final senderName = auth.currentUser?.displayName ?? auth.currentUser?.email ?? 'مستخدم';
       await firestore.sendMessage(widget.conversationId, senderId, senderName, text);
       _messageController.clear();
+      _focusNode.requestFocus();
       _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
@@ -168,22 +193,7 @@ class _ChatScreenState extends State<ChatScreen> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          elevation: 0,
-          scrolledUnderElevation: 1,
-          backgroundColor: AppColors.cards,
-          leadingWidth: 40,
-          title: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.propertyTitle ?? 'المحادثة',
-                style: AppTextStyles.titleMedium.copyWith(fontSize: 16),
-              ),
-            ],
-          ),
-          centerTitle: true,
-        ),
+        appBar: _buildAppBar(),
         body: Column(
           children: [
             Expanded(
@@ -250,6 +260,35 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      scrolledUnderElevation: 1,
+      backgroundColor: AppColors.cards,
+      leadingWidth: 40,
+      leading: IconButton(
+        icon: Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: AppColors.textPrimary,
+          size: 20,
+        ),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            widget.propertyTitle ?? 'المحادثة',
+            style: AppTextStyles.titleMedium.copyWith(fontSize: 15),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+      centerTitle: true,
     );
   }
 
@@ -407,269 +446,272 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
 
-    return SlideTransition(
-      position: Tween<Offset>(
-        begin: Offset(isMe ? 0.3 : -0.3, 0),
-        end: Offset.zero,
-      ).animate(CurvedAnimation(
-        parent: ModalRoute.of(context)?.animation ?? const AlwaysStoppedAnimation(1.0),
-        curve: Curves.easeOutCubic,
-      )),
-      child: FadeInSlide(
-        delay: (index.clamp(0, 20)) * 20,
-        offset: Offset(isMe ? 20 : -20, 0),
-        duration: const Duration(milliseconds: 300),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Column(
-            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Column(
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Row(
-                mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (!isMe && isTail) ...[
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppColors.primary.withValues(alpha: 0.7), AppColors.secondary.withValues(alpha: 0.7)],
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.person, size: 16, color: Colors.white),
+              if (!isMe && isTail) ...[
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppColors.primary.withValues(alpha: 0.7), AppColors.secondary.withValues(alpha: 0.7)],
                     ),
-                    const SizedBox(width: 6),
-                  ],
-                  if (!isMe && !isTail) const SizedBox(width: 34),
-                  Flexible(
-                    child: Container(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.72,
-                      ),
-                      padding: msg.type == 'image'
-                          ? EdgeInsets.zero
-                          : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        gradient: isMe
-                            ? LinearGradient(
-                                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.9)],
-                                begin: Alignment.topRight,
-                                end: Alignment.bottomLeft,
-                              )
-                            : null,
-                        color: isMe ? null : AppColors.cards,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(isMe ? 18 : (isTail ? 18 : 6)),
-                          topRight: Radius.circular(isMe ? (isTail ? 18 : 6) : 18),
-                          bottomLeft: Radius.circular(isMe ? 4 : 18),
-                          bottomRight: Radius.circular(isMe ? 18 : 4),
-                        ),
-                        border: isMe ? null : Border.all(
-                          color: AppColors.border.withValues(alpha: 0.5),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isMe ? AppColors.primary : Colors.black).withValues(alpha: isMe ? 0.15 : 0.04),
-                            blurRadius: isMe ? 8 : 4,
-                            offset: Offset(0, isMe ? 3 : 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          if (msg.type == 'image' && msg.imageUrl != null)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: CachedNetworkImage(
-                                imageUrl: msg.imageUrl!,
-                                fit: BoxFit.cover,
-                                width: 240,
-                                placeholder: (_, __) => Container(
-                                  height: 180,
-                                  width: 240,
-                                  color: AppColors.shimmerBase,
-                                  child: const Center(
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-                                  ),
-                                ),
-                                errorWidget: (_, __, ___) => Container(
-                                  height: 180,
-                                  width: 240,
-                                  color: AppColors.shimmerBase,
-                                  child: Icon(Icons.broken_image, color: AppColors.textSecondary),
-                                ),
-                              ),
-                            ),
-                          if (msg.type == 'text')
-                            Text(
-                              msg.message,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: isMe ? Colors.white : AppColors.textPrimary,
-                                fontSize: 14,
-                              ),
-                            ),
-                          if (msg.type == 'image')
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
-                              child: Text(
-                                msg.message,
-                                style: AppTextStyles.caption.copyWith(
-                                  color: isMe ? Colors.white70 : AppColors.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 2),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                timeStr,
-                                style: AppTextStyles.caption.copyWith(
-                                  color: isMe
-                                      ? Colors.white.withValues(alpha: 0.6)
-                                      : AppColors.textSecondary,
-                                  fontSize: 9,
-                                ),
-                              ),
-                              if (isMe) ...[
-                                const SizedBox(width: 4),
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 300),
-                                  child: Icon(
-                                    msg.isRead ? Icons.done_all_rounded : Icons.done_rounded,
-                                    key: ValueKey(msg.isRead),
-                                    size: 14,
-                                    color: msg.isRead
-                                        ? const Color(0xFF4FC3F7)
-                                        : Colors.white.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  if (isMe && !isTail) const SizedBox(width: 0),
-                ],
+                  child: const Icon(Icons.person, size: 16, color: Colors.white),
+                ),
+                const SizedBox(width: 6),
+              ],
+              if (!isMe && !isTail) const SizedBox(width: 34),
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.72,
+                  ),
+                  padding: msg.type == 'image'
+                      ? EdgeInsets.zero
+                      : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: isMe
+                        ? LinearGradient(
+                            colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.9)],
+                            begin: Alignment.topRight,
+                            end: Alignment.bottomLeft,
+                          )
+                        : null,
+                    color: isMe ? null : AppColors.cards,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(isMe ? 18 : (isTail ? 18 : 6)),
+                      topRight: Radius.circular(isMe ? (isTail ? 18 : 6) : 18),
+                      bottomLeft: Radius.circular(isMe ? 4 : 18),
+                      bottomRight: Radius.circular(isMe ? 18 : 4),
+                    ),
+                    border: isMe ? null : Border.all(
+                      color: AppColors.border.withValues(alpha: 0.5),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isMe ? AppColors.primary : Colors.black).withValues(alpha: isMe ? 0.15 : 0.04),
+                        blurRadius: isMe ? 8 : 4,
+                        offset: Offset(0, isMe ? 3 : 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (msg.type == 'image' && msg.imageUrl != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: CachedNetworkImage(
+                            imageUrl: msg.imageUrl!,
+                            fit: BoxFit.cover,
+                            width: 240,
+                            placeholder: (_, __) => Container(
+                              height: 180,
+                              width: 240,
+                              color: AppColors.shimmerBase,
+                              child: const Center(
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                              ),
+                            ),
+                            errorWidget: (_, __, ___) => Container(
+                              height: 180,
+                              width: 240,
+                              color: AppColors.shimmerBase,
+                              child: Icon(Icons.broken_image, color: AppColors.textSecondary),
+                            ),
+                          ),
+                        ),
+                      if (msg.type == 'text')
+                        Text(
+                          msg.message,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: isMe ? Colors.white : AppColors.textPrimary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      if (msg.type == 'image')
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+                          child: Text(
+                            msg.message,
+                            style: AppTextStyles.caption.copyWith(
+                              color: isMe ? Colors.white70 : AppColors.textSecondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            timeStr,
+                            style: AppTextStyles.caption.copyWith(
+                              color: isMe
+                                  ? Colors.white.withValues(alpha: 0.6)
+                                  : AppColors.textSecondary,
+                              fontSize: 9,
+                            ),
+                          ),
+                          if (isMe) ...[
+                            const SizedBox(width: 4),
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: Icon(
+                                msg.isRead ? Icons.done_all_rounded : Icons.done_rounded,
+                                key: ValueKey(msg.isRead),
+                                size: 14,
+                                color: msg.isRead
+                                    ? const Color(0xFF4FC3F7)
+                                    : Colors.white.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
+              if (isMe && !isTail) const SizedBox(width: 0),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildInputBar() {
-    return Container(
-      padding: EdgeInsets.only(
-        left: 10,
-        right: 10,
-        top: 10,
-        bottom: MediaQuery.of(context).padding.bottom + 10,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.cards,
-        border: Border(
-          top: BorderSide(color: AppColors.border.withValues(alpha: 0.3)),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          ScaleIn(
-            delay: 0,
-            duration: const Duration(milliseconds: 300),
-            child: GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(Icons.add_photo_alternate_rounded, color: AppColors.primary, size: 22),
-              ),
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: _inputBarController, curve: Curves.easeOut),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 1),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: _inputBarController, curve: Curves.easeOutCubic)),
+        child: Container(
+          padding: EdgeInsets.only(
+            left: 10,
+            right: 10,
+            top: 10,
+            bottom: MediaQuery.of(context).padding.bottom + 10,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.cards,
+            border: Border(
+              top: BorderSide(color: AppColors.border.withValues(alpha: 0.3)),
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: TextField(
-                controller: _messageController,
-                onChanged: (_) => _onTyping(),
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'اكتب رسالتك...',
-                  hintStyle: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary.withValues(alpha: 0.6),
-                  ),
-                  filled: true,
-                  fillColor: Colors.transparent,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                ),
-                maxLines: 4,
-                minLines: 1,
-                textInputAction: TextInputAction.newline,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          AnimatedBuilder(
-            animation: _messageController,
-            builder: (context, _) {
-              final hasText = _messageController.text.trim().isNotEmpty;
-              return GestureDetector(
-                onTap: _sending ? null : _sendMessage,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutCubic,
-                  width: 48,
-                  height: 48,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    gradient: hasText
-                        ? const LinearGradient(
-                            colors: [AppColors.primary, AppColors.secondary],
-                          )
-                        : null,
-                    color: hasText ? null : AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Center(
-                    child: _sending
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : Icon(
-                            Icons.send_rounded,
-                            color: hasText ? Colors.white : AppColors.primary,
-                            size: 20,
-                          ),
+                  child: Icon(Icons.add_photo_alternate_rounded, color: AppColors.primary, size: 22),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: TextField(
+                    controller: _messageController,
+                    focusNode: _focusNode,
+                    onChanged: (_) => _onTyping(),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'اكتب رسالتك...',
+                      hintStyle: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary.withValues(alpha: 0.6),
+                      ),
+                      filled: true,
+                      fillColor: Colors.transparent,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    ),
+                    maxLines: 4,
+                    minLines: 1,
+                    textInputAction: TextInputAction.newline,
                   ),
                 ),
-              );
-            },
+              ),
+              const SizedBox(width: 8),
+              ScaleTransition(
+                scale: CurvedAnimation(
+                  parent: _sendButtonController,
+                  curve: Curves.elasticOut,
+                ),
+                child: GestureDetector(
+                  onTap: _sending ? null : _sendMessage,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: _messageController.text.trim().isNotEmpty
+                          ? const LinearGradient(
+                              colors: [AppColors.primary, AppColors.secondary],
+                            )
+                          : null,
+                      color: _messageController.text.trim().isNotEmpty ? null : AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: _messageController.text.trim().isNotEmpty
+                          ? [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: _sending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : Icon(
+                              Icons.send_rounded,
+                              color: _messageController.text.trim().isNotEmpty
+                                  ? Colors.white
+                                  : AppColors.primary,
+                              size: 20,
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,6 +19,14 @@ class SearchScreen extends StatefulWidget {
   final String? initialType;
   final String? initialOperation;
   final String? initialGovernorate;
+  final double? initialMinPrice;
+  final double? initialMaxPrice;
+  final double? initialMinArea;
+  final double? initialMaxArea;
+  final int? initialRooms;
+  final int? initialBathrooms;
+  final int? initialFloor;
+  final List<String>? initialAmenities;
 
   const SearchScreen({
     super.key,
@@ -25,6 +34,14 @@ class SearchScreen extends StatefulWidget {
     this.initialType,
     this.initialOperation,
     this.initialGovernorate,
+    this.initialMinPrice,
+    this.initialMaxPrice,
+    this.initialMinArea,
+    this.initialMaxArea,
+    this.initialRooms,
+    this.initialBathrooms,
+    this.initialFloor,
+    this.initialAmenities,
   });
 
   @override
@@ -45,6 +62,7 @@ class _SearchScreenState extends State<SearchScreen> {
   int? _floorFilter;
   Set<String> _amenities = {};
   final bool _showFilters = true;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -62,10 +80,23 @@ class _SearchScreenState extends State<SearchScreen> {
     if (widget.initialGovernorate != null && widget.initialGovernorate!.isNotEmpty) {
       _governorateFilter = widget.initialGovernorate!;
     }
+    if (widget.initialMinPrice != null || widget.initialMaxPrice != null) {
+      final max = widget.initialMaxPrice ?? widget.initialMinPrice;
+      if (max != null) _priceFilter = max.toStringAsFixed(0);
+    }
+    _minArea = widget.initialMinArea;
+    _maxArea = widget.initialMaxArea;
+    _roomsFilter = widget.initialRooms;
+    _bathroomsFilter = widget.initialBathrooms;
+    _floorFilter = widget.initialFloor;
+    if (widget.initialAmenities != null && widget.initialAmenities!.isNotEmpty) {
+      _amenities = Set<String>.from(widget.initialAmenities!);
+    }
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -134,7 +165,12 @@ class _SearchScreenState extends State<SearchScreen> {
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    onChanged: (value) => setState(() => _query = value.toLowerCase()),
+                    onChanged: (value) {
+                      _debounce?.cancel();
+                      _debounce = Timer(const Duration(milliseconds: 300), () {
+                        setState(() => _query = value.toLowerCase());
+                      });
+                    },
                   ),
                 ),
               ),
@@ -222,12 +258,20 @@ class _SearchScreenState extends State<SearchScreen> {
       return;
     }
     try {
+      final maxPrice = _priceFilter != null ? double.tryParse(_priceFilter!) : null;
       await context.read<FirestoreService>().saveSearch(
             userId: uid,
             query: _query,
             propertyType: _typeFilter == 'الكل' ? '' : _typeFilter,
             operationType: _operationFilter == 'الكل' ? '' : _operationFilter,
             governorate: _governorateFilter == 'الكل' ? '' : _governorateFilter,
+            maxPrice: maxPrice,
+            minArea: _minArea,
+            maxArea: _maxArea,
+            rooms: _roomsFilter,
+            bathrooms: _bathroomsFilter,
+            floor: _floorFilter,
+            amenities: _amenities.toList(),
           );
       if (mounted) showSnackBar(context, 'تم حفظ البحث بنجاح');
     } catch (_) {
@@ -425,19 +469,35 @@ class _SearchScreenState extends State<SearchScreen> {
           return _buildEmptyState('لا توجد نتائج للبحث');
         }
 
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          child: ListView.builder(
-            key: ValueKey('${_query}_${_typeFilter}_${_operationFilter}_${_governorateFilter}_$_priceFilter'),
-            padding: const EdgeInsets.all(20),
-            itemCount: results.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: PropertyCard(property: results[index]),
-              );
-            },
-          ),
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  'تم العثور على ${results.length} ${results.length == 1 ? 'عقار' : 'عقارات'}',
+                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary),
+                ),
+              ),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: ListView.builder(
+                  key: ValueKey('${_query}_${_typeFilter}_${_operationFilter}_${_governorateFilter}_$_priceFilter'),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: results.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: PropertyCard(property: results[index]),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

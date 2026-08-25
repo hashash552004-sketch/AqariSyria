@@ -17,6 +17,12 @@ class SavedSearch {
   final String governorate;
   final double? minPrice;
   final double? maxPrice;
+  final double? minArea;
+  final double? maxArea;
+  final int? rooms;
+  final int? bathrooms;
+  final int? floor;
+  final List<String> amenities;
   final DateTime createdAt;
 
   SavedSearch({
@@ -27,6 +33,12 @@ class SavedSearch {
     this.governorate = '',
     this.minPrice,
     this.maxPrice,
+    this.minArea,
+    this.maxArea,
+    this.rooms,
+    this.bathrooms,
+    this.floor,
+    this.amenities = const [],
     required this.createdAt,
   });
 
@@ -39,6 +51,12 @@ class SavedSearch {
       governorate: data['governorate']?.toString() ?? '',
       minPrice: (data['minPrice'] as num?)?.toDouble(),
       maxPrice: (data['maxPrice'] as num?)?.toDouble(),
+      minArea: (data['minArea'] as num?)?.toDouble(),
+      maxArea: (data['maxArea'] as num?)?.toDouble(),
+      rooms: (data['rooms'] as num?)?.toInt(),
+      bathrooms: (data['bathrooms'] as num?)?.toInt(),
+      floor: (data['floor'] as num?)?.toInt(),
+      amenities: (data['amenities'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -50,11 +68,46 @@ class SavedSearch {
     if (governorate.isNotEmpty) parts.add(governorate);
     if (minPrice != null || maxPrice != null) {
       final priceParts = <String>[];
-      if (minPrice != null) priceParts.add('من ${minPrice!.toStringAsFixed(0)}');
-      if (maxPrice != null) priceParts.add('إلى ${maxPrice!.toStringAsFixed(0)}');
+      if (minPrice != null) priceParts.add('من ${_formatNum(minPrice!)}');
+      if (maxPrice != null) priceParts.add('إلى ${_formatNum(maxPrice!)}');
       parts.add(priceParts.join(' '));
     }
+    if (rooms != null) parts.add('$rooms غرف');
+    if (bathrooms != null) parts.add('$bathrooms حمام');
+    if (floor != null) parts.add('الطابق $floor');
+    if (minArea != null || maxArea != null) {
+      final areaParts = <String>[];
+      if (minArea != null && minArea! > 0) areaParts.add('من ${minArea!.toStringAsFixed(0)}م²');
+      if (maxArea != null && maxArea! < 1000) areaParts.add('إلى ${maxArea!.toStringAsFixed(0)}م²');
+      if (areaParts.isNotEmpty) parts.add(areaParts.join(' '));
+    }
+    if (amenities.isNotEmpty) {
+      final labels = amenities.map((a) => _amenityLabel(a)).toList();
+      parts.add(labels.join(', '));
+    }
     return parts.isNotEmpty ? parts.join(' • ') : 'جميع العقارات';
+  }
+
+  static String _amenityLabel(String key) {
+    switch (key) {
+      case 'hasElevator': return 'مصعد';
+      case 'hasParking': return 'موقف';
+      case 'hasAC': return 'تكييف';
+      case 'hasHeating': return 'تدفئة';
+      case 'hasGarden': return 'حديقة';
+      case 'hasPool': return 'مسبح';
+      case 'hasBalcony': return 'شرفة';
+      case 'hasInternet': return 'إنترنت';
+      case 'hasGas': return 'غاز';
+      case 'isFurnished': return 'مفروش';
+      default: return key;
+    }
+  }
+
+  static String _formatNum(double n) {
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(0)}K';
+    return n.toStringAsFixed(0);
   }
 }
 
@@ -112,8 +165,52 @@ class SavedSearchesScreen extends StatelessWidget {
     );
   }
 
+  void _viewResults(BuildContext context, SavedSearch search) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SearchScreen(
+          initialQuery: search.query,
+          initialType:
+              search.propertyType.isEmpty ? null : search.propertyType,
+          initialOperation:
+              search.operationType.isEmpty ? null : search.operationType,
+          initialGovernorate:
+              search.governorate.isEmpty ? null : search.governorate,
+          initialMinPrice: search.minPrice,
+          initialMaxPrice: search.maxPrice,
+          initialMinArea: search.minArea,
+          initialMaxArea: search.maxArea,
+          initialRooms: search.rooms,
+          initialBathrooms: search.bathrooms,
+          initialFloor: search.floor,
+          initialAmenities: search.amenities,
+        ),
+      ),
+    );
+  }
+
   Future<void> _deleteSearch(
       BuildContext context, String uid, String searchId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('حذف البحث'),
+        content: const Text('هل أنت متأكد من حذف هذا البحث المحفوظ؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('إلغاء', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('حذف', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     try {
       await FirebaseFirestore.instance
           .collection('users')
@@ -128,23 +225,6 @@ class SavedSearchesScreen extends StatelessWidget {
         );
       }
     }
-  }
-
-  void _viewResults(BuildContext context, SavedSearch search) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SearchScreen(
-          initialQuery: search.query,
-          initialType:
-              search.propertyType.isEmpty ? null : search.propertyType,
-          initialOperation:
-              search.operationType.isEmpty ? null : search.operationType,
-          initialGovernorate:
-              search.governorate.isEmpty ? null : search.governorate,
-        ),
-      ),
-    );
   }
 }
 

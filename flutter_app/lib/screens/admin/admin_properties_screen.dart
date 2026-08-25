@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../models/property.dart';
 import '../../services/firestore_service.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/custom_app_bar.dart';
 
 class AdminPropertiesScreen extends StatefulWidget {
@@ -19,6 +21,7 @@ class _AdminPropertiesScreenState extends State<AdminPropertiesScreen>
   final TextEditingController _searchController = TextEditingController();
   late TabController _tabController;
   String _searchQuery = '';
+  Map<String, dynamic> _permissions = {};
 
   static const _tabs = ['الكل', 'نشط', 'محظور', 'قيد المراجعة', 'مرفوض'];
 
@@ -29,6 +32,17 @@ class _AdminPropertiesScreenState extends State<AdminPropertiesScreen>
     _searchController.addListener(() {
       setState(() => _searchQuery = _searchController.text.trim().toLowerCase());
     });
+    _loadPermissions();
+  }
+
+  Future<void> _loadPermissions() async {
+    final auth = context.read<AuthService>();
+    if (auth.currentUser == null) return;
+    final fs = context.read<FirestoreService>();
+    final user = await fs.getUser(auth.currentUser!.uid);
+    if (mounted && user != null) {
+      setState(() => _permissions = user.permissions);
+    }
   }
 
   @override
@@ -106,6 +120,7 @@ class _AdminPropertiesScreenState extends State<AdminPropertiesScreen>
               children: _tabs.map((tab) => _PropertiesList(
                 searchQuery: _searchQuery,
                 filter: tab,
+                canFeature: _permissions['feature_property'] == true,
               )).toList(),
             ),
           ),
@@ -118,8 +133,9 @@ class _AdminPropertiesScreenState extends State<AdminPropertiesScreen>
 class _PropertiesList extends StatelessWidget {
   final String searchQuery;
   final String filter;
+  final bool canFeature;
 
-  const _PropertiesList({required this.searchQuery, required this.filter});
+  const _PropertiesList({required this.searchQuery, required this.filter, this.canFeature = true});
 
   @override
   Widget build(BuildContext context) {
@@ -163,6 +179,7 @@ class _PropertiesList extends StatelessWidget {
           itemCount: properties.length,
           itemBuilder: (context, index) => _PropertyAdminCard(
             property: properties[index],
+            canFeature: canFeature,
             onDelete: () => _handleDelete(context, properties[index].id),
             onToggleActive: () => _handleToggleActive(context, properties[index]),
             onToggleFeatured: () => _handleToggleFeatured(context, properties[index]),
@@ -250,7 +267,7 @@ class _PropertiesList extends StatelessWidget {
 
   Future<void> _handleApprove(BuildContext context, String propertyId) async {
     try {
-      await FirestoreService().updateProperty(propertyId, {'status': 'approved'});
+      await FirestoreService().updateProperty(propertyId, {'status': 'published'});
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تمت الموافقة'), behavior: SnackBarBehavior.floating),
@@ -266,18 +283,63 @@ class _PropertiesList extends StatelessWidget {
   }
 
   Future<void> _handleReject(BuildContext context, String propertyId) async {
-    try {
-      await FirestoreService().updateProperty(propertyId, {'status': 'rejected'});
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم الرفض'), behavior: SnackBarBehavior.floating),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e'), behavior: SnackBarBehavior.floating),
-        );
+    final reasonController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('رفض العقار'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('يرجى كتابة سبب الرفض'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              textDirection: TextDirection.rtl,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'سبب الرفض...',
+                hintStyle: TextStyle(color: AppColors.textSecondary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.error),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('رفض', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      final reason = reasonController.text.trim();
+      try {
+        await FirestoreService().updateProperty(propertyId, {
+          'status': 'rejected',
+          'rejectionReason': reason.isNotEmpty ? reason : 'غير محدد',
+        });
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم الرفض'), behavior: SnackBarBehavior.floating),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$e'), behavior: SnackBarBehavior.floating),
+          );
+        }
       }
     }
   }
@@ -285,6 +347,7 @@ class _PropertiesList extends StatelessWidget {
 
 class _PropertyAdminCard extends StatelessWidget {
   final Property property;
+  final bool canFeature;
   final VoidCallback onDelete;
   final VoidCallback onToggleActive;
   final VoidCallback onToggleFeatured;
@@ -293,6 +356,7 @@ class _PropertyAdminCard extends StatelessWidget {
 
   const _PropertyAdminCard({
     required this.property,
+    this.canFeature = true,
     required this.onDelete,
     required this.onToggleActive,
     required this.onToggleFeatured,
@@ -392,23 +456,28 @@ class _PropertyAdminCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: SizedBox(
-                          height: 32,
-                          child: OutlinedButton.icon(
-                            onPressed: onToggleFeatured,
-                            icon: Icon(property.isFeatured ? Icons.star : Icons.star_border, size: 14),
-                            label: Text(property.isFeatured ? 'مميز' : 'تحديد مميز', style: AppTextStyles.labelSmall),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: property.isFeatured ? const Color(0xFFD4AF37) : AppColors.textSecondary,
-                              side: BorderSide(color: (property.isFeatured ? const Color(0xFFD4AF37) : AppColors.textSecondary).withValues(alpha: 0.3)),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                      if (canFeature) ...[
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: SizedBox(
+                            height: 32,
+                            child: OutlinedButton.icon(
+                              onPressed: onToggleFeatured,
+                              icon: Icon(property.isFeatured ? Icons.star : Icons.star_border, size: 14),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(property.isFeatured ? 'مميز' : 'تحديد مميز', style: AppTextStyles.labelSmall),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: property.isFeatured ? const Color(0xFFD4AF37) : AppColors.textSecondary,
+                                side: BorderSide(color: (property.isFeatured ? const Color(0xFFD4AF37) : AppColors.textSecondary).withValues(alpha: 0.3)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                       const SizedBox(width: 4),
                       Expanded(
                         child: SizedBox(
@@ -416,7 +485,7 @@ class _PropertyAdminCard extends StatelessWidget {
                           child: OutlinedButton.icon(
                             onPressed: onDelete,
                             icon: const Icon(Icons.delete_outline, size: 14),
-                            label: Text('حذف', style: AppTextStyles.labelSmall),
+                            label: FittedBox(fit: BoxFit.scaleDown, child: Text('حذف', style: AppTextStyles.labelSmall)),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.error,
                               side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),

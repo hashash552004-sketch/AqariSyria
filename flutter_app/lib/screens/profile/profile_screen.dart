@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import '../../services/imgbb_service.dart';
 import '../../services/notification_service.dart';
 import '../../models/app_settings.dart';
 import '../../widgets/animated_widgets.dart';
@@ -15,7 +18,6 @@ import '../compare/compare_properties_screen.dart';
 import '../favorites/saved_searches_screen.dart';
 import '../recently_viewed/recently_viewed_screen.dart';
 import '../notifications/notifications_screen.dart';
-import '../dashboard/dashboard_screen.dart';
 import 'my_stats_screen.dart';
 import 'settings_screen.dart';
 import 'contact_us_screen.dart';
@@ -26,7 +28,8 @@ import '../admin/admin_dashboard_screen.dart';
 import '../auth/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onNavigateToFavorites;
+  const ProfileScreen({super.key, this.onNavigateToFavorites});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -99,6 +102,40 @@ class _ProfileScreenState extends State<ProfileScreen>
     } catch (e) {
       debugPrint('_loadUserData error: $e');
       if (mounted) setState(() => _loadingRole = false);
+    }
+  }
+
+  Future<void> _pickAndUploadProfileImage() async {
+    final auth = context.read<AuthService>();
+    final fs = context.read<FirestoreService>();
+    final uid = auth.currentUser?.uid;
+    if (uid == null) return;
+
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (picked == null) return;
+
+    try {
+      final url = await ImgBBService.uploadImage(File(picked.path));
+      await fs.updateUserProfileImage(uid, url);
+      if (mounted) setState(() => _profileImage = url);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم تحديث الصورة بنجاح'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل رفع الصورة: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -309,20 +346,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                     Positioned(
                       bottom: 2,
                       right: 2,
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 8,
-                            ),
-                          ],
+                      child: GestureDetector(
+                        onTap: _pickAndUploadProfileImage,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.12),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary, size: 16),
                         ),
-                        child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary, size: 16),
                       ),
                     ),
                   ],
@@ -514,7 +554,13 @@ class _ProfileScreenState extends State<ProfileScreen>
     final menuItems = [
       _MenuItem('عقاراتي', Icons.home_work_rounded, AppColors.primary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPropertiesScreen()))),
       _MenuItem('طلبات المعاينة', Icons.event_available_rounded, AppColors.success, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VisitRequestsScreen()))),
-      _MenuItem('المفضلة', Icons.favorite_rounded, AppColors.error, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FavoritesScreen()))),
+      _MenuItem('المفضلة', Icons.favorite_rounded, AppColors.error, () {
+        if (widget.onNavigateToFavorites != null) {
+          widget.onNavigateToFavorites!();
+        } else {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const FavoritesScreen()));
+        }
+      }),
       _MenuItem('العقارات المقترحة', Icons.compare_arrows_rounded, AppColors.warning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ComparePropertiesScreen()))),
       _MenuItem('عمليات البحث المحفوظة', Icons.bookmark_rounded, const Color(0xFF8B5CF6), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedSearchesScreen()))),
       _MenuItem('تمت المشاهدة مؤخراً', Icons.history_rounded, const Color(0xFFEC4899), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecentlyViewedScreen()))),

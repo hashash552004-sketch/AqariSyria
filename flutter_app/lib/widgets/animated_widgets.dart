@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 class FadeInSlide extends StatefulWidget {
@@ -263,12 +262,10 @@ class _AnimatedCounterState extends State<AnimatedCounter>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  int _oldValue = 0;
 
   @override
   void initState() {
     super.initState();
-    _oldValue = widget.value;
     _controller = AnimationController(vsync: this, duration: widget.duration);
     _animation = Tween<double>(begin: 0, end: widget.value.toDouble()).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
@@ -280,7 +277,6 @@ class _AnimatedCounterState extends State<AnimatedCounter>
   void didUpdateWidget(AnimatedCounter oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
-      _oldValue = widget.value;
       _animation = Tween<double>(
         begin: _animation.value,
         end: widget.value.toDouble(),

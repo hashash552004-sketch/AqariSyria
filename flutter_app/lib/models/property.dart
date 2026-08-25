@@ -34,6 +34,7 @@ class Property {
   final bool isUrgent;
   final bool isSold;
   final String status;
+  final String rejectionReason;
   final String deedType;
   final int viewsCount;
   final double rating;
@@ -74,6 +75,7 @@ class Property {
     this.isUrgent = false,
     this.isSold = false,
     this.status = 'pending',
+    this.rejectionReason = '',
     this.deedType = '',
     this.viewsCount = 0,
     this.rating = 0,
@@ -117,7 +119,8 @@ class Property {
       isFeatured: data['isFeatured'] ?? false,
       isUrgent: data['isUrgent'] ?? false,
       isSold: data['isSold'] ?? false,
-      status: data['status']?.toString() ?? 'approved',
+      status: data['status']?.toString() ?? 'pending',
+      rejectionReason: data['rejectionReason']?.toString() ?? '',
       deedType: data['deedType']?.toString() ?? '',
       viewsCount: (data['viewsCount'] as num?)?.toInt() ?? 0,
       rating: (data['rating'] as num?)?.toDouble() ?? 0,
@@ -162,6 +165,7 @@ class Property {
       'isUrgent': isUrgent,
       'isSold': isSold,
       'status': status,
+      'rejectionReason': rejectionReason,
       'deedType': deedType,
       'viewsCount': viewsCount,
     };

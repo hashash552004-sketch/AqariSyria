@@ -14,13 +14,13 @@ import '../../services/auth_service.dart';
 import '../../widgets/property_card.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../chat/chat_screen.dart';
-import '../compare/compare_properties_screen.dart';
 import '../../services/compare_service.dart';
 import '../../widgets/star_rating.dart';
 import 'full_gallery_screen.dart';
 import 'interactive_map_screen.dart';
 import 'package:share_plus/share_plus.dart' as share_plus;
 import '../reviews/reviews_screen.dart';
+import '../visit/request_visit_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final Property property;
@@ -40,6 +40,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   double _scrollOffset = 0;
   String? _userId;
   bool _isFavorite = false;
+  bool _chatLoading = false;
 
 
   @override
@@ -136,6 +137,35 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         _buildLocation(p),
                         const SizedBox(height: 12),
                         _buildBadges(p),
+                        if (p.status == 'rejected' && p.rejectionReason.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.cancel_outlined, size: 18, color: AppColors.error),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('تم رفض العقار', style: AppTextStyles.labelMedium.copyWith(color: AppColors.error, fontWeight: FontWeight.w600)),
+                                      const SizedBox(height: 4),
+                                      Text(p.rejectionReason, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textPrimary)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 20),
                         _buildDivider(),
                         _buildQuickStats(p),
@@ -253,10 +283,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       ),
     );
     if (mounted) setState(() {});
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ComparePropertiesScreen()),
-    );
   }
 
   Widget _buildImageCarousel(Property property) {
@@ -461,14 +487,65 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         : 'بيع';
     final auth = context.read<AuthService>();
     final isOwner = auth.currentUser?.uid == property.ownerId;
+    final isLoggedIn = auth.currentUser != null;
     return Wrap(
       spacing: 8,
       runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         _badge(property.type, AppColors.primary),
         _badge(opLabel, property.operationType == 'rent' ? AppColors.success : AppColors.primary),
         if (property.isSold) _badge('تم البيع', AppColors.error),
         if (property.isFeatured) _badge('مميز', AppColors.featuredBadge),
+        if (!isOwner && !property.isSold && isLoggedIn)
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RequestVisitScreen(
+                    propertyId: property.id,
+                    propertyTitle: property.title,
+                    ownerId: property.ownerId,
+                    ownerName: property.ownerName,
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF12B76A), Color(0xFF6CE9A6)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF12B76A).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.event_available_rounded, size: 15, color: Colors.white),
+                  SizedBox(width: 5),
+                  Text(
+                    'طلب معاينة',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (!isOwner && !property.isSold && isLoggedIn)
+          const SizedBox(width: 4),
         if (isOwner)
           GestureDetector(
             onTap: () async {
@@ -628,16 +705,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        AnimatedCrossFade(
-          firstChild: Text(
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: Text(
             property.description,
             style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary, height: 1.7),
             maxLines: _descriptionExpanded ? null : 3,
             overflow: _descriptionExpanded ? null : TextOverflow.ellipsis,
           ),
-          secondChild: const SizedBox.shrink(),
-          crossFadeState: CrossFadeState.showFirst,
-          duration: const Duration(milliseconds: 200),
         ),
         if (property.description.length > 100)
           GestureDetector(
@@ -1046,11 +1123,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     return FutureBuilder<DocumentSnapshot>(
       future: firestore.getUserDoc(property.ownerId),
       builder: (context, snap) {
-        final data = snap.data?.data() as Map<String, dynamic>?;
-        final ownerPhone = data?['phone']?.toString() ?? property.ownerPhone;
-        final ownerWhatsapp = data?['whatsapp']?.toString().isNotEmpty == true
-            ? data!['whatsapp'].toString()
-            : ownerPhone;
+        String ownerPhone = property.ownerPhone;
+        String ownerWhatsapp = ownerPhone;
+        if (snap.hasData) {
+          final data = snap.data?.data() as Map<String, dynamic>?;
+          ownerPhone = data?['phone']?.toString() ?? property.ownerPhone;
+          final whatsapp = data?['whatsapp']?.toString();
+          ownerWhatsapp = (whatsapp != null && whatsapp.isNotEmpty) ? whatsapp : ownerPhone;
+        }
+
+        final bool isLoading = snap.connectionState == ConnectionState.waiting;
 
         return Container(
           padding: EdgeInsets.only(
@@ -1073,17 +1155,20 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _launchUrl('https://wa.me/${_normalizePhone(ownerWhatsapp)}'),
+                  onTap: isLoading ? null : () => _launchUrl('https://wa.me/${_normalizePhone(ownerWhatsapp)}'),
                   child: Container(
                     height: 44,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF25D366),
+                      color: isLoading ? AppColors.textSecondary.withValues(alpha: 0.3) : const Color(0xFF25D366),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.chat_rounded, color: Colors.white, size: 18),
+                        if (isLoading)
+                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        else
+                          Icon(Icons.chat_rounded, color: Colors.white, size: 18),
                         const SizedBox(width: 6),
                         Text('واتساب', style: AppTextStyles.button),
                       ],
@@ -1094,19 +1179,25 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _launchUrl('tel:$ownerPhone'),
+                  onTap: isLoading ? null : () => _launchUrl('tel:$ownerPhone'),
                   child: Container(
                     height: 44,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.secondary],
-                      ),
+                      gradient: isLoading
+                          ? null
+                          : const LinearGradient(
+                              colors: [AppColors.primary, AppColors.secondary],
+                            ),
+                      color: isLoading ? AppColors.textSecondary.withValues(alpha: 0.3) : null,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.phone_rounded, color: Colors.white, size: 18),
+                        if (isLoading)
+                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        else
+                          Icon(Icons.phone_rounded, color: Colors.white, size: 18),
                         const SizedBox(width: 6),
                         Text('اتصال', style: AppTextStyles.button),
                       ],
@@ -1117,21 +1208,27 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _startChat(context, property),
+                  onTap: _chatLoading ? null : () => _startChat(context, property),
                   child: Container(
                     height: 44,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [const Color(0xFF7B68EE), const Color(0xFF9B59B6)],
-                      ),
+                      gradient: _chatLoading
+                          ? null
+                          : const LinearGradient(
+                              colors: [Color(0xFF7B68EE), Color(0xFF9B59B6)],
+                            ),
+                      color: _chatLoading ? AppColors.textSecondary.withValues(alpha: 0.3) : null,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 18),
+                        if (_chatLoading)
+                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        else
+                          Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 18),
                         const SizedBox(width: 6),
-                        Text('مراسلة', style: AppTextStyles.button),
+                        Text(_chatLoading ? 'جاري...' : 'مراسلة', style: AppTextStyles.button),
                       ],
                     ),
                   ),
@@ -1217,30 +1314,42 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Future<void> _startChat(BuildContext context, Property p) async {
-    try {
-      final auth = context.read<AuthService>();
-      final firestore = context.read<FirestoreService>();
-      final user = auth.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('سجل دخول أولاً للمراسلة'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        return;
-      }
-      final currentUserId = user.uid;
-      if (currentUserId == p.ownerId) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('لا يمكنك مراسلة نفسك'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        return;
-      }
+    if (_chatLoading) return;
 
+    final auth = context.read<AuthService>();
+    final user = auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('سجل دخول أولاً للمراسلة'), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    final currentUserId = user.uid;
+    if (currentUserId == p.ownerId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يمكنك مراسلة نفسك'), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    if (p.ownerId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('بيانات المالك غير متوفرة'), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    if (p.isSold) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('هذا العقار تم بيعه'), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    setState(() => _chatLoading = true);
+    try {
+      final firestore = context.read<FirestoreService>();
       final userName = user.displayName ?? user.email ?? 'مستخدم';
       final convId = await firestore.createConversation(
         p.id,
@@ -1259,7 +1368,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             convId,
             currentUserId,
             userName,
-            'مرحباً، أنا مهتم بـ "${p.title}"\n\nhttps://baitalomr.app/property/${p.id}',
+            'مرحباً، أنا مهتم بـ "${p.title}"',
           );
         }
       }
@@ -1278,12 +1387,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$e'),
-            behavior: SnackBarBehavior.floating,
-          ),
+          SnackBar(content: Text('حدث خطأ: $e'), behavior: SnackBarBehavior.floating),
         );
       }
+    } finally {
+      if (mounted) setState(() => _chatLoading = false);
     }
   }
 

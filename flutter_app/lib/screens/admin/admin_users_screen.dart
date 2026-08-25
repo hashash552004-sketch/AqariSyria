@@ -80,7 +80,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 const SizedBox(width: 8),
                 _filterChip('مشرف', 2),
                 const SizedBox(width: 8),
-                _filterChip('مستخدم', 3),
+                _filterChip('موظف', 3),
                 const SizedBox(width: 8),
                 _filterChip('محظورين', 4),
               ],
@@ -282,7 +282,7 @@ class _UserTile extends StatelessWidget {
       case 'moderator':
         return 'مشرف';
       default:
-        return 'مستخدم';
+        return 'موظف';
     }
   }
 
@@ -313,37 +313,46 @@ class _UserDetailScreen extends StatefulWidget {
 class _UserDetailScreenState extends State<_UserDetailScreen> {
   final FirestoreService _firestore = FirestoreService();
   late bool _banned;
+  late String _currentRole;
   late Map<String, dynamic> _permissions;
   bool _saving = false;
 
   static const List<_PermissionEntry> _permissionDefs = [
-    _PermissionEntry('review_reports', 'مراجعة البلاغات'),
-    _PermissionEntry('respond_customers', 'الرد على العملاء'),
-    _PermissionEntry('see_reports', 'عرض التقارير'),
-    _PermissionEntry('review_properties', 'مراجعة العقارات'),
-    _PermissionEntry('see_users', 'عرض المستخدمين'),
-    _PermissionEntry('admin_permissions', 'صلاحيات المدير'),
+    _PermissionEntry('review_reports', 'مراجعة البلاغات', Icons.report_outlined),
+    _PermissionEntry('respond_customers', 'الرد على العملاء', Icons.support_agent_outlined),
+    _PermissionEntry('review_properties', 'مراجعة العقارات', Icons.approval_outlined),
+    _PermissionEntry('feature_property', 'تمييز العقار كمميز', Icons.star_outline_rounded),
+    _PermissionEntry('view_reports', 'عرض التقارير', Icons.analytics_outlined),
   ];
 
   @override
   void initState() {
     super.initState();
     _banned = widget.user.banned;
+    _currentRole = widget.user.role;
     _permissions = Map<String, dynamic>.from(widget.user.permissions);
   }
 
-  bool get _adminPerm => _permissions['admin_permissions'] == true;
+  bool get _isModerator => _currentRole == 'moderator';
 
-  void _toggleAdmin(bool value) {
+  void _applyRolePermissions(String role) {
     setState(() {
-      _permissions['admin_permissions'] = value;
-      for (final entry in _permissionDefs) {
-        if (entry.key != 'admin_permissions') {
-          _permissions[entry.key] = value;
+      _currentRole = role;
+      if (role == 'admin') {
+        for (final entry in _permissionDefs) {
+          _permissions[entry.key] = true;
         }
+      } else if (role == 'moderator') {
+        for (final entry in _permissionDefs) {
+          _permissions[entry.key] = true;
+        }
+      } else {
+        _permissions['review_reports'] = true;
+        _permissions['respond_customers'] = true;
+        _permissions['review_properties'] = true;
+        _permissions['feature_property'] = false;
       }
     });
-    _savePermissions();
   }
 
   void _togglePermission(String key, bool value) {
@@ -461,15 +470,17 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
     setState(() => _saving = true);
     try {
       await _firestore.updateUserRole(widget.user.uid, newRole);
+      _applyRolePermissions(newRole);
+      await _firestore.updateUserPermissions(widget.user.uid, _permissions);
       if (mounted) {
         String message;
         switch (newRole) {
           case 'admin':
-            message = 'تمت الترقية لمدير';
+            message = 'تم تعيين كمدير';
           case 'moderator':
-            message = 'تمت الترقية لمشرف';
+            message = 'تم تعيين كمشرف';
           default:
-            message = 'تم تخفيض الدور';
+            message = 'تم تعيين كموظف';
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
@@ -604,6 +615,11 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('إدارة الدور', style: AppTextStyles.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                  'مدير: جميع الصلاحيات\nمشرف: جميع الصلاحيات\nموظف: مراجعة العقارات، مراجعة البلاغات، الرد على العملاء',
+                  style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary, height: 1.5),
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -616,7 +632,7 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _roleButton('مستخدم', AppColors.primary, () => _changeRole('user')),
+                      child: _roleButton('موظف', AppColors.primary, () => _changeRole('user')),
                     ),
                   ],
                 ),
@@ -648,6 +664,15 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
                       ),
+                    if (_isModerator || _currentRole == 'admin')
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text('الكل', style: AppTextStyles.caption.copyWith(color: AppColors.success, fontWeight: FontWeight.w600)),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -666,7 +691,10 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _saving ? null : _toggleBan,
                     icon: Icon(_banned ? Icons.lock_open : Icons.block, size: 18),
-                    label: Text(_banned ? 'إلغاء الحظر' : 'حظر المستخدم'),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(_banned ? 'إلغاء الحظر' : 'حظر المستخدم'),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _banned ? AppColors.success : AppColors.error,
                       side: BorderSide(color: (_banned ? AppColors.success : AppColors.error).withValues(alpha: 0.3)),
@@ -682,7 +710,10 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _saving ? null : _deleteUser,
                     icon: const Icon(Icons.delete_outline, size: 18),
-                    label: const Text('حذف المستخدم'),
+                    label: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('حذف المستخدم'),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.error,
                       side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
@@ -723,58 +754,90 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
   }
 
   Widget _roleButton(String label, Color color, VoidCallback onTap) {
+    final isActive = (label == 'مدير' && _currentRole == 'admin') ||
+        (label == 'مشرف' && _currentRole == 'moderator') ||
+        (label == 'موظف' && _currentRole == 'user');
     return SizedBox(
-      height: 40,
+      height: 44,
       child: OutlinedButton(
         onPressed: _saving ? null : onTap,
         style: OutlinedButton.styleFrom(
+          backgroundColor: isActive ? color.withValues(alpha: 0.08) : null,
           foregroundColor: color,
-          side: BorderSide(color: color.withValues(alpha: 0.3)),
+          side: BorderSide(
+            color: isActive ? color : color.withValues(alpha: 0.3),
+            width: isActive ? 2 : 1,
+          ),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        child: Text(label, style: AppTextStyles.labelSmall.copyWith(color: color)),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isActive) ...[
+                Icon(Icons.check_circle_rounded, size: 14, color: color),
+                const SizedBox(width: 4),
+              ],
+              Text(label, style: AppTextStyles.labelSmall.copyWith(color: color, fontWeight: isActive ? FontWeight.w700 : FontWeight.w500)),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildPermissionTile(_PermissionEntry entry) {
-    if (entry.key == 'admin_permissions') {
-      return Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.admin_panel_settings, size: 20, color: AppColors.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(entry.label, style: AppTextStyles.labelLarge.copyWith(fontSize: 13)),
-            ),
-            Switch(
-              value: _adminPerm,
-              onChanged: (v) => _toggleAdmin(v),
-              activeThumbColor: AppColors.primary,
-            ),
-          ],
-        ),
-      );
-    }
+    final isEnabled = _permissions[entry.key] == true;
+    final canToggle = _currentRole == 'user';
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isEnabled
+            ? entry.key == 'feature_property'
+                ? AppColors.warning.withValues(alpha: 0.06)
+                : AppColors.primary.withValues(alpha: 0.05)
+            : AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isEnabled
+              ? entry.key == 'feature_property'
+                  ? AppColors.warning.withValues(alpha: 0.2)
+                  : AppColors.primary.withValues(alpha: 0.15)
+              : AppColors.border,
+        ),
+      ),
       child: Row(
         children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isEnabled
+                  ? (entry.key == 'feature_property' ? AppColors.warning : AppColors.primary).withValues(alpha: 0.12)
+                  : AppColors.border.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              entry.icon,
+              size: 18,
+              color: isEnabled
+                  ? (entry.key == 'feature_property' ? AppColors.warning : AppColors.primary)
+                  : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(
-            child: Text(entry.label, style: AppTextStyles.bodyLarge.copyWith(fontSize: 14)),
+            child: Text(entry.label, style: AppTextStyles.labelLarge.copyWith(
+              fontSize: 13,
+              color: isEnabled ? AppColors.textPrimary : AppColors.textSecondary,
+            )),
           ),
           Switch(
-            value: _permissions[entry.key] == true,
-            onChanged: (v) => _togglePermission(entry.key, v),
-            activeThumbColor: AppColors.primary,
+            value: isEnabled,
+            onChanged: canToggle ? (v) => _togglePermission(entry.key, v) : null,
+            activeThumbColor: entry.key == 'feature_property' ? AppColors.warning : AppColors.primary,
           ),
         ],
       ),
@@ -782,18 +845,18 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
   }
 
   String _roleLabel() {
-    switch (widget.user.role) {
+    switch (_currentRole) {
       case 'admin':
         return 'مدير';
       case 'moderator':
         return 'مشرف';
       default:
-        return 'مستخدم';
+        return 'موظف';
     }
   }
 
   Color _roleColor() {
-    switch (widget.user.role) {
+    switch (_currentRole) {
       case 'admin':
         return const Color(0xFFD4AF37);
       case 'moderator':
@@ -807,5 +870,6 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
 class _PermissionEntry {
   final String key;
   final String label;
-  const _PermissionEntry(this.key, this.label);
+  final IconData icon;
+  const _PermissionEntry(this.key, this.label, this.icon);
 }

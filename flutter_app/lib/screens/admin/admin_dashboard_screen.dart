@@ -4,11 +4,14 @@ import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../models/property.dart';
+import '../../models/user.dart';
 import '../../services/firestore_service.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import 'admin_users_screen.dart';
 import 'admin_properties_screen.dart';
 import 'admin_reports_screen.dart';
+import 'admin_analytics_screen.dart';
 import 'admin_settings_screen.dart';
 
 enum _DateFilter { today, week, month, all }
@@ -31,6 +34,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   int _totalUsers = 0;
 
   List<Property> _allProps = [];
+  Map<String, dynamic> _permissions = {};
 
   late final AnimationController _staggerController;
   late final AnimationController _headerController;
@@ -60,6 +64,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   Future<void> _loadStats() async {
     setState(() => _loading = true);
     final fs = context.read<FirestoreService>();
+    final auth = context.read<AuthService>();
     try {
       final results = await Future.wait([
         fs.getAllPropertiesAdmin(),
@@ -69,11 +74,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       final props = results[0] as List<Property>;
       final users = results[1] as List<dynamic>;
 
+      AppUser? currentUser;
+      if (auth.currentUser != null) {
+        currentUser = await fs.getUser(auth.currentUser!.uid);
+      }
+
       if (!mounted) return;
       setState(() {
         _allProps = props;
         _totalProps = props.length;
         _totalUsers = users.length;
+        _permissions = currentUser?.permissions ?? {};
         _loading = false;
       });
       _computeStats();
@@ -384,38 +395,53 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   // ────────────────────── ADMIN ACTIONS ──────────────────────
 
   Widget _buildAdminActions(BuildContext context) {
-    final actions = [
-      _AdminAction(
+    final actions = <_AdminAction>[];
+
+    if (_permissions['review_properties'] == true) {
+      actions.add(_AdminAction(
         'مراجعة العقارات',
         Icons.home_work_rounded,
         AppColors.primary,
-        () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => const AdminPropertiesScreen())),
-      ),
-      _AdminAction(
-        'إدارة المستخدمين',
-        Icons.people_rounded,
-        AppColors.success,
         () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AdminUsersScreen())),
-      ),
-      _AdminAction(
+            MaterialPageRoute(builder: (_) => const AdminPropertiesScreen())),
+      ));
+    }
+
+    actions.add(_AdminAction(
+      'إدارة المستخدمين',
+      Icons.people_rounded,
+      AppColors.success,
+      () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => const AdminUsersScreen())),
+    ));
+
+    if (_permissions['review_reports'] == true) {
+      actions.add(_AdminAction(
         'مراجعة البلاغات',
         Icons.flag_rounded,
         AppColors.warning,
         () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const AdminReportsScreen())),
-      ),
-      _AdminAction(
-        'إعدادات التطبيق',
-        Icons.settings_rounded,
-        AppColors.accent,
+      ));
+    }
+
+    if (_permissions['view_reports'] == true) {
+      actions.add(_AdminAction(
+        'التقارير والإحصائيات',
+        Icons.analytics_rounded,
+        const Color(0xFF76C7FF),
         () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AdminSettingsScreen())),
-      ),
-    ];
+            MaterialPageRoute(builder: (_) => const AdminAnalyticsScreen())),
+      ));
+    }
+
+    actions.add(_AdminAction(
+      'إعدادات التطبيق',
+      Icons.settings_rounded,
+      AppColors.accent,
+      () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => const AdminSettingsScreen())),
+    ));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

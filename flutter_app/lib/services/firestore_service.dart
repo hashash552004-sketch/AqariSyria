@@ -32,7 +32,7 @@ class FirestoreService {
     final properties = <Property>[];
     for (final doc in snapshot.docs) {
       final data = doc.data();
-      if (data['status'] != 'approved') continue;
+      if (data['status'] != 'published') continue;
       if (type != null && data['type'] != type) continue;
       if (operationType != null && data['operationType'] != operationType) continue;
       properties.add(Property.fromFirestore(Map<String, dynamic>.from(data), doc.id));
@@ -72,7 +72,7 @@ class FirestoreService {
       if (!adminView) {
         properties = properties
             .where((p) => !bannedIds.contains(p.ownerId))
-            .where((p) => p.status == 'approved')
+            .where((p) => p.status == 'published')
             .toList();
       }
 
@@ -240,6 +240,10 @@ class FirestoreService {
 
   Future<void> updateUserPermissions(String uid, Map<String, dynamic> permissions) async {
     await _firestore.collection('users').doc(uid).update({'permissions': permissions});
+  }
+
+  Future<void> updateUserProfileImage(String uid, String imageUrl) async {
+    await _firestore.collection('users').doc(uid).update({'profileImage': imageUrl});
   }
 
   Future<bool> isUserBanned(String uid) async {
@@ -987,6 +991,21 @@ class FirestoreService {
     return _firestore.collection('users').doc(uid).snapshots();
   }
 
+  Future<List<Property>> getPropertiesByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    try {
+      final results = await Future.wait(
+        ids.map((id) => _firestore.collection('properties').doc(id).get()),
+      );
+      return results
+          .where((doc) => doc.exists)
+          .map((doc) => Property.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   Future<void> notifyAdminsNewProperty(Property property) async {
     try {
       final snapshot = await _firestore
@@ -1120,6 +1139,12 @@ class FirestoreService {
     String governorate = '',
     double? minPrice,
     double? maxPrice,
+    double? minArea,
+    double? maxArea,
+    int? rooms,
+    int? bathrooms,
+    int? floor,
+    List<String> amenities = const [],
   }) async {
     await _firestore
         .collection('users')
@@ -1132,6 +1157,12 @@ class FirestoreService {
       'governorate': governorate,
       'minPrice': minPrice,
       'maxPrice': maxPrice,
+      'minArea': minArea,
+      'maxArea': maxArea,
+      'rooms': rooms,
+      'bathrooms': bathrooms,
+      'floor': floor,
+      'amenities': amenities,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -1143,12 +1174,17 @@ class FirestoreService {
         .collection('properties')
         .doc(propertyId)
         .collection('reviews')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => Review.fromFirestore(
-                Map<String, dynamic>.from(d.data() as Map<dynamic, dynamic>), d.id))
-            .toList());
+        .map((snap) {
+      final reviews = snap.docs
+          .map((d) => Review.fromFirestore(
+              Map<String, dynamic>.from(d.data() as Map<dynamic, dynamic>), d.id))
+          .toList();
+      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return reviews;
+    }).handleError((error) {
+      return <Review>[];
+    });
   }
 
   /// Creates or updates the current user's review (doc id == uid).
@@ -1194,10 +1230,10 @@ class FirestoreService {
           .collection('reviews')
           .get();
       if (snap.docs.isEmpty) {
-        await _firestore.collection('properties').doc(propertyId).update({
+        await _firestore.collection('properties').doc(propertyId).set({
           'rating': 0.0,
           'reviewsCount': 0,
-        });
+        }, SetOptions(merge: true));
         return;
       }
       double sum = 0;
@@ -1205,10 +1241,10 @@ class FirestoreService {
         sum += ((doc.data()['rating'] as num?)?.toDouble()) ?? 0;
       }
       final avg = sum / snap.docs.length;
-      await _firestore.collection('properties').doc(propertyId).update({
+      await _firestore.collection('properties').doc(propertyId).set({
         'rating': double.parse(avg.toStringAsFixed(1)),
         'reviewsCount': snap.docs.length,
-      });
+      }, SetOptions(merge: true));
     } catch (_) {}
   }
 

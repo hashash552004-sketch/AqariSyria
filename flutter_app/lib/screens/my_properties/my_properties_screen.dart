@@ -25,7 +25,7 @@ class _MyPropertiesScreenState extends State<MyPropertiesScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  static const _tabs = ['منشورة', 'قيد المراجعة', 'مرفوضة', 'منتهية'];
+  static const _tabs = ['قيد المراجعة', 'منشورة', 'مرفوضة'];
 
   @override
   void initState() {
@@ -111,9 +111,8 @@ class _PropertiesList extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusMap = {
       'منشورة': 'published',
-      'قيد المراجعة': 'review',
+      'قيد المراجعة': 'pending',
       'مرفوضة': 'rejected',
-      'منتهية': 'expired',
     };
 
     final statusEn = statusMap[status] ?? 'published';
@@ -138,7 +137,7 @@ class _PropertiesList extends StatelessWidget {
         });
         final filtered = allDocs.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          final docStatus = data['status']?.toString() ?? 'published';
+          final docStatus = data['status']?.toString() ?? 'pending';
           if (statusEn == 'published') {
             return docStatus == 'published' && data['isActive'] != false;
           }
@@ -197,34 +196,30 @@ class _PropertiesList extends StatelessWidget {
   }
 
   String _statusLabel(Map<String, dynamic> data) {
-    final s = data['status']?.toString() ?? 'published';
+    final s = data['status']?.toString() ?? 'pending';
     switch (s) {
       case 'published':
         return 'منشورة';
-      case 'review':
+      case 'pending':
         return 'قيد المراجعة';
       case 'rejected':
         return 'مرفوضة';
-      case 'expired':
-        return 'منتهية';
       default:
-        return 'منشورة';
+        return 'قيد المراجعة';
     }
   }
 
   Color _statusColor(Map<String, dynamic> data) {
-    final s = data['status']?.toString() ?? 'published';
+    final s = data['status']?.toString() ?? 'pending';
     switch (s) {
       case 'published':
         return AppColors.success;
-      case 'review':
+      case 'pending':
         return AppColors.warning;
       case 'rejected':
         return AppColors.error;
-      case 'expired':
-        return AppColors.textSecondary;
       default:
-        return AppColors.success;
+        return AppColors.warning;
     }
   }
 
@@ -253,6 +248,7 @@ class _PropertiesList extends StatelessWidget {
       ),
     );
     if (confirmed == true) {
+      if (!context.mounted) return;
       try {
         final fs = context.read<FirestoreService>();
         await fs.deleteProperty(propertyId);
@@ -442,6 +438,35 @@ class _MyPropertyCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
+                if (property.status == 'rejected' && property.rejectionReason.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.info_outline, size: 16, color: AppColors.error),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('سبب الرفض', style: AppTextStyles.labelSmall.copyWith(color: AppColors.error, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text(property.rejectionReason, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textPrimary)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 Row(
                   children: [
                     Expanded(

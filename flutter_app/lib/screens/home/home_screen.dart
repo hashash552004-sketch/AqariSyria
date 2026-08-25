@@ -35,6 +35,10 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _selectedIndex = 0);
   }
 
+  void _switchToFavoritesTab() {
+    setState(() => _selectedIndex = 1);
+  }
+
   void _handleCompare(String propertyId) {
     CompareService.toggle(propertyId);
     final isAdding = CompareService.isInCompare(propertyId);
@@ -55,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const FavoritesScreen(),
       AddPropertyScreen(onBackToHome: _switchToHomeTab),
       const ConversationsScreen(),
-      const ProfileScreen(),
+      ProfileScreen(onNavigateToFavorites: _switchToFavoritesTab),
     ];
 
     return PopScope(
@@ -195,23 +199,24 @@ class _HomeTabState extends State<_HomeTab> {
   final List<String> _categories = ['الكل', 'شقة', 'فيلا', 'منزل', 'أرض'];
   Set<String> _favoriteIds = {};
   StreamSubscription? _favSubscription;
-  final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0;
 
   @override
   void initState() {
     super.initState();
     _loadFavorites();
-    _scrollController.addListener(() {
-      if (mounted) setState(() => _scrollOffset = _scrollController.offset);
-    });
   }
 
   @override
   void dispose() {
     _favSubscription?.cancel();
-    _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _refreshData() async {
+    _favSubscription?.cancel();
+    _loadFavorites();
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) setState(() {});
   }
 
   void _loadFavorites() {
@@ -264,19 +269,20 @@ class _HomeTabState extends State<_HomeTab> {
     final auth = context.read<AuthService>();
     final user = auth.currentUser;
     final userName = user?.displayName ?? '';
-    final parallaxFactor = (_scrollOffset / 300).clamp(0.0, 1.0);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        controller: _scrollController,
-        physics: const BouncingScrollPhysics(),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        color: AppColors.primary,
+        child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         slivers: [
             SliverToBoxAdapter(
               child: FadeInSlide(
                 offset: const Offset(0, -30),
                 duration: const Duration(milliseconds: 600),
-                child: _buildPremiumHeader(userName, user?.uid ?? '', parallaxFactor),
+                child: _buildPremiumHeader(userName, user?.uid ?? ''),
               ),
             ),
             SliverToBoxAdapter(
@@ -317,10 +323,11 @@ class _HomeTabState extends State<_HomeTab> {
             ),
           ],
         ),
+        ),
     );
   }
 
-  Widget _buildPremiumHeader(String userName, String userId, double parallaxFactor) {
+  Widget _buildPremiumHeader(String userName, String userId) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -473,10 +480,10 @@ class _HomeTabState extends State<_HomeTab> {
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'صباح الخير ☀️';
-    if (hour < 17) return 'مساء الخير 🌤️';
-    if (hour < 21) return 'مساء الخير 🌙';
-    return 'مساء الخير 🌙';
+    if (hour >= 5 && hour < 12) return 'صباح الخير ☀️';
+    if (hour >= 12 && hour < 17) return 'مساء الخير 🌤️';
+    if (hour >= 17 && hour < 21) return 'مساء الخير 🌙';
+    return 'تصبح على خير 🌙';
   }
 
   Widget _buildFeaturedSection(FirestoreService firestore) {
@@ -553,6 +560,7 @@ class _HomeTabState extends State<_HomeTab> {
                           padding: const EdgeInsets.only(left: 12),
                           child: PropertyCard(
                             property: properties[index],
+                            isFavorite: _favoriteIds.contains(properties[index].id),
                             onFavorite: () => _toggleFavorite(properties[index]),
                           ),
                         ),
