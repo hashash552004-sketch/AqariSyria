@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,6 +13,7 @@ import '../../services/compare_service.dart';
 import '../../widgets/property_card.dart';
 import '../../widgets/loading_skeleton.dart';
 import '../../widgets/empty_state_widget.dart';
+import '../../widgets/animated_widgets.dart';
 import '../search/search_screen.dart';
 import '../favorites/favorites_screen.dart';
 import '../add_property/add_property_screen.dart';
@@ -42,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
       SnackBar(
         content: Text(isAdding ? 'تمت الإضافة للمقارنة' : 'تمت الإزالة من المقارنة'),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -57,8 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return PopScope(
-      // Hardware back on a non-home tab goes back one "step" (to home tab)
-      // instead of closing the app.
       canPop: _selectedIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop && _selectedIndex != 0) {
@@ -71,124 +72,119 @@ class _HomeScreenState extends State<HomeScreen> {
           children: screens,
         ),
         floatingActionButton: CompareService.compareIds.length >= 2
-            ? FloatingActionButton.extended(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ComparePropertiesScreen()),
+            ? ScaleIn(
+                child: FloatingActionButton.extended(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ComparePropertiesScreen()),
+                  ),
+                  label: Text('مقارنة (${CompareService.compareIds.length})'),
+                  icon: const Icon(Icons.compare_arrows),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
                 ),
-                label: Text('مقارنة (${CompareService.compareIds.length})'),
-                icon: const Icon(Icons.compare_arrows),
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
               )
             : null,
         bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) => setState(() => _selectedIndex = index),
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: AppColors.cards,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textSecondary,
-          selectedFontSize: 11,
-          unselectedFontSize: 11,
-          selectedLabelStyle: GoogleFonts.cairo(fontWeight: FontWeight.w600),
-          unselectedLabelStyle: GoogleFonts.cairo(),
-          elevation: 0,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded, size: 26),
-              activeIcon: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            child: BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: (index) => setState(() => _selectedIndex = index),
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: AppColors.cards,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textSecondary,
+              selectedFontSize: 11,
+              unselectedFontSize: 11,
+              selectedLabelStyle: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+              unselectedLabelStyle: GoogleFonts.cairo(),
+              elevation: 0,
+              items: [
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.home_rounded, size: 26),
+                  activeIcon: _ActiveTabIcon(icon: Icons.home_rounded),
+                  label: 'الرئيسية',
                 ),
-                child: Icon(Icons.home_rounded, size: 26, color: AppColors.primary),
-              ),
-              label: 'الرئيسية',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_rounded, size: 26),
-              activeIcon: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.favorite_rounded, size: 26),
+                  activeIcon: _ActiveTabIcon(icon: Icons.favorite_rounded),
+                  label: 'المفضلة',
                 ),
-                child: Icon(Icons.favorite_rounded, size: 26, color: AppColors.primary),
-              ),
-              label: 'المفضلة',
-            ),
-            BottomNavigationBarItem(
-              icon: ShaderMask(
-                shaderCallback: (bounds) => LinearGradient(
-                  colors: [AppColors.primary, AppColors.secondary],
-                ).createShader(bounds),
-                child: Icon(Icons.add_circle_rounded, size: 36, color: Colors.white),
-              ),
-              activeIcon: ShaderMask(
-                shaderCallback: (bounds) => LinearGradient(
-                  colors: [AppColors.accent, AppColors.secondary],
-                ).createShader(bounds),
-                child: Icon(Icons.add_circle_rounded, size: 36, color: Colors.white),
-              ),
-              label: 'إضافة',
-            ),
-            BottomNavigationBarItem(
-              icon: StreamBuilder<int>(
-                stream: context.read<FirestoreService>().streamUnreadConversationCount(context.read<AuthService>().currentUser?.uid ?? ''),
-                builder: (context, snap) {
-                  final count = snap.data ?? 0;
-                  return Badge(
-                    isLabelVisible: count > 0,
-                    label: Text('$count', style: const TextStyle(fontSize: 10, color: Colors.white)),
-                    child: const Icon(Icons.chat_bubble_rounded, size: 26),
-                  );
-                },
-              ),
-              activeIcon: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                BottomNavigationBarItem(
+                  icon: ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [AppColors.primary, AppColors.secondary],
+                    ).createShader(bounds),
+                    child: const Icon(Icons.add_circle_rounded, size: 36, color: Colors.white),
+                  ),
+                  activeIcon: ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [AppColors.accent, AppColors.secondary],
+                    ).createShader(bounds),
+                    child: const Icon(Icons.add_circle_rounded, size: 36, color: Colors.white),
+                  ),
+                  label: 'إضافة',
                 ),
-                child: const Icon(Icons.chat_bubble_rounded, size: 26, color: AppColors.primary),
-              ),
-              label: 'الرسائل',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded, size: 26),
-              activeIcon: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                BottomNavigationBarItem(
+                  icon: StreamBuilder<int>(
+                    stream: context.read<FirestoreService>().streamUnreadConversationCount(
+                      context.read<AuthService>().currentUser?.uid ?? '',
+                    ),
+                    builder: (context, snap) {
+                      final count = snap.data ?? 0;
+                      return Badge(
+                        isLabelVisible: count > 0,
+                        label: Text('$count', style: const TextStyle(fontSize: 10, color: Colors.white)),
+                        child: const Icon(Icons.chat_bubble_rounded, size: 26),
+                      );
+                    },
+                  ),
+                  activeIcon: _ActiveTabIcon(icon: Icons.chat_bubble_rounded),
+                  label: 'الرسائل',
                 ),
-                child: Icon(Icons.person_rounded, size: 26, color: AppColors.primary),
-              ),
-              label: 'حسابي',
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.person_rounded, size: 26),
+                  activeIcon: _ActiveTabIcon(icon: Icons.person_rounded),
+                  label: 'حسابي',
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _ActiveTabIcon extends StatelessWidget {
+  final IconData icon;
+  const _ActiveTabIcon({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
       ),
+      child: Icon(icon, size: 26, color: AppColors.primary),
     );
   }
 }
 
 class _HomeTab extends StatefulWidget {
   final void Function(String)? onCompare;
-
   const _HomeTab({this.onCompare});
 
   @override
@@ -200,16 +196,22 @@ class _HomeTabState extends State<_HomeTab> {
   final List<String> _categories = ['الكل', 'شقة', 'فيلا', 'منزل', 'أرض'];
   Set<String> _favoriteIds = {};
   StreamSubscription? _favSubscription;
+  final ScrollController _scrollController = ScrollController();
+  double _scrollOffset = 0;
 
   @override
   void initState() {
     super.initState();
     _loadFavorites();
+    _scrollController.addListener(() {
+      if (mounted) setState(() => _scrollOffset = _scrollController.offset);
+    });
   }
 
   @override
   void dispose() {
     _favSubscription?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -244,6 +246,7 @@ class _HomeTabState extends State<_HomeTab> {
           SnackBar(
             content: Text(wasFav ? 'تمت الإزالة من المفضلة' : 'تمت الإضافة إلى المفضلة'),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -262,38 +265,61 @@ class _HomeTabState extends State<_HomeTab> {
     final auth = context.read<AuthService>();
     final user = auth.currentUser;
     final userName = user?.displayName ?? '';
+    final parallaxFactor = (_scrollOffset / 300).clamp(0.0, 1.0);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() {});
+          await Future.delayed(const Duration(milliseconds: 600));
         },
+        color: AppColors.primary,
         child: CustomScrollView(
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(child: _buildPremiumHeader(userName, user?.uid ?? '')),
-            SliverToBoxAdapter(child: _buildFeaturedSection(firestore)),
-            SliverToBoxAdapter(child: _buildCategoryChips()),
+            SliverToBoxAdapter(
+              child: FadeInSlide(
+                offset: const Offset(0, -30),
+                duration: const Duration(milliseconds: 600),
+                child: _buildPremiumHeader(userName, user?.uid ?? '', parallaxFactor),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: FadeInSlide(
+                delay: 150,
+                offset: const Offset(30, 0),
+                child: _buildFeaturedSection(firestore),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: FadeInSlide(delay: 250, child: _buildCategoryChips()),
+            ),
             SliverPadding(
               padding: AppConstants.screenHorizontalPadding,
               sliver: SliverToBoxAdapter(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('عقارات حديثة', style: AppTextStyles.headlineSmall),
-                    TextButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SearchScreen()),
+                child: FadeInSlide(
+                  delay: 350,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('عقارات حديثة', style: AppTextStyles.headlineSmall),
+                      TextButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SearchScreen()),
+                        ),
+                        icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                        label: Text('عرض الكل', style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
                       ),
-                      child: Text('عرض الكل', style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
             SliverPadding(
-              padding: EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.only(bottom: 24),
               sliver: _buildRecentProperties(firestore),
             ),
           ],
@@ -302,30 +328,30 @@ class _HomeTabState extends State<_HomeTab> {
     );
   }
 
-  Widget _buildPremiumHeader(String userName, String userId) {
+  Widget _buildPremiumHeader(String userName, String userId, double parallaxFactor) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.secondary],
+          colors: [AppColors.primary, AppColors.secondary, AppColors.accent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
+          bottomLeft: Radius.circular(36),
+          bottomRight: Radius.circular(36),
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: AppColors.primary.withValues(alpha: 0.35),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -335,13 +361,19 @@ class _HomeTabState extends State<_HomeTab> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('أهلاً بك', style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                      )),
+                      Text(
+                        _getGreeting(),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
+                      ),
                       const SizedBox(height: 2),
                       Text(
                         userName.isNotEmpty ? userName : 'عقار اونلاين',
-                        style: AppTextStyles.headlineMedium.copyWith(color: Colors.white),
+                        style: AppTextStyles.headlineMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
@@ -349,82 +381,94 @@ class _HomeTabState extends State<_HomeTab> {
                     stream: context.read<FirestoreService>().streamUnreadNotificationCount(userId),
                     builder: (context, snapshot) {
                       final unread = snapshot.data ?? 0;
-                      return Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                      return GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
                         ),
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
-                              onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                          ),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              const Center(
+                                child: Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
                               ),
-                            ),
-                            if (unread > 0)
-                              Positioned(
-                                top: 4,
-                                right: 4,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.error,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 1.5),
-                                  ),
-                                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                                  child: Text(
-                                    unread > 99 ? '99+' : '$unread',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
+                              if (unread > 0)
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: GlowPulse(
+                                    glowColor: AppColors.error,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.error,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.white, width: 1.5),
+                                      ),
+                                      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                                      child: Text(
+                                        unread > 99 ? '99+' : '$unread',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
-                                    textAlign: TextAlign.center,
                                   ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     },
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              Material(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(18),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+              const SizedBox(height: 22),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchScreen()),
+                ),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                   ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.search_rounded, color: Colors.white.withValues(alpha: 0.8), size: 22),
-                        const SizedBox(width: 12),
-                        Text(
-                          'ابحث عن عقار...',
+                  child: Row(
+                    children: [
+                      Icon(Icons.search_rounded, color: Colors.white.withValues(alpha: 0.85), size: 22),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'ابحث عن عقارك المثالي...',
                           style: AppTextStyles.bodyLarge.copyWith(
-                            color: Colors.white.withValues(alpha: 0.7),
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.tune_rounded, color: Colors.white.withValues(alpha: 0.8), size: 18),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -433,6 +477,14 @@ class _HomeTabState extends State<_HomeTab> {
         ),
       ),
     );
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'صباح الخير ☀️';
+    if (hour < 17) return 'مساء الخير 🌤️';
+    if (hour < 21) return 'مساء الخير 🌙';
+    return 'مساء الخير 🌙';
   }
 
   Widget _buildFeaturedSection(FirestoreService firestore) {
@@ -446,7 +498,24 @@ class _HomeTabState extends State<_HomeTab> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('عقارات مميزة', style: AppTextStyles.headlineSmall),
+                Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.primary, AppColors.secondary],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text('عقارات مميزة', style: AppTextStyles.headlineSmall),
+                  ],
+                ),
                 TextButton(
                   onPressed: () => Navigator.push(
                     context,
@@ -458,7 +527,7 @@ class _HomeTabState extends State<_HomeTab> {
             ),
           ),
           SizedBox(
-            height: 260,
+            height: 270,
             child: StreamBuilder<List<Property>>(
               stream: firestore.streamFeaturedProperties(),
               builder: (context, snapshot) {
@@ -466,31 +535,34 @@ class _HomeTabState extends State<_HomeTab> {
                   return ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: 3,
-                    itemBuilder: (_, __) => const SizedBox(
+                    itemBuilder: (_, i) => SizedBox(
                       width: 280,
                       child: Padding(
-                        padding: EdgeInsets.only(left: 16),
-                        child: PropertyCardSkeleton(),
+                        padding: const EdgeInsets.only(left: 16),
+                        child: ScaleIn(delay: i * 100, beginScale: 0.9, child: const PropertyCardSkeleton()),
                       ),
                     ),
                   );
                 }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const SizedBox.shrink();
-                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
                 final properties = snapshot.data!;
                 return ListView.builder(
                   scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.only(left: 16),
                   itemCount: properties.length,
                   itemBuilder: (context, index) {
-                    return SizedBox(
-                      width: 280,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: PropertyCard(
-                          property: properties[index],
-                          onFavorite: () => _toggleFavorite(properties[index]),
+                    return ScaleIn(
+                      delay: index * 80,
+                      duration: const Duration(milliseconds: 500),
+                      child: SizedBox(
+                        width: 280,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: PropertyCard(
+                            property: properties[index],
+                            onFavorite: () => _toggleFavorite(properties[index]),
+                          ),
                         ),
                       ),
                     );
@@ -508,37 +580,52 @@ class _HomeTabState extends State<_HomeTab> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: SizedBox(
-        height: 44,
+        height: 46,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
           itemCount: _categories.length,
           separatorBuilder: (_, __) => const SizedBox(width: 10),
           itemBuilder: (context, index) {
             final isSelected = _selectedCategory == _categories[index];
-            return GestureDetector(
-              onTap: () => setState(() => _selectedCategory = _categories[index]),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.cards,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.border,
-                  ),
-                  boxShadow: isSelected ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+            return ScaleIn(
+              delay: index * 50,
+              beginScale: 0.8,
+              duration: const Duration(milliseconds: 400),
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedCategory = _categories[index]),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            colors: [AppColors.primary, AppColors.secondary],
+                          )
+                        : null,
+                    color: isSelected ? null : AppColors.cards,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected ? Colors.transparent : AppColors.border,
                     ),
-                  ] : null,
-                ),
-                child: Center(
-                  child: Text(
-                    _categories[index],
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      _categories[index],
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: isSelected ? Colors.white : AppColors.textSecondary,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
@@ -559,9 +646,12 @@ class _HomeTabState extends State<_HomeTab> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SliverList(
             delegate: SliverChildBuilderDelegate(
-              (_, __) => const Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: PropertyCardSkeleton(),
+              (_, i) => FadeInSlide(
+                delay: i * 100,
+                child: const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: PropertyCardSkeleton(),
+                ),
               ),
               childCount: 3,
             ),
@@ -580,12 +670,15 @@ class _HomeTabState extends State<_HomeTab> {
         return SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
-              return Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: PropertyCard(
-                  property: properties[index],
-                  isFavorite: _favoriteIds.contains(properties[index].id),
-                  onFavorite: () => _toggleFavorite(properties[index]),
+              return FadeInSlide(
+                delay: index * 80,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: PropertyCard(
+                    property: properties[index],
+                    isFavorite: _favoriteIds.contains(properties[index].id),
+                    onFavorite: () => _toggleFavorite(properties[index]),
+                  ),
                 ),
               );
             },

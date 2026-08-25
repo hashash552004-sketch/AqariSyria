@@ -7,10 +7,10 @@ import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../services/firestore_service.dart';
 import '../../services/auth_service.dart';
-import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_skeleton.dart';
 import '../../widgets/empty_state_widget.dart';
+import '../../widgets/animated_widgets.dart';
 import '../../models/chat.dart';
 import 'chat_screen.dart';
 
@@ -75,17 +75,26 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: 'قائمة المحادثات'),
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        backgroundColor: AppColors.cards,
+        centerTitle: true,
+        title: Text('الرسائل', style: AppTextStyles.titleLarge),
+      ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: CustomTextField(
-              controller: _searchController,
-              label: 'بحث عن مستخدم',
-              hint: 'أدخل اسم المستخدم',
-              prefixIcon: Icons.search_rounded,
-              onChanged: _onSearchChanged,
+          FadeInSlide(
+            delay: 100,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: CustomTextField(
+                controller: _searchController,
+                label: 'بحث عن مستخدم',
+                hint: 'أدخل اسم المستخدم',
+                prefixIcon: Icons.search_rounded,
+                onChanged: _onSearchChanged,
+              ),
             ),
           ),
           if (_searchController.text.trim().isNotEmpty)
@@ -105,13 +114,53 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         }
                         final conversations = snapshot.data ?? [];
                         if (conversations.isEmpty) {
-                          return const EmptyStateWidget(
-                            icon: Icons.chat_bubble_outline,
-                            title: 'لا توجد محادثات',
-                            subtitle: 'يمكنك البحث عن مستخدمين لبدء محادثة',
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ScaleIn(
+                                  duration: const Duration(milliseconds: 800),
+                                  child: Container(
+                                    width: 90,
+                                    height: 90,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          AppColors.primary.withValues(alpha: 0.1),
+                                          AppColors.secondary.withValues(alpha: 0.1),
+                                        ],
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.chat_rounded,
+                                      size: 44,
+                                      color: AppColors.primary.withValues(alpha: 0.5),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                FadeInSlide(
+                                  delay: 300,
+                                  child: Text(
+                                    'لا توجد محادثات',
+                                    style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                FadeInSlide(
+                                  delay: 400,
+                                  child: Text(
+                                    'ابحث عن مستخدمين لبدء محادثة',
+                                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         }
                         return ListView.builder(
+                          physics: const BouncingScrollPhysics(),
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                           itemCount: conversations.length,
                           itemBuilder: (context, index) {
@@ -119,7 +168,11 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                             final isOwner = conv.ownerId == userId;
                             final otherName =
                                 isOwner ? conv.interestedUserName : conv.ownerName;
-                            return _buildConversationCard(context, conv, otherName);
+                            return FadeInSlide(
+                              delay: index * 60,
+                              offset: const Offset(30, 0),
+                              child: _buildConversationCard(context, conv, otherName, index),
+                            );
                           },
                         );
                       },
@@ -132,7 +185,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
   Widget _buildSearchResults(String? currentUserId) {
     if (_searching) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_searchResults.isEmpty) {
       return Center(
@@ -140,6 +193,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       );
     }
     return ListView.builder(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
@@ -149,39 +203,46 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
         final username = userData['username']?.toString() ?? '';
         final profileImage = userData['profileImage']?.toString();
         if (uid == currentUserId) return const SizedBox.shrink();
-        return _buildUserCard(uid, fullName, username, profileImage);
+        return FadeInSlide(
+          delay: index * 60,
+          child: _buildUserCard(uid, fullName, username, profileImage),
+        );
       },
     );
   }
 
   Widget _buildLoading() {
     return ListView.builder(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: 5,
       itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.cards,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                const SkeletonCard(width: 56, height: 56),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SkeletonText(width: 180, height: 16),
-                      const SizedBox(height: 8),
-                      const SkeletonText(width: 240, height: 12),
-                    ],
+        return FadeInSlide(
+          delay: index * 80,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.cards,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  const SkeletonCard(width: 56, height: 56),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SkeletonText(width: 180, height: 16),
+                        const SizedBox(height: 8),
+                        const SkeletonText(width: 240, height: 12),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -190,10 +251,12 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   }
 
   Widget _buildConversationCard(
-      BuildContext context, Conversation conv, String otherName) {
+      BuildContext context, Conversation conv, String otherName, int index) {
     final timeStr = _formatTime(conv.lastMessageTime);
+    final hasUnread = conv.unreadCount > 0;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: GestureDetector(
         onTap: () {
           Navigator.push(
@@ -206,31 +269,70 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
             ),
           );
         },
-        child: Container(
-          padding: const EdgeInsets.all(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.cards,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            color: hasUnread
+                ? AppColors.primary.withValues(alpha: 0.04)
+                : AppColors.cards,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: hasUnread
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : AppColors.border.withValues(alpha: 0.4),
+            ),
+            boxShadow: hasUnread
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
           ),
           child: Row(
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary],
+              Stack(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.primary, AppColors.secondary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Center(
+                      child: Text(
+                        otherName.isNotEmpty ? otherName[0].toUpperCase() : '?',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Text(
-                    otherName.isNotEmpty ? otherName[0].toUpperCase() : '?',
-                    style: AppTextStyles.headlineMedium
-                        .copyWith(color: Colors.white),
-                  ),
-                ),
+                  if (hasUnread)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.cards, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -242,12 +344,21 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         Expanded(
                           child: Text(
                             conv.propertyTitle,
-                            style: AppTextStyles.titleSmall,
+                            style: AppTextStyles.titleSmall.copyWith(
+                              fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w600,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Text(timeStr, style: AppTextStyles.caption),
+                        const SizedBox(width: 8),
+                        Text(
+                          timeStr,
+                          style: AppTextStyles.caption.copyWith(
+                            color: hasUnread ? AppColors.primary : AppColors.textSecondary,
+                            fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -257,7 +368,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Expanded(
@@ -266,27 +377,32 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                                 ? conv.lastMessage
                                 : 'انقر لبدء المحادثة',
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: conv.lastMessage.isNotEmpty
+                              color: hasUnread
                                   ? AppColors.textPrimary
                                   : AppColors.textSecondary,
+                              fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w400,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (conv.unreadCount > 0) ...[
+                        if (hasUnread) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.primary,
+                              gradient: const LinearGradient(
+                                colors: [AppColors.primary, AppColors.secondary],
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               '${conv.unreadCount}',
-                              style: AppTextStyles.labelSmall
-                                  .copyWith(color: Colors.white),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ],
@@ -304,7 +420,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
   Widget _buildUserCard(String uid, String fullName, String username, String? profileImage) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: GestureDetector(
         onTap: () async {
           final auth = context.read<AuthService>();
@@ -315,7 +431,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           final existingConv = await FirebaseFirestore.instance.collection('conversations').doc(convId).get();
           if (!existingConv.exists) {
             await firestore.createDirectConversation(
-              convId, uid, fullName, currentUser.uid, currentUser.displayName ?? currentUser.email ?? 'مستخدم',
+              convId, uid, fullName, currentUser.uid,
+              currentUser.displayName ?? currentUser.email ?? 'مستخدم',
             );
           }
           if (mounted) {
@@ -331,11 +448,11 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           }
         },
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: AppColors.cards,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
           ),
           child: Row(
             children: [
@@ -345,13 +462,19 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [AppColors.primary, AppColors.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                 ),
                 child: Center(
                   child: Text(
                     fullName.isNotEmpty ? fullName[0].toUpperCase() : '?',
-                    style: AppTextStyles.headlineMedium.copyWith(color: Colors.white),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -360,13 +483,27 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(fullName, style: AppTextStyles.titleSmall),
+                    Text(
+                      fullName,
+                      style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 4),
-                    Text('@$username', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+                    Text(
+                      '@$username',
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.chat_bubble_outline_rounded, color: AppColors.primary, size: 20),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.primary, size: 18),
+              ),
             ],
           ),
         ),
@@ -379,12 +516,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     final diff = now.difference(dt);
     if (diff.inMinutes < 1) return 'الآن';
     if (diff.inHours < 1) return '${diff.inMinutes} د';
-    if (diff.inDays < 1) {
-      return DateFormat('HH:mm').format(dt);
-    }
-    if (diff.inDays < 7) {
-      return DateFormat('E').format(dt);
-    }
+    if (diff.inDays < 1) return DateFormat('HH:mm').format(dt);
+    if (diff.inDays < 7) return DateFormat('E', 'ar').format(dt);
     return DateFormat('dd/MM').format(dt);
   }
 }

@@ -360,7 +360,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     _buildDropdown(
                       label: 'نوع الطابو',
                       value: _deedType,
-                      items: const ['', 'طابو أخضر', 'ورثة', 'حط أنت التالي'],
+                      items: const ['', 'طابو أخضر', 'ورثة', 'حكم محكمة', 'فروغ'],
                       onChanged: (v) => setState(() => _deedType = v),
                     ),
                     const SizedBox(height: 16),
