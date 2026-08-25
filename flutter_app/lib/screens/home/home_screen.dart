@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -269,16 +268,10 @@ class _HomeTabState extends State<_HomeTab> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() {});
-          await Future.delayed(const Duration(milliseconds: 600));
-        },
-        color: AppColors.primary,
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const BouncingScrollPhysics(),
-          slivers: [
+      body: CustomScrollView(
+        controller: _scrollController,
+        physics: const BouncingScrollPhysics(),
+        slivers: [
             SliverToBoxAdapter(
               child: FadeInSlide(
                 offset: const Offset(0, -30),
@@ -324,7 +317,6 @@ class _HomeTabState extends State<_HomeTab> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -489,12 +481,12 @@ class _HomeTabState extends State<_HomeTab> {
 
   Widget _buildFeaturedSection(FirestoreService firestore) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 0, 8),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 20, bottom: 16),
+            padding: const EdgeInsets.only(left: 4, bottom: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

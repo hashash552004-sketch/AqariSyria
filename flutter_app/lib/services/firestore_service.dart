@@ -238,6 +238,19 @@ class FirestoreService {
     await _firestore.collection('users').doc(uid).update({'banned': false});
   }
 
+  Future<void> updateUserPermissions(String uid, Map<String, dynamic> permissions) async {
+    await _firestore.collection('users').doc(uid).update({'permissions': permissions});
+  }
+
+  Future<bool> isUserBanned(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      return doc.data()?['banned'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> deleteUser(String uid) async {
     final batch = _firestore.batch();
     batch.delete(_firestore.collection('users').doc(uid));

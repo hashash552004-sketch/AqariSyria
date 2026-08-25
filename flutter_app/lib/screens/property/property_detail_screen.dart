@@ -20,7 +20,6 @@ import '../../widgets/star_rating.dart';
 import 'full_gallery_screen.dart';
 import 'interactive_map_screen.dart';
 import 'package:share_plus/share_plus.dart' as share_plus;
-import '../visit/request_visit_screen.dart';
 import '../reviews/reviews_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
@@ -460,6 +459,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         : property.operationType == 'invest'
         ? 'استثمار'
         : 'بيع';
+    final auth = context.read<AuthService>();
+    final isOwner = auth.currentUser?.uid == property.ownerId;
     return Wrap(
       spacing: 8,
       runSpacing: 4,
@@ -468,6 +469,61 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         _badge(opLabel, property.operationType == 'rent' ? AppColors.success : AppColors.primary),
         if (property.isSold) _badge('تم البيع', AppColors.error),
         if (property.isFeatured) _badge('مميز', AppColors.featuredBadge),
+        if (isOwner)
+          GestureDetector(
+            onTap: () async {
+              try {
+                await context.read<FirestoreService>().updateProperty(property.id, {
+                  'isSold': !property.isSold,
+                });
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(property.isSold ? 'تم إلغاء البيع' : 'تم تعليم العقار كمباع'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('خطأ: $e'), behavior: SnackBarBehavior.floating),
+                  );
+                }
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: property.isSold
+                    ? AppColors.warning.withValues(alpha: 0.1)
+                    : AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: property.isSold
+                      ? AppColors.warning.withValues(alpha: 0.3)
+                      : AppColors.error.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.sell_rounded,
+                    size: 14,
+                    color: property.isSold ? AppColors.warning : AppColors.error,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    property.isSold ? 'إلغاء البيع' : 'تعليم كمباع',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: property.isSold ? AppColors.warning : AppColors.error,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -986,8 +1042,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
   Widget _buildBottomBar(Property property) {
     final firestore = context.read<FirestoreService>();
-    final auth = context.read<AuthService>();
-    final isOwner = auth.currentUser?.uid == property.ownerId;
 
     return FutureBuilder<DocumentSnapshot>(
       future: firestore.getUserDoc(property.ownerId),
@@ -999,209 +1053,94 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             : ownerPhone;
 
         return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 12,
-        bottom: MediaQuery.of(context).padding.bottom + 12,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.cards,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 10,
+            bottom: MediaQuery.of(context).padding.bottom + 10,
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (property.isSold && !isOwner) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+          decoration: BoxDecoration(
+            color: AppColors.cards,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, -4),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.sell_rounded, color: AppColors.error, size: 20),
-                  const SizedBox(width: 8),
-                  Text('تم بيع هذا العقار', style: AppTextStyles.button.copyWith(color: AppColors.error)),
-                ],
-              ),
-            ),
-          ] else ...[
-            if (!isOwner)
-            GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => RequestVisitScreen(
-                    propertyId: property.id,
-                    propertyTitle: property.title,
-                    ownerId: property.ownerId,
-                    ownerName: property.ownerName,
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _launchUrl('https://wa.me/${_normalizePhone(ownerWhatsapp)}'),
+                  child: Container(
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF25D366),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.chat_rounded, color: Colors.white, size: 18),
+                        const SizedBox(width: 6),
+                        Text('واتساب', style: AppTextStyles.button),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              child: Container(
-                width: double.infinity,
-                height: 44,
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.calendar_today, color: Colors.white, size: 18),
-                    const SizedBox(width: 8),
-                    Text('طلب معاينة', style: AppTextStyles.button),
-                  ],
-                ),
-              ),
-            ),
-          Row(
-        children: [
-          if (isOwner)
-            GestureDetector(
-              onTap: () async {
-                try {
-                  await firestore.updateProperty(property.id, {
-                    'isSold': !property.isSold,
-                  });
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(property.isSold ? 'تم إلغاء البيع' : 'تم تعليم العقار كمباع'),
-                        behavior: SnackBarBehavior.floating,
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _launchUrl('tel:$ownerPhone'),
+                  child: Container(
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.primary, AppColors.secondary],
                       ),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('خطأ: $e'), behavior: SnackBarBehavior.floating),
-                    );
-                  }
-                }
-              },
-              child: Container(
-                height: 52,
-                margin: const EdgeInsets.only(left: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: property.isSold ? AppColors.warning : AppColors.error,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.sell_rounded, color: Colors.white, size: 20),
-                    const SizedBox(width: 6),
-                    Text(
-                      property.isSold ? 'إلغاء البيع' : 'تم البيع',
-                      style: AppTextStyles.button,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _launchUrl('https://wa.me/${_normalizePhone(ownerWhatsapp)}'),
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF25D366),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.chat_rounded, color: Colors.white, size: 20),
-                    const SizedBox(width: 8),
-                    Text('واتساب', style: AppTextStyles.button),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _launchUrl('tel:$ownerPhone'),
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.phone_rounded, color: Colors.white, size: 18),
+                        const SizedBox(width: 6),
+                        Text('اتصال', style: AppTextStyles.button),
+                      ],
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.phone_rounded, color: Colors.white, size: 20),
-                    const SizedBox(width: 8),
-                    Text('اتصال', style: AppTextStyles.button),
-                  ],
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _startChat(context, property),
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [const Color(0xFF7B68EE), const Color(0xFF9B59B6)],
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _startChat(context, property),
+                  child: Container(
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [const Color(0xFF7B68EE), const Color(0xFF9B59B6)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 18),
+                        const SizedBox(width: 6),
+                        Text('مراسلة', style: AppTextStyles.button),
+                      ],
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF7B68EE).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 20),
-                    const SizedBox(width: 8),
-                    Text('مراسلة', style: AppTextStyles.button),
-                  ],
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-        ),
-          ],
-        ],
-      ),
-    );
-        },
+        );
+      },
     );
   }
 

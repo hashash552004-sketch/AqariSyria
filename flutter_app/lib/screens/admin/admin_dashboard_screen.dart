@@ -3,12 +3,15 @@ import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
+import '../../models/property.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import 'admin_users_screen.dart';
 import 'admin_properties_screen.dart';
 import 'admin_reports_screen.dart';
 import 'admin_settings_screen.dart';
+
+enum _DateFilter { today, week, month, all }
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -17,41 +20,590 @@ class AdminDashboardScreen extends StatefulWidget {
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  bool _loading = false;
+class _AdminDashboardScreenState extends State<AdminDashboardScreen>
+    with TickerProviderStateMixin {
+  bool _loading = true;
+  _DateFilter _dateFilter = _DateFilter.today;
+
   int _totalProps = 0;
+  int _todayProps = 0;
+  int _todaySold = 0;
   int _totalUsers = 0;
-  int _pendingProps = 0;
+
+  List<Property> _allProps = [];
+
+  late final AnimationController _staggerController;
+  late final AnimationController _headerController;
 
   @override
   void initState() {
     super.initState();
+    _staggerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _headerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _headerController.forward();
     _loadStats();
   }
 
-  Future<void> _loadStats() async {
-    final fs = context.read<FirestoreService>();
-    try {
-      final props = await fs.getAllPropertiesAdmin();
-      final users = await fs.streamUsers().first;
-      if (mounted) {
-        setState(() {
-          _totalProps = props.length;
-          _totalUsers = users.length;
-          _pendingProps = props.where((p) => p.status == 'pending').length;
-        });
-      }
-    } catch (_) {}
+  @override
+  void dispose() {
+    _staggerController.dispose();
+    _headerController.dispose();
+    super.dispose();
   }
 
-  Future<void> _confirmReset(String title, String msg, Future<void> Function() action) async {
+  Future<void> _loadStats() async {
+    setState(() => _loading = true);
+    final fs = context.read<FirestoreService>();
+    try {
+      final results = await Future.wait([
+        fs.getAllPropertiesAdmin(),
+        fs.streamUsers().first,
+      ]);
+
+      final props = results[0] as List<Property>;
+      final users = results[1] as List<dynamic>;
+
+      if (!mounted) return;
+      setState(() {
+        _allProps = props;
+        _totalProps = props.length;
+        _totalUsers = users.length;
+        _loading = false;
+      });
+      _computeStats();
+      _staggerController.forward(from: 0);
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _computeStats() {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    DateTime filterStart;
+    switch (_dateFilter) {
+      case _DateFilter.today:
+        filterStart = todayStart;
+        break;
+      case _DateFilter.week:
+        filterStart = todayStart.subtract(const Duration(days: 6));
+        break;
+      case _DateFilter.month:
+        filterStart = todayStart.subtract(const Duration(days: 29));
+        break;
+      case _DateFilter.all:
+        filterStart = DateTime(2000);
+        break;
+    }
+
+    int todayProps = 0;
+    int todaySold = 0;
+
+    for (final p in _allProps) {
+      final created = p.createdAt;
+      if (created == null) continue;
+      if (!created.isBefore(filterStart)) {
+        todayProps++;
+        if (p.isSold) todaySold++;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _todayProps = todayProps;
+        _todaySold = todaySold;
+      });
+    }
+  }
+
+  void _onFilterChanged(_DateFilter filter) {
+    setState(() => _dateFilter = filter);
+    _computeStats();
+    _staggerController.forward(from: 0);
+  }
+
+  // ────────────────────── BUILD ──────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: const CustomAppBar(title: 'لوحة الإدارة'),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadStats,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: AppConstants.screenPadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    const SizedBox(height: 20),
+                    _buildDateFilter(),
+                    const SizedBox(height: 20),
+                    _buildStatsGrid(),
+                    const SizedBox(height: 28),
+                    _buildAdminActions(context),
+                    const SizedBox(height: 28),
+                    _buildResetSection(context),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+
+  // ────────────────────── HEADER ──────────────────────
+
+  Widget _buildHeader() {
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: _headerController,
+        curve: Curves.easeOut,
+      ),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, -0.15),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: _headerController,
+          curve: Curves.easeOutCubic,
+        )),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('لوحة التحكم', style: AppTextStyles.headlineLarge),
+            const SizedBox(height: 4),
+            Text(
+              'مرحباً بك في لوحة إدارة التطبيق',
+              style: AppTextStyles.bodyMedium,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ────────────────────── DATE FILTER ──────────────────────
+
+  Widget _buildDateFilter() {
+    final filters = [
+      (_DateFilter.today, 'اليوم'),
+      (_DateFilter.week, '7 أيام'),
+      (_DateFilter.month, '30 يوم'),
+      (_DateFilter.all, 'الكل'),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cards,
+        borderRadius: BorderRadius.circular(AppConstants.cardRadiusSmall),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(6),
+      child: Row(
+        children: filters.map((f) {
+          final selected = _dateFilter == f.$1;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => _onFilterChanged(f.$1),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.primary : Colors.transparent,
+                  borderRadius:
+                      BorderRadius.circular(AppConstants.cardRadiusSmall - 4),
+                ),
+                child: Center(
+                  child: Text(
+                    f.$2,
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: selected ? Colors.white : AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ────────────────────── STATS GRID ──────────────────────
+
+  Widget _buildStatsGrid() {
+    final stats = [
+      _StatData(
+        label: 'عقارات اليوم',
+        value: '$_todayProps',
+        icon: Icons.home_work_rounded,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1677FF), Color(0xFF4DA3FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      _StatData(
+        label: 'بيع اليوم',
+        value: '$_todaySold',
+        icon: Icons.payments_rounded,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF12B76A), Color(0xFF6CE9A6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      _StatData(
+        label: 'المستخدمين',
+        value: '$_totalUsers',
+        icon: Icons.groups_rounded,
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF79009), Color(0xFFFFD666)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      _StatData(
+        label: 'العقارات',
+        value: '$_totalProps',
+        icon: Icons.apartment_rounded,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF76C7FF), Color(0xFF1677FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+    ];
+
+    return AnimatedBuilder(
+      animation: _staggerController,
+      builder: (context, _) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            childAspectRatio: 1.55,
+          ),
+          itemCount: stats.length,
+          itemBuilder: (context, index) {
+            final delay = index * 0.15;
+            final anim = CurvedAnimation(
+              parent: _staggerController,
+              curve: Interval(delay, (delay + 0.5).clamp(0.0, 1.0),
+                  curve: Curves.easeOutCubic),
+            );
+            return FadeTransition(
+              opacity: anim,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.2),
+                  end: Offset.zero,
+                ).animate(anim),
+                child: _buildStatCard(stats[index]),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStatCard(_StatData data) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cards,
+        borderRadius: BorderRadius.circular(AppConstants.cardRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              gradient: data.gradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: data.gradient.colors.first.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Icon(data.icon, color: Colors.white, size: 21),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                data.value,
+                style: AppTextStyles.displaySmall.copyWith(fontSize: 22),
+              ),
+              const SizedBox(height: 2),
+              Text(data.label, style: AppTextStyles.bodySmall),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ────────────────────── ADMIN ACTIONS ──────────────────────
+
+  Widget _buildAdminActions(BuildContext context) {
+    final actions = [
+      _AdminAction(
+        'مراجعة العقارات',
+        Icons.home_work_rounded,
+        AppColors.primary,
+        () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const AdminPropertiesScreen())),
+      ),
+      _AdminAction(
+        'إدارة المستخدمين',
+        Icons.people_rounded,
+        AppColors.success,
+        () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AdminUsersScreen())),
+      ),
+      _AdminAction(
+        'مراجعة البلاغات',
+        Icons.flag_rounded,
+        AppColors.warning,
+        () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AdminReportsScreen())),
+      ),
+      _AdminAction(
+        'إعدادات التطبيق',
+        Icons.settings_rounded,
+        AppColors.accent,
+        () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AdminSettingsScreen())),
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('الإجراءات', style: AppTextStyles.titleLarge),
+        const SizedBox(height: 14),
+        ...actions.asMap().entries.map((entry) {
+          final index = entry.key;
+          final action = entry.value;
+          final delay = index * 0.1;
+          final anim = CurvedAnimation(
+            parent: _staggerController,
+            curve: Interval(delay, (delay + 0.5).clamp(0.0, 1.0),
+                curve: Curves.easeOutCubic),
+          );
+          return FadeTransition(
+            opacity: anim,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.1, 0),
+                end: Offset.zero,
+              ).animate(anim),
+              child: _buildActionCard(action),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(_AdminAction action) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: AppColors.cards,
+        borderRadius: BorderRadius.circular(AppConstants.cardRadius),
+        elevation: 0,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppConstants.cardRadius),
+          onTap: action.onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppConstants.cardRadius),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: action.color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(action.icon, color: action.color, size: 21),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    action.title,
+                    style: AppTextStyles.titleMedium,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: AppColors.textSecondary,
+                  size: 14,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ────────────────────── RESET SECTION ──────────────────────
+
+  Widget _buildResetSection(BuildContext context) {
+    final fs = context.read<FirestoreService>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('تصفير البيانات', style: AppTextStyles.titleLarge),
+        const SizedBox(height: 4),
+        Text(
+          'تنبيه: هذه الإجراءات لا يمكن التراجع عنها',
+          style: AppTextStyles.bodySmall,
+        ),
+        const SizedBox(height: 14),
+        _resetButton(
+          'تصفير المشاهدات',
+          Icons.visibility_off_rounded,
+          AppColors.warning,
+          () => _confirmReset(
+            'تصفير المشاهدات',
+            'هل أنت متأكد من تصفير جميع المشاهدات؟',
+            fs.resetAllViews,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _resetButton(
+          'تصفير المفضلة',
+          Icons.favorite_border_rounded,
+          Colors.pink,
+          () => _confirmReset(
+            'تصفير المفضلة',
+            'هل أنت متأكد من إزالة جميع المفضلة؟',
+            fs.resetAllFavorites,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _resetButton(
+          'حذف جميع العقارات',
+          Icons.delete_sweep_rounded,
+          AppColors.error,
+          () => _confirmReset(
+            'حذف العقارات',
+            'هل أنت متأكد من حذف جميع العقارات؟ هذا الإجراء نهائي!',
+            fs.deleteAllProperties,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _resetButton(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: AppColors.cards,
+        borderRadius: BorderRadius.circular(AppConstants.cardRadius),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppConstants.cardRadius),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 21),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(title, style: AppTextStyles.titleMedium),
+                ),
+                Icon(Icons.warning_amber_rounded, color: color, size: 18),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmReset(
+    String title,
+    String msg,
+    Future<void> Function() action,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
         content: Text(msg),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('تأكيد', style: TextStyle(color: Colors.red)),
@@ -63,170 +615,42 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     setState(() => _loading = true);
     try {
       await action();
-      _loadStats();
+      await _loadStats();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم بنجاح'), behavior: SnackBarBehavior.floating),
+        const SnackBar(
+          content: Text('تم بنجاح'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ: $e'), behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text('خطأ: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: 'لوحة الإدارة'),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: AppConstants.screenPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('لوحة التحكم', style: AppTextStyles.headlineMedium),
-                  const SizedBox(height: 24),
-                  _buildStatsGrid(),
-                  const SizedBox(height: 24),
-                  _buildAdminActions(context),
-                  const SizedBox(height: 24),
-                  _buildResetSection(context),
-                ],
-              ),
-            ),
-    );
-  }
+// ────────────────────── DATA MODELS ──────────────────────
 
-  Widget _buildStatsGrid() {
-    return Row(
-      children: [
-        Expanded(child: _statCard('العقارات', '$_totalProps', Icons.home_work_rounded, AppColors.primary)),
-        const SizedBox(width: 12),
-        Expanded(child: _statCard('المستخدمين', '$_totalUsers', Icons.people_rounded, AppColors.success)),
-        const SizedBox(width: 12),
-        Expanded(child: _statCard('قيد المراجعة', '$_pendingProps', Icons.hourglass_empty_rounded, AppColors.warning)),
-      ],
-    );
-  }
+class _StatData {
+  final String label;
+  final String value;
+  final IconData icon;
+  final LinearGradient gradient;
 
-  Widget _statCard(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.cards,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 48, height: 48,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 12),
-          Text(value, style: AppTextStyles.headlineMedium),
-          const SizedBox(height: 4),
-          Text(label, style: AppTextStyles.bodyMedium),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAdminActions(BuildContext context) {
-    final actions = [
-      _AdminAction('إدارة العقارات', Icons.home_work_rounded, AppColors.primary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPropertiesScreen()))),
-      _AdminAction('إدارة المستخدمين', Icons.people_rounded, AppColors.success, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminUsersScreen()))),
-      _AdminAction('التقارير', Icons.description_rounded, AppColors.warning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminReportsScreen()))),
-      _AdminAction('إعدادات التطبيق', Icons.settings_rounded, AppColors.accent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminSettingsScreen()))),
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('الإجراءات', style: AppTextStyles.titleLarge),
-        const SizedBox(height: 16),
-        ...actions.map((a) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Material(
-            color: AppColors.cards,
-            borderRadius: BorderRadius.circular(16),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: a.onTap,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(color: a.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
-                      child: Icon(a.icon, color: a.color, size: 22),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(child: Text(a.title, style: AppTextStyles.titleMedium)),
-                    Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textSecondary, size: 14),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        )),
-      ],
-    );
-  }
-
-  Widget _buildResetSection(BuildContext context) {
-    final fs = context.read<FirestoreService>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('تصفير البيانات', style: AppTextStyles.titleLarge),
-        const SizedBox(height: 4),
-        Text('تنبيه: هذه الإجراءات لا يمكن التراجع عنها', style: AppTextStyles.bodySmall),
-        const SizedBox(height: 16),
-        _resetButton('تصفير المشاهدات', Icons.visibility_off_rounded, AppColors.warning, () => _confirmReset('تصفير المشاهدات', 'هل أنت متأكد من تصفير جميع المشاهدات؟', fs.resetAllViews)),
-        const SizedBox(height: 12),
-        _resetButton('تصفير المفضلة', Icons.favorite_border_rounded, Colors.pink, () => _confirmReset('تصفير المفضلة', 'هل أنت متأكد من إزالة جميع المفضلة؟', fs.resetAllFavorites)),
-        const SizedBox(height: 12),
-        _resetButton('حذف جميع العقارات', Icons.delete_sweep_rounded, Colors.red, () => _confirmReset('حذف العقارات', 'هل أنت متأكد من حذف جميع العقارات؟ هذا الإجراء نهائي!', fs.deleteAllProperties)),
-      ],
-    );
-  }
-
-  Widget _resetButton(String title, IconData icon, Color color, VoidCallback onTap) {
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: AppColors.cards,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 44, height: 44,
-                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
-                  child: Icon(icon, color: color, size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(child: Text(title, style: AppTextStyles.titleMedium)),
-                Icon(Icons.warning_amber_rounded, color: color, size: 18),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  const _StatData({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.gradient,
+  });
 }
 
 class _AdminAction {
@@ -234,5 +658,6 @@ class _AdminAction {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+
   const _AdminAction(this.title, this.icon, this.color, this.onTap);
 }

@@ -121,8 +121,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     );
 
     if (saved != true) return;
-    final uid = auth.currentUser!.uid;
-    final name = auth.currentUser!.displayName ?? 'مستخدم';
+    if (!mounted) return;
+    final user = auth.currentUser;
+    if (user == null) return;
+    final uid = user.uid;
+    final name = user.displayName ?? 'مستخدم';
     try {
       await context.read<FirestoreService>().submitReview(
             propertyId: widget.propertyId,
@@ -132,9 +135,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             comment: commentController.text.trim(),
           );
       if (mounted) showSnackBar(context, 'شكراً لك، تم حفظ تقييمك');
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      showSnackBar(context, 'تعذر حفظ التقييم، حاول مجدداً',
+      showSnackBar(context, 'تعذر حفظ التقييم: $e',
           backgroundColor: AppColors.error);
     }
   }

@@ -38,11 +38,38 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  void _navigateNext() {
+  Future<void> _navigateNext() async {
     if (!mounted) return;
     final auth = context.read<AuthService>();
     if (auth.currentUser != null) {
       final user = auth.currentUser!;
+      final isBanned = await context.read<FirestoreService>().isUserBanned(user.uid);
+      if (!mounted) return;
+      if (isBanned) {
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('تم حظر حسابك'),
+            content: const Text('تم حظر حسابك. لا يمكنك استخدام التطبيق.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('موافق'),
+              ),
+            ],
+          ),
+        );
+        await auth.signOut();
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        );
+        return;
+      }
       context.read<FirestoreService>().ensureDefaultAdmin(user.uid, user.email ?? '');
       NotificationService().saveToken(user.uid);
       Navigator.pushReplacement(

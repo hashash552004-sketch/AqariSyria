@@ -33,31 +33,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSection(
               'العامة',
               [
-                _buildSettingItem(
-                  icon: Icons.language_rounded,
-                  iconColor: AppColors.primary,
-                  title: 'اللغة',
-                  subtitle: themeProvider.languageCode == 'ar' ? 'العربية' : 'English',
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.arrow_back_ios_new, size: 12, color: AppColors.primary),
-                        const SizedBox(width: 4),
-                        Text(
-                          themeProvider.languageCode == 'ar' ? 'العربية' : 'English',
-                          style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  onTap: () => _showLanguagePicker(themeProvider),
-                ),
                 _buildSwitchItem(
                   icon: Icons.dark_mode_rounded,
                   iconColor: AppColors.warning,
@@ -284,76 +259,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],
-      ),
-    );
-  }
-
-  void _showLanguagePicker(ThemeProvider themeProvider) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text('اختر اللغة', style: AppTextStyles.titleLarge),
-              const SizedBox(height: 20),
-              _languageOption('العربية', themeProvider.languageCode == 'ar', () {
-                themeProvider.setLanguage('ar');
-                Navigator.pop(ctx);
-              }),
-              _languageOption('English', themeProvider.languageCode == 'en', () {
-                themeProvider.setLanguage('en');
-                Navigator.pop(ctx);
-              }),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _languageOption(String name, bool selected, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: selected ? AppColors.primary.withValues(alpha: 0.05) : null,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected ? AppColors.primary : AppColors.border,
-              ),
-            ),
-            child: Row(
-              children: [
-                Text(name, style: AppTextStyles.titleMedium),
-                const Spacer(),
-                if (selected)
-                  const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 22),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

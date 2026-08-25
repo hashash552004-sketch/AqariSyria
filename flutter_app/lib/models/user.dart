@@ -10,6 +10,7 @@ class AppUser {
   final String role;
   final String username;
   final bool banned;
+  final Map<String, dynamic> permissions;
 
   AppUser({
     required this.uid,
@@ -23,6 +24,7 @@ class AppUser {
     this.role = 'user',
     this.username = '',
     this.banned = false,
+    this.permissions = const {},
   });
 
   factory AppUser.fromFirestore(Map<String, dynamic> data, String uid) {
@@ -40,6 +42,7 @@ class AppUser {
       role: data['role']?.toString() ?? 'user',
       username: data['username']?.toString() ?? '',
       banned: data['banned'] ?? false,
+      permissions: (data['permissions'] as Map<String, dynamic>?) ?? {},
     );
   }
 
@@ -55,6 +58,7 @@ class AppUser {
       'role': role,
       'username': username,
       'banned': banned,
+      'permissions': permissions,
     };
   }
 }
