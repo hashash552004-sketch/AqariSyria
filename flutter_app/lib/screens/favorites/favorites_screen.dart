@@ -19,19 +19,11 @@ class FavoritesScreen extends StatelessWidget {
     final auth = context.read<AuthService>();
     final uid = auth.currentUser?.uid;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      },
-      child: Scaffold(
-        appBar: const CustomAppBar(title: 'المفضلة'),
-        body: uid == null
-            ? const Center(child: Text('يرجى تسجيل الدخول'))
-            : _buildBody(context, uid),
-      ),
+    return Scaffold(
+      appBar: const CustomAppBar(title: 'المفضلة'),
+      body: uid == null
+          ? const Center(child: Text('يرجى تسجيل الدخول'))
+          : _buildBody(context, uid),
     );
   }
 

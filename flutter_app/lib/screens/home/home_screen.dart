@@ -56,24 +56,33 @@ class _HomeScreenState extends State<HomeScreen> {
       const ProfileScreen(),
     ];
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: screens,
-      ),
-      floatingActionButton: CompareService.compareIds.length >= 2
-          ? FloatingActionButton.extended(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ComparePropertiesScreen()),
-              ),
-              label: Text('مقارنة (${CompareService.compareIds.length})'),
-              icon: const Icon(Icons.compare_arrows),
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            )
-          : null,
-      bottomNavigationBar: Container(
+    return PopScope(
+      // Hardware back on a non-home tab goes back one "step" (to home tab)
+      // instead of closing the app.
+      canPop: _selectedIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _selectedIndex != 0) {
+          setState(() => _selectedIndex = 0);
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: screens,
+        ),
+        floatingActionButton: CompareService.compareIds.length >= 2
+            ? FloatingActionButton.extended(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ComparePropertiesScreen()),
+                ),
+                label: Text('مقارنة (${CompareService.compareIds.length})'),
+                icon: const Icon(Icons.compare_arrows),
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              )
+            : null,
+        bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
@@ -171,6 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

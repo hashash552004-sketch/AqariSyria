@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
 import 'providers/theme_provider.dart';
@@ -30,7 +31,7 @@ Future<void> main() async {
   }
   final themeProvider = ThemeProvider();
   await themeProvider.loadPreferences();
-  runApp(BaitAlOmrApp(firebaseReady: firebaseReady, themeProvider: themeProvider));
+  runApp(AqarOnlineApp(firebaseReady: firebaseReady, themeProvider: themeProvider));
 }
 
 Future<bool> _initializeFirebase() async {
@@ -44,8 +45,8 @@ Future<bool> _initializeFirebase() async {
   }
 }
 
-class BaitAlOmrApp extends StatelessWidget {
-  const BaitAlOmrApp({super.key, required this.firebaseReady, required this.themeProvider});
+class AqarOnlineApp extends StatelessWidget {
+  const AqarOnlineApp({super.key, required this.firebaseReady, required this.themeProvider});
 
   final bool firebaseReady;
   final ThemeProvider themeProvider;
@@ -56,7 +57,14 @@ class BaitAlOmrApp extends StatelessWidget {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'عقار اونلاين',
-        home: FirebaseConfigScreen(),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('ar'), Locale('en')],
+        locale: const Locale('ar'),
+        home: const FirebaseConfigScreen(),
       );
     }
 
@@ -71,10 +79,16 @@ class BaitAlOmrApp extends StatelessWidget {
           title: 'عقار اونلاين',
           debugShowCheckedModeBanner: false,
           navigatorKey: NotificationService.navigatorKey,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('ar'), Locale('en')],
+          locale: tp.locale,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: tp.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          locale: tp.locale,
           home: const SplashScreen(),
         ),
       ),

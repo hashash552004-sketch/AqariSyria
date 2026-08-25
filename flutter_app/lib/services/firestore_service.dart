@@ -966,6 +966,10 @@ class FirestoreService {
     }
   }
 
+  Stream<DocumentSnapshot> streamUserDoc(String uid) {
+    return _firestore.collection('users').doc(uid).snapshots();
+  }
+
   Stream<DocumentSnapshot> streamUserFavorites(String uid) {
     return _firestore.collection('users').doc(uid).snapshots();
   }
@@ -1233,6 +1237,15 @@ class FirestoreService {
     } catch (_) {
       return null;
     }
+  }
+
+  Stream<Property> streamPropertyById(String propertyId) {
+    return _firestore.collection('properties').doc(propertyId).snapshots().map((doc) {
+      return Property.fromFirestore(
+        Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
+        doc.id,
+      );
+    });
   }
 
   Future<void> deleteNotification(String notificationId) async {

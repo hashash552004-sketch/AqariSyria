@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,7 +22,7 @@ class VisitRequestsScreen extends StatelessWidget {
           backgroundColor: AppColors.cards,
           elevation: 0.5,
           titleTextStyle: AppTextStyles.titleMedium,
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.primary,
@@ -180,7 +180,7 @@ class _IncomingRequestCard extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.person_outline, size: 18, color: AppColors.textSecondary),
+              Icon(Icons.person_outline, size: 18, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text(data['requesterName']?.toString() ?? 'مستخدم',
                   style: AppTextStyles.bodyMedium),
@@ -189,7 +189,7 @@ class _IncomingRequestCard extends StatelessWidget {
           const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(Icons.calendar_month_outlined, size: 18, color: AppColors.textSecondary),
+              Icon(Icons.calendar_month_outlined, size: 18, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text(dateStr, style: AppTextStyles.bodyMedium),
             ],
@@ -199,7 +199,7 @@ class _IncomingRequestCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.notes_rounded, size: 18, color: AppColors.textSecondary),
+                Icon(Icons.notes_rounded, size: 18, color: AppColors.textSecondary),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(data['message'].toString(), style: AppTextStyles.bodyMedium),

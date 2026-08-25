@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../widgets/custom_app_bar.dart';
@@ -18,7 +18,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           children: [
             _buildSection(
               'المقدمة',
-              'نحن في بيت العمر نلتزم بحماية خصوصية مستخدمينا. توضح سياسة الخصوصية هذه كيفية جمع واستخدام وحماية المعلومات الشخصية التي تقدمها عند استخدام تطبيقنا.',
+              'نحن في عقار اونلاين نلتزم بحماية خصوصية مستخدمينا. توضح سياسة الخصوصية هذه كيفية جمع واستخدام وحماية المعلومات الشخصية التي تقدمها عند استخدام تطبيقنا.',
             ),
             _buildSection(
               'المعلومات التي نجمعها',

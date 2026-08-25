@@ -15,7 +15,7 @@ import '../favorites/saved_searches_screen.dart';
 import '../recently_viewed/recently_viewed_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../dashboard/dashboard_screen.dart';
-import '../reports/reports_screen.dart';
+import 'my_stats_screen.dart';
 import 'settings_screen.dart';
 import 'contact_us_screen.dart';
 import 'about_screen.dart';
@@ -366,12 +366,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (s == null) return const SizedBox.shrink();
         final defaultWhatsapp = '+963 900 000 000';
         final defaultEmail = 'info@baitalomar.com';
+        // Handles may be stored as "@name", full URLs or plain names.
+        String clean(String v) {
+          var h = v.trim();
+          h = h.replaceFirst(RegExp(r'^@+'), '');
+          final match = RegExp(r'(?:https?://)?(?:www\.)?[a-z]+\.[a-z.]+/(@?[A-Za-z0-9_.]+)$')
+              .firstMatch(h);
+          if (match != null) h = match.group(1)!;
+          return h.replaceFirst(RegExp(r'^@+'), '');
+        }
+
         final items = <_SocialItem>[];
-        if (s.instagram.isNotEmpty) items.add(_SocialItem('إنستغرام', Icons.camera_alt_rounded, const Color(0xFFE1306C), 'https://instagram.com/${s.instagram}'));
-        if (s.telegram.isNotEmpty) items.add(_SocialItem('تلغرام', Icons.send_rounded, const Color(0xFF0088CC), 'https://t.me/${s.telegram}'));
-        if (s.facebook.isNotEmpty) items.add(_SocialItem('فيسبوك', Icons.facebook_rounded, const Color(0xFF1877F2), 'https://facebook.com/${s.facebook}'));
-        if (s.tiktok.isNotEmpty) items.add(_SocialItem('تيك توك', Icons.music_note_rounded, const Color(0xFF000000), 'https://tiktok.com/@${s.tiktok}'));
-        if (s.whatsapp.isNotEmpty && s.whatsapp != defaultWhatsapp) items.add(_SocialItem('واتساب', Icons.chat_rounded, const Color(0xFF25D366), 'https://wa.me/${s.whatsapp.replaceAll(RegExp(r'[+\s]'), '')}'));
+        if (s.instagram.isNotEmpty) items.add(_SocialItem('إنستغرام', Icons.camera_alt_rounded, const Color(0xFFE1306C), 'https://instagram.com/${clean(s.instagram)}'));
+        if (s.telegram.isNotEmpty) items.add(_SocialItem('تلغرام', Icons.send_rounded, const Color(0xFF0088CC), 'https://t.me/${clean(s.telegram)}'));
+        if (s.facebook.isNotEmpty) items.add(_SocialItem('فيسبوك', Icons.facebook_rounded, const Color(0xFF1877F2), 'https://facebook.com/${clean(s.facebook)}'));
+        if (s.tiktok.isNotEmpty) items.add(_SocialItem('تيك توك', Icons.music_note_rounded, const Color(0xFF000000), 'https://tiktok.com/@${clean(s.tiktok)}'));
+        if (s.whatsapp.isNotEmpty && s.whatsapp != defaultWhatsapp) {
+          final wa = s.whatsapp.replaceAll(RegExp(r'[^\d]'), '');
+          if (wa.startsWith('00')) {
+            items.add(_SocialItem('واتساب', Icons.chat_rounded, const Color(0xFF25D366), 'https://wa.me/${wa.substring(2)}'));
+          } else if (wa.startsWith('0')) {
+            items.add(_SocialItem('واتساب', Icons.chat_rounded, const Color(0xFF25D366), 'https://wa.me/963${wa.substring(1)}'));
+          } else {
+            items.add(_SocialItem('واتساب', Icons.chat_rounded, const Color(0xFF25D366), 'https://wa.me/$wa'));
+          }
+        }
         if (s.email.isNotEmpty && s.email != defaultEmail) items.add(_SocialItem('بريد إلكتروني', Icons.email_rounded, AppColors.primary, 'mailto:${s.email}'));
         if (items.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -395,12 +414,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: GestureDetector(
                   onTap: () async {
                     final uri = Uri.tryParse(item.url);
-                    if (uri != null && await canLaunchUrl(uri)) {
+                    if (uri == null) return;
+                    try {
                       await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    } else if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('لا يمكن فتح الرابط، تأكد من تثبيت التطبيق'), behavior: SnackBarBehavior.floating),
-                      );
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('لا يمكن فتح الرابط، تأكد من تثبيت التطبيق'), behavior: SnackBarBehavior.floating),
+                        );
+                      }
                     }
                   },
                   child: Container(
@@ -437,6 +459,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _MenuItem('عمليات البحث المحفوظة', Icons.search_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedSearchesScreen()))),
       _MenuItem('تمت المشاهدة مؤخراً', Icons.history_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecentlyViewedScreen()))),
       _MenuItem('الإشعارات', Icons.notifications_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
+      _MenuItem('الإحصائيات', Icons.bar_chart_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyStatsScreen()))),
       _MenuItem('الإعدادات', Icons.settings_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
       _MenuItem('تواصل معنا', Icons.headset_mic_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactUsScreen()))),
       _MenuItem('خدمة العملاء', Icons.support_agent_rounded, () => _startCustomerChat(context)),
@@ -445,8 +468,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (!_loadingRole && (_userRole == 'admin' || _userRole == 'moderator')) {
       menuItems.insert(0, _MenuItem('لوحة الإدارة', Icons.admin_panel_settings_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardScreen()))));
-      menuItems.insert(1, _MenuItem('الإحصائيات', Icons.bar_chart_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DashboardScreen()))));
-      menuItems.insert(2, _MenuItem('التقارير', Icons.description_rounded, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen()))));
     }
 
     return Container(

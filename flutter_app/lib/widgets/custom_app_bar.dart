@@ -24,10 +24,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tabs inside HomeScreen are not on the navigator stack – showing a back
+    // arrow there crashes on tap. Only show it when a route can actually pop.
+    final canBack = showBack && Navigator.of(context).canPop();
     return AppBar(
       title: titleWidget ?? (title != null ? Text(title!) : null),
       leading: leading ??
-          (showBack
+          (canBack
               ? IconButton(
                 icon: Container(
                   padding: const EdgeInsets.all(8),
@@ -42,7 +45,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     size: 16,
                   ),
                 ),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  final navigator = Navigator.of(context);
+                  if (navigator.canPop()) navigator.pop();
+                },
               )
               : null),
       actions: actions,

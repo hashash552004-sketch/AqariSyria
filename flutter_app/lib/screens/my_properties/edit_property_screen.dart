@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
@@ -393,7 +393,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
@@ -411,13 +411,13 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
               value: value.isEmpty ? null : value,
               hint: Text(
                 'اختر $label',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   color: AppColors.textSecondary,
                 ),
               ),
               isExpanded: true,
-              icon: const Icon(
+              icon: Icon(
                 Icons.keyboard_arrow_down,
                 color: AppColors.textSecondary,
               ),
@@ -426,7 +426,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                   value: item,
                   child: Text(
                     item,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       color: AppColors.textPrimary,
                     ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/app_colors.dart';
@@ -255,7 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   delay: 600,
                   child: Row(
                     children: [
-                      const Expanded(child: Divider(color: AppColors.border)),
+                      Expanded(child: Divider(color: AppColors.border)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
@@ -263,7 +263,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: AppTextStyles.bodyMedium,
                         ),
                       ),
-                      const Expanded(child: Divider(color: AppColors.border)),
+                      Expanded(child: Divider(color: AppColors.border)),
                     ],
                   ),
                 ),
@@ -284,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: AppColors.primary,
                               ),
                             )
-                          : const Icon(Icons.g_mobiledata, size: 28, color: AppColors.textPrimary),
+                          : Icon(Icons.g_mobiledata, size: 28, color: AppColors.textPrimary),
                       label: Text(
                         'تسجيل الدخول بواسطة Google',
                         style: AppTextStyles.titleMedium.copyWith(
@@ -293,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        side: const BorderSide(color: AppColors.border),
+                        side: BorderSide(color: AppColors.border),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
                             AppConstants.buttonRadius,

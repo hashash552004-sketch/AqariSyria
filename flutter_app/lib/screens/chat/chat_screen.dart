@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -368,7 +368,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                             errorWidget: (_, __, ___) => Container(
                               height: 180, color: AppColors.shimmerBase,
-                              child: const Icon(Icons.broken_image, color: AppColors.textSecondary),
+                              child: Icon(Icons.broken_image, color: AppColors.textSecondary),
                             ),
                           ),
                         ),

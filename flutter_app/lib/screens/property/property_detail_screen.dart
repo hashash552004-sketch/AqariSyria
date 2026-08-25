@@ -1,3 +1,5 @@
+﻿import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -32,6 +34,8 @@ class PropertyDetailScreen extends StatefulWidget {
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   final PageController _pageController = PageController();
   final ScrollController _scrollController = ScrollController();
+  late Property _property = widget.property;
+  StreamSubscription<Property>? _propertySub;
   int _currentImageIndex = 0;
   bool _descriptionExpanded = false;
   double _scrollOffset = 0;
@@ -46,6 +50,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       setState(() => _scrollOffset = _scrollController.offset);
     });
     _loadFavoriteStatus();
+    // Keep the screen in sync with Firestore (e.g. owner toggles تم البيع).
+    _propertySub = context
+        .read<FirestoreService>()
+        .streamPropertyById(widget.property.id)
+        .listen(
+          (fresh) {
+            if (mounted) setState(() => _property = fresh);
+          },
+          onError: (_) {},
+        );
   }
 
   Future<void> _loadFavoriteStatus() async {
@@ -67,6 +81,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
   @override
   void dispose() {
+    _propertySub?.cancel();
     _pageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -76,7 +91,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = widget.property;
+    final p = _property;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -413,7 +428,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   Text('أضف تقييماً', style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary)),
                 ],
                 const SizedBox(width: 4),
-                const Icon(Icons.chevron_left_rounded, size: 18, color: AppColors.textSecondary),
+                Icon(Icons.chevron_left_rounded, size: 18, color: AppColors.textSecondary),
               ],
             ),
           ),
@@ -885,7 +900,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                             ? data!['whatsapp'].toString()
                             : property.ownerPhone;
                         return GestureDetector(
-                          onTap: () => _launchUrl('https://wa.me/$ownerWhatsapp'),
+                          onTap: () => _launchUrl('https://wa.me/${_normalizePhone(ownerWhatsapp)}'),
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -1003,7 +1018,26 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (!isOwner)
+          if (property.isSold && !isOwner) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.sell_rounded, color: AppColors.error, size: 20),
+                  const SizedBox(width: 8),
+                  Text('تم بيع هذا العقار', style: AppTextStyles.button.copyWith(color: AppColors.error)),
+                ],
+              ),
+            ),
+          ] else ...[
+            if (!isOwner)
             GestureDetector(
               onTap: () => Navigator.push(
                 context,
@@ -1083,7 +1117,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             ),
           Expanded(
             child: GestureDetector(
-              onTap: () => _launchUrl('https://wa.me/$ownerWhatsapp'),
+              onTap: () => _launchUrl('https://wa.me/${_normalizePhone(ownerWhatsapp)}'),
               child: Container(
                 height: 52,
                 decoration: BoxDecoration(
@@ -1162,9 +1196,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             ),
           ),
         ],
+        ),
+          ],
+        ],
       ),
-      ],
-    ),
     );
         },
     );
@@ -1313,14 +1348,32 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     }
   }
 
+  /// Strips formatting characters and normalizes Syrian numbers for wa.me.
+  String _normalizePhone(String raw) {
+    var digits = raw.replaceAll(RegExp(r'[^\d]'), '');
+    // Local format 09xxxxxxxx -> international 9639xxxxxxxx
+    if (digits.startsWith('00')) digits = digits.substring(2);
+    if (digits.startsWith('0') && digits.length == 10) {
+      digits = '963${digits.substring(1)}';
+    }
+    return digits;
+  }
+
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا يمكن فتح الرابط'), behavior: SnackBarBehavior.floating),
-      );
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تأكد من تثبيت التطبيق المناسب'), behavior: SnackBarBehavior.floating),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('لا يمكن فتح الرابط'), behavior: SnackBarBehavior.floating),
+        );
+      }
     }
   }
 }

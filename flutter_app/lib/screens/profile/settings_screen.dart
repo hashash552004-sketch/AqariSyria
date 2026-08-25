@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
@@ -106,7 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.shield_rounded,
                   iconColor: AppColors.primary,
                   title: 'سياسة الخصوصية',
-                  trailing: const Icon(
+                  trailing: Icon(
                     Icons.arrow_back_ios_new_rounded,
                     color: AppColors.textSecondary,
                     size: 14,
@@ -117,7 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.description_rounded,
                   iconColor: AppColors.textSecondary,
                   title: 'شروط الاستخدام',
-                  trailing: const Icon(
+                  trailing: Icon(
                     Icons.arrow_back_ios_new_rounded,
                     color: AppColors.textSecondary,
                     size: 14,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
@@ -97,7 +97,7 @@ class _AdvancedFiltersScreenState extends State<AdvancedFiltersScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.cards,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),

@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -218,7 +218,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary, size: 16),
+            child: Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary, size: 16),
           ),
           onPressed: () => widget.onBackToHome?.call(),
         ),
@@ -559,7 +559,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
@@ -577,13 +577,13 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               value: value.isEmpty ? null : value,
               hint: Text(
                 'اختر $label',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   color: AppColors.textSecondary,
                 ),
               ),
               isExpanded: true,
-              icon: const Icon(
+              icon: Icon(
                 Icons.keyboard_arrow_down,
                 color: AppColors.textSecondary,
               ),
@@ -592,7 +592,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   value: item,
                   child: Text(
                     item,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       color: AppColors.textPrimary,
                     ),
@@ -761,7 +761,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               const SizedBox(height: 6),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
                 ),

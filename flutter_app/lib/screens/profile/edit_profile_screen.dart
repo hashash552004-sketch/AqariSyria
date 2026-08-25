@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -306,7 +306,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _defaultAvatar() {
     return Container(
       color: AppColors.shimmerBase,
-      child: const Icon(Icons.person_rounded, size: 56, color: AppColors.textSecondary),
+      child: Icon(Icons.person_rounded, size: 56, color: AppColors.textSecondary),
     );
   }
 

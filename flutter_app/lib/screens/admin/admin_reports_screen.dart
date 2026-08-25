@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
@@ -67,14 +67,14 @@ class _AdminReportsScreenState extends State<AdminReportsScreen>
       ),
       child: TextField(
         controller: _searchController,
-        style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+        style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
         decoration: InputDecoration(
           hintText: 'ابحث عن بلاغ...',
-          hintStyle: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
-          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 22),
+          hintStyle: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          prefixIcon: Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 22),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 20),
+                  icon: Icon(Icons.close, color: AppColors.textSecondary, size: 20),
                   onPressed: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -245,7 +245,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen>
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.report_outlined, size: 16, color: AppColors.textSecondary),
+              Icon(Icons.report_outlined, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 reasonTranslations[report.reason] ?? report.reason,
@@ -261,7 +261,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen>
             const SizedBox(height: 6),
             Row(
               children: [
-                const Icon(Icons.description_outlined, size: 16, color: AppColors.textSecondary),
+                Icon(Icons.description_outlined, size: 16, color: AppColors.textSecondary),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(report.description!, style: AppTextStyles.bodySmall),
@@ -300,7 +300,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen>
         final title = snapshot.data;
         return Row(
           children: [
-            const Icon(Icons.home_work_outlined, size: 16, color: AppColors.textSecondary),
+            Icon(Icons.home_work_outlined, size: 16, color: AppColors.textSecondary),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
@@ -322,7 +322,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen>
         final name = snapshot.data;
         return Row(
           children: [
-            const Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary),
+            Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary),
             const SizedBox(width: 6),
             Text(
               name != null ? 'المبلغ: $name' : 'المبلغ: $reportedBy',

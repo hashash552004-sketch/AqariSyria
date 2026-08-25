@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
@@ -59,7 +59,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           ),
           child: Container(
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
@@ -247,7 +247,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       child: Column(
         children: [
           Text(count == 0 ? '-' : avg.toStringAsFixed(1),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 56,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
