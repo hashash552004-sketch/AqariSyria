@@ -1,13 +1,76 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
 import '../../models/review.dart';
-import '../../services/firestore_service.dart';
 import '../../services/auth_service.dart';
 import '../../core/snackbar_helper.dart';
 import '../../widgets/custom_app_bar.dart';
+
+class _LocalReviewsService {
+  static const _key = 'local_reviews';
+
+  Future<Map<String, dynamic>> _getAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_key);
+    if (raw == null) return {};
+    return (jsonDecode(raw) as Map).cast<String, dynamic>();
+  }
+
+  Future<List<Review>> getReviews(String propertyId) async {
+    final all = await _getAll();
+    final list = (all[propertyId] as List?)?.cast<dynamic>() ?? [];
+    return list.map((e) {
+      final m = Map<String, dynamic>.from(e as Map);
+      return Review(
+        id: m['userId']?.toString() ?? '',
+        propertyId: m['propertyId']?.toString() ?? propertyId,
+        userId: m['userId']?.toString() ?? '',
+        userName: m['userName']?.toString() ?? 'مستخدم',
+        rating: (m['rating'] as num?)?.toInt() ?? 5,
+        comment: m['comment']?.toString() ?? '',
+        createdAt: DateTime.tryParse(m['createdAt']?.toString() ?? '') ?? DateTime.now(),
+        updatedAt: DateTime.tryParse(m['updatedAt']?.toString() ?? '') ?? DateTime.now(),
+      );
+    }).toList();
+  }
+
+  Future<void> submitReview({
+    required String propertyId,
+    required String userId,
+    required String userName,
+    required int rating,
+    required String comment,
+  }) async {
+    final all = await _getAll();
+    final list = (all[propertyId] as List?)?.cast<dynamic>() ?? [];
+    list.removeWhere((e) => (e as Map)['userId'] == userId);
+    list.add({
+      'propertyId': propertyId,
+      'userId': userId,
+      'userName': userName,
+      'rating': rating.clamp(1, 5),
+      'comment': comment,
+      'createdAt': DateTime.now().toIso8601String(),
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+    all[propertyId] = list;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, jsonEncode(all));
+  }
+
+  Future<void> deleteReview(String propertyId, String userId) async {
+    final all = await _getAll();
+    final list = (all[propertyId] as List?)?.cast<dynamic>() ?? [];
+    list.removeWhere((e) => (e as Map)['userId'] == userId);
+    all[propertyId] = list;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, jsonEncode(all));
+  }
+}
 
 class ReviewsScreen extends StatefulWidget {
   final String propertyId;
@@ -26,6 +89,25 @@ class ReviewsScreen extends StatefulWidget {
 class _ReviewsScreenState extends State<ReviewsScreen> {
   String _selectedFilter = 'الكل';
   final List<String> _filters = ['الكل', 'الأحدث', 'الأعلى تقييماً'];
+  final _LocalReviewsService _service = _LocalReviewsService();
+  List<Review> _reviews = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReviews();
+  }
+
+  Future<void> _loadReviews() async {
+    setState(() => _loading = true);
+    final reviews = await _service.getReviews(widget.propertyId);
+    if (!mounted) return;
+    setState(() {
+      _reviews = reviews;
+      _loading = false;
+    });
+  }
 
   List<Review> _applyFilter(List<Review> reviews) {
     switch (_selectedFilter) {
@@ -127,13 +209,14 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     final uid = user.uid;
     final name = user.displayName ?? 'مستخدم';
     try {
-      await context.read<FirestoreService>().submitReview(
-            propertyId: widget.propertyId,
-            userId: uid,
-            userName: name,
-            rating: rating,
-            comment: commentController.text.trim(),
-          );
+      await _service.submitReview(
+        propertyId: widget.propertyId,
+        userId: uid,
+        userName: name,
+        rating: rating,
+        comment: commentController.text.trim(),
+      );
+      await _loadReviews();
       if (mounted) showSnackBar(context, 'شكراً لك، تم حفظ تقييمك');
     } catch (e) {
       if (!mounted) return;
@@ -149,102 +232,79 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       appBar: CustomAppBar(title: widget.propertyTitle.isEmpty
           ? 'التقييمات'
           : 'تقييمات: ${widget.propertyTitle}'),
-      body: StreamBuilder<List<Review>>(
-        stream:
-            context.read<FirestoreService>().streamPropertyReviews(widget.propertyId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: AppConstants.screenPadding,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
-                    const SizedBox(height: 12),
-                    Text('حدث خطأ في تحميل التقييمات', style: AppTextStyles.titleMedium),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => setState(() {}),
-                      child: Text('إعادة المحاولة', style: TextStyle(color: AppColors.primary)),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          final reviews = snapshot.data ?? [];
-          final avg = reviews.isEmpty
-              ? 0.0
-              : reviews.map((r) => r.rating).reduce((a, b) => a + b) / reviews.length;
-          final distribution = <int, int>{};
-          for (final r in reviews) {
-            distribution[r.rating] = (distribution[r.rating] ?? 0) + 1;
-          }
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildContent(),
+    );
+  }
 
-          return ListView(
-            padding: AppConstants.screenPadding,
-            children: [
-              _buildOverallRating(avg, reviews.length),
-              const SizedBox(height: 24),
-              _buildRatingBars(distribution, reviews.length),
-              const SizedBox(height: 24),
-              _buildFilterChips(),
-              const SizedBox(height: 16),
-              if (_applyFilter(reviews).isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Column(
-                    children: [
-                      Icon(Icons.rate_review_outlined,
-                          size: 56, color: AppColors.textSecondary),
-                      const SizedBox(height: 12),
-                      Text('لا توجد تقييمات بعد',
-                          style: AppTextStyles.titleMedium),
-                      const SizedBox(height: 6),
-                      Text('كن أول من يقيّم هذا العقار',
-                          style: AppTextStyles.bodyMedium
-                              .copyWith(color: AppColors.textSecondary)),
-                    ],
-                  ),
-                )
-              else
-                ..._applyFilter(reviews).map((r) => Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildReviewCard(r),
-                    )),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                  onPressed: reviews.any((r) =>
-                          r.userId == context.read<AuthService>().currentUser?.uid)
-                      ? () => _openReviewEditor(
-                          existing: reviews.firstWhere((r) =>
-                              r.userId ==
-                              context.read<AuthService>().currentUser!.uid))
-                      : () => _openReviewEditor(),
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  label: Text(reviews.any((r) =>
-                          r.userId == context.read<AuthService>().currentUser?.uid)
-                      ? 'تعديل تقييمك'
-                      : 'إضافة تقييم'),
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          );
-        },
-      ),
+  Widget _buildContent() {
+    final reviews = _reviews;
+    final avg = reviews.isEmpty
+        ? 0.0
+        : reviews.map((r) => r.rating).reduce((a, b) => a + b) / reviews.length;
+    final distribution = <int, int>{};
+    for (final r in reviews) {
+      distribution[r.rating] = (distribution[r.rating] ?? 0) + 1;
+    }
+
+    return ListView(
+      padding: AppConstants.screenPadding,
+      children: [
+        _buildOverallRating(avg, reviews.length),
+        const SizedBox(height: 24),
+        _buildRatingBars(distribution, reviews.length),
+        const SizedBox(height: 24),
+        _buildFilterChips(),
+        const SizedBox(height: 16),
+        if (_applyFilter(reviews).isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: Column(
+              children: [
+                Icon(Icons.rate_review_outlined,
+                    size: 56, color: AppColors.textSecondary),
+                const SizedBox(height: 12),
+                Text('لا توجد تقييمات بعد',
+                    style: AppTextStyles.titleMedium),
+                const SizedBox(height: 6),
+                Text('كن أول من يقيّم هذا العقار',
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(color: AppColors.textSecondary)),
+              ],
+            ),
+          )
+        else
+          ..._applyFilter(reviews).map((r) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildReviewCard(r),
+              )),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
+            ),
+            onPressed: reviews.any((r) =>
+                    r.userId == context.read<AuthService>().currentUser?.uid)
+                ? () => _openReviewEditor(
+                    existing: reviews.firstWhere((r) =>
+                        r.userId ==
+                        context.read<AuthService>().currentUser!.uid))
+                : () => _openReviewEditor(),
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: Text(reviews.any((r) =>
+                    r.userId == context.read<AuthService>().currentUser?.uid)
+                ? 'تعديل تقييمك'
+                : 'إضافة تقييم'),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 
@@ -494,7 +554,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     );
     if (confirmed != true) return;
     try {
-      await context.read<FirestoreService>().deleteReview(widget.propertyId, review.id);
+      final user = context.read<AuthService>().currentUser;
+      if (user == null) return;
+      await _service.deleteReview(widget.propertyId, user.uid);
+      await _loadReviews();
       if (mounted) showSnackBar(context, 'تم حذف تقييمك');
     } catch (_) {
       if (mounted) {
