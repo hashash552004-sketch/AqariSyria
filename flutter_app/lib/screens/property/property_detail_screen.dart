@@ -13,7 +13,6 @@ import '../../services/firestore_service.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/property_card.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../chat/chat_screen.dart';
 import '../../services/compare_service.dart';
 import '../../widgets/star_rating.dart';
 import 'full_gallery_screen.dart';
@@ -40,15 +39,18 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   double _scrollOffset = 0;
   String? _userId;
   bool _isFavorite = false;
-  bool _chatLoading = false;
-
+  late Future<DocumentSnapshot?> _ownerDocFuture;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      setState(() => _scrollOffset = _scrollController.offset);
+      final offset = _scrollController.offset;
+      if ((_scrollOffset > 200) != (offset > 200)) {
+        setState(() => _scrollOffset = offset);
+      }
     });
+    _ownerDocFuture = context.read<FirestoreService>().getUserDoc(widget.property.ownerId);
     _loadFavoriteStatus();
     // Keep the screen in sync with Firestore (e.g. owner toggles تم البيع).
     _propertySub = context
@@ -487,7 +489,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         : 'بيع';
     final auth = context.read<AuthService>();
     final isOwner = auth.currentUser?.uid == property.ownerId;
-    final isLoggedIn = auth.currentUser != null;
     return Wrap(
       spacing: 8,
       runSpacing: 4,
@@ -497,55 +498,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         _badge(opLabel, property.operationType == 'rent' ? AppColors.success : AppColors.primary),
         if (property.isSold) _badge('تم البيع', AppColors.error),
         if (property.isFeatured) _badge('مميز', AppColors.featuredBadge),
-        if (!isOwner && !property.isSold && isLoggedIn)
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => RequestVisitScreen(
-                    propertyId: property.id,
-                    propertyTitle: property.title,
-                    ownerId: property.ownerId,
-                    ownerName: property.ownerName,
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF12B76A), Color(0xFF6CE9A6)],
-                ),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF12B76A).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.event_available_rounded, size: 15, color: Colors.white),
-                  SizedBox(width: 5),
-                  Text(
-                    'طلب معاينة',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        if (!isOwner && !property.isSold && isLoggedIn)
-          const SizedBox(width: 4),
         if (isOwner)
           GestureDetector(
             onTap: () async {
@@ -1118,15 +1070,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Widget _buildBottomBar(Property property) {
-    final firestore = context.read<FirestoreService>();
-
-    return FutureBuilder<DocumentSnapshot>(
-      future: firestore.getUserDoc(property.ownerId),
+    return FutureBuilder<DocumentSnapshot?>(
+      future: _ownerDocFuture,
       builder: (context, snap) {
         String ownerPhone = property.ownerPhone;
         String ownerWhatsapp = ownerPhone;
-        if (snap.hasData) {
-          final data = snap.data?.data() as Map<String, dynamic>?;
+        if (snap.hasData && snap.data != null) {
+          final data = snap.data!.data() as Map<String, dynamic>?;
           ownerPhone = data?['phone']?.toString() ?? property.ownerPhone;
           final whatsapp = data?['whatsapp']?.toString();
           ownerWhatsapp = (whatsapp != null && whatsapp.isNotEmpty) ? whatsapp : ownerPhone;
@@ -1155,7 +1105,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: isLoading ? null : () => _launchUrl('https://wa.me/${_normalizePhone(ownerWhatsapp)}'),
+                  onTap: isLoading ? null : () => _launchUrl('https://wa.me/${_normalizePhone(ownerWhatsapp)}?text=${Uri.encodeComponent("مرحباً، أنا مهتم بـ \"${property.title}\"")}'),
                   child: Container(
                     height: 44,
                     decoration: BoxDecoration(
@@ -1168,7 +1118,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         if (isLoading)
                           const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         else
-                          Icon(Icons.chat_rounded, color: Colors.white, size: 18),
+                          const Icon(Icons.chat_rounded, color: Colors.white, size: 18),
                         const SizedBox(width: 6),
                         Text('واتساب', style: AppTextStyles.button),
                       ],
@@ -1197,7 +1147,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         if (isLoading)
                           const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         else
-                          Icon(Icons.phone_rounded, color: Colors.white, size: 18),
+                          const Icon(Icons.phone_rounded, color: Colors.white, size: 18),
                         const SizedBox(width: 6),
                         Text('اتصال', style: AppTextStyles.button),
                       ],
@@ -1206,34 +1156,54 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: GestureDetector(
-                  onTap: _chatLoading ? null : () => _startChat(context, property),
-                  child: Container(
-                    height: 44,
-                    decoration: BoxDecoration(
-                      gradient: _chatLoading
-                          ? null
-                          : const LinearGradient(
-                              colors: [Color(0xFF7B68EE), Color(0xFF9B59B6)],
-                            ),
-                      color: _chatLoading ? AppColors.textSecondary.withValues(alpha: 0.3) : null,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (_chatLoading)
-                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        else
-                          Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 18),
-                        const SizedBox(width: 6),
-                        Text(_chatLoading ? 'جاري...' : 'مراسلة', style: AppTextStyles.button),
-                      ],
+              if (!property.isSold && property.ownerId.isNotEmpty)
+                Expanded(
+                  child: GestureDetector(
+                    onTap: isLoading ? null : () {
+                      final auth = context.read<AuthService>();
+                      if (auth.currentUser == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('سجل دخول أولاً'), behavior: SnackBarBehavior.floating),
+                        );
+                        return;
+                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RequestVisitScreen(
+                            propertyId: property.id,
+                            propertyTitle: property.title,
+                            ownerId: property.ownerId,
+                            ownerName: property.ownerName,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: isLoading
+                            ? null
+                            : const LinearGradient(
+                                colors: [Color(0xFF12B76A), Color(0xFF6CE9A6)],
+                              ),
+                        color: isLoading ? AppColors.textSecondary.withValues(alpha: 0.3) : null,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (isLoading)
+                            const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          else
+                            const Icon(Icons.event_available_rounded, color: Colors.white, size: 18),
+                          const SizedBox(width: 6),
+                          Text('طلب معاينة', style: AppTextStyles.button),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         );
@@ -1311,88 +1281,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _startChat(BuildContext context, Property p) async {
-    if (_chatLoading) return;
-
-    final auth = context.read<AuthService>();
-    final user = auth.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('سجل دخول أولاً للمراسلة'), behavior: SnackBarBehavior.floating),
-      );
-      return;
-    }
-
-    final currentUserId = user.uid;
-    if (currentUserId == p.ownerId) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا يمكنك مراسلة نفسك'), behavior: SnackBarBehavior.floating),
-      );
-      return;
-    }
-
-    if (p.ownerId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('بيانات المالك غير متوفرة'), behavior: SnackBarBehavior.floating),
-      );
-      return;
-    }
-
-    if (p.isSold) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('هذا العقار تم بيعه'), behavior: SnackBarBehavior.floating),
-      );
-      return;
-    }
-
-    setState(() => _chatLoading = true);
-    try {
-      final firestore = context.read<FirestoreService>();
-      final userName = user.displayName ?? user.email ?? 'مستخدم';
-      final convId = await firestore.createConversation(
-        p.id,
-        p.title,
-        p.ownerId,
-        p.ownerName.isNotEmpty ? p.ownerName : 'مالك العقار',
-        currentUserId,
-        userName,
-      );
-
-      final convDoc = await firestore.getConversationDoc(convId);
-      if (convDoc != null && convDoc.exists) {
-        final convData = convDoc.data() as Map<String, dynamic>?;
-        if (convData != null && (convData['lastMessage']?.toString() ?? '').isEmpty) {
-          await firestore.sendMessage(
-            convId,
-            currentUserId,
-            userName,
-            'مرحباً، أنا مهتم بـ "${p.title}"',
-          );
-        }
-      }
-
-      if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChatScreen(
-              conversationId: convId,
-              propertyTitle: p.title,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ: $e'), behavior: SnackBarBehavior.floating),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _chatLoading = false);
-    }
   }
 
   /// Strips formatting characters and normalizes Syrian numbers for wa.me.

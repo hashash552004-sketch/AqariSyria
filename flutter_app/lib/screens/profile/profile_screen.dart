@@ -43,6 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   String _whatsapp = '';
   String? _profileImage;
   bool _loadingRole = true;
+  Map<String, dynamic> _permissions = {};
   late AnimationController _headerAnimController;
   late Animation<double> _avatarScale;
   late Animation<double> _avatarRotation;
@@ -94,6 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _username = userData?.username ?? '';
           _phone = userData?.phone ?? '';
           _whatsapp = userData?.whatsapp ?? '';
+          _permissions = Map<String, dynamic>.from(userData?.permissions ?? {});
           final img = userData?.profileImage;
           _profileImage = (img != null && img.isNotEmpty) ? img : auth.currentUser?.photoURL;
           _loadingRole = false;
@@ -565,14 +567,15 @@ class _ProfileScreenState extends State<ProfileScreen>
       _MenuItem('عمليات البحث المحفوظة', Icons.bookmark_rounded, const Color(0xFF8B5CF6), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedSearchesScreen()))),
       _MenuItem('تمت المشاهدة مؤخراً', Icons.history_rounded, const Color(0xFFEC4899), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecentlyViewedScreen()))),
       _MenuItem('الإشعارات', Icons.notifications_rounded, const Color(0xFFF59E0B), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
-      _MenuItem('الإحصائيات', Icons.bar_chart_rounded, const Color(0xFF06B6D4), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyStatsScreen()))),
+      if (_permissions.isNotEmpty || _userRole == 'admin')
+        _MenuItem('الإحصائيات', Icons.bar_chart_rounded, const Color(0xFF06B6D4), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyStatsScreen()))),
       _MenuItem('الإعدادات', Icons.settings_rounded, AppColors.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
       _MenuItem('تواصل معنا', Icons.headset_mic_rounded, const Color(0xFF10B981), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactUsScreen()))),
       _MenuItem('خدمة العملاء', Icons.support_agent_rounded, const Color(0xFF3B82F6), () => _startCustomerChat(context)),
       _MenuItem('حول التطبيق', Icons.info_rounded, AppColors.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen()))),
     ];
 
-    if (!_loadingRole && (_userRole == 'admin' || _userRole == 'moderator')) {
+    if (!_loadingRole && (_userRole == 'admin' || _userRole == 'moderator' || _permissions.isNotEmpty)) {
       menuItems.insert(0, _MenuItem('لوحة الإدارة', Icons.admin_panel_settings_rounded, const Color(0xFFEF4444), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardScreen()))));
     }
 

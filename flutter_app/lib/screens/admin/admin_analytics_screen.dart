@@ -34,6 +34,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen>
   List<int> _propsPerMonth = [];
   List<int> _usersPerMonth = [];
 
+  int _dateFilterIndex = 3;
+
   static const _dayLabels = ['سبت', 'أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة'];
   static const _monthLabels = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 
@@ -63,35 +65,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen>
 
       if (!mounted) return;
 
-      final now = DateTime.now();
-      final weekAgo = now.subtract(const Duration(days: 6));
-
-      _propsPerDay = List.filled(7, 0);
-      _usersPerDay = List.filled(7, 0);
-      _propsPerMonth = List.filled(12, 0);
-      _usersPerMonth = List.filled(12, 0);
-
-      for (final p in props) {
-        final c = p.createdAt;
-        if (c != null && c.isAfter(weekAgo)) {
-          _propsPerDay[c.weekday % 7]++;
-        }
-        if (c != null) {
-          _propsPerMonth[c.month - 1]++;
-        }
-      }
-
-      for (final doc in usersSnap.docs) {
-        final data = doc.data();
-        final createdAt = data['createdAt'];
-        if (createdAt is Timestamp) {
-          final c = createdAt.toDate();
-          if (c.isAfter(weekAgo)) {
-            _usersPerDay[c.weekday % 7]++;
-          }
-          _usersPerMonth[c.month - 1]++;
-        }
-      }
+      _computeStats(props, usersSnap.docs);
 
       setState(() {
         _allProps = props;
@@ -106,6 +80,54 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen>
       _animController.forward();
     } catch (e) {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _computeStats(List<Property> props, List<QueryDocumentSnapshot> userDocs) {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    DateTime filterStart;
+    switch (_dateFilterIndex) {
+      case 0:
+        filterStart = todayStart;
+        break;
+      case 1:
+        filterStart = todayStart.subtract(const Duration(days: 6));
+        break;
+      case 2:
+        filterStart = todayStart.subtract(const Duration(days: 29));
+        break;
+      default:
+        filterStart = DateTime(2000);
+        break;
+    }
+
+    _propsPerDay = List.filled(7, 0);
+    _usersPerDay = List.filled(7, 0);
+    _propsPerMonth = List.filled(12, 0);
+    _usersPerMonth = List.filled(12, 0);
+
+    for (final p in props) {
+      final c = p.createdAt;
+      if (c != null && c.isAfter(filterStart)) {
+        _propsPerDay[c.weekday % 7]++;
+      }
+      if (c != null) {
+        _propsPerMonth[c.month - 1]++;
+      }
+    }
+
+    for (final doc in userDocs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final createdAt = data['createdAt'];
+      if (createdAt is Timestamp) {
+        final c = createdAt.toDate();
+        if (c.isAfter(filterStart)) {
+          _usersPerDay[c.weekday % 7]++;
+        }
+        _usersPerMonth[c.month - 1]++;
+      }
     }
   }
 
@@ -124,6 +146,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 20),
+                    _buildDateFilter(),
                     const SizedBox(height: 20),
                     _buildSectionTitle('ملخص العقارات', Icons.pie_chart_rounded),
                     const SizedBox(height: 12),
@@ -161,6 +185,56 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen>
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildDateFilter() {
+    final filters = [
+      (0, 'اليوم'),
+      (1, '7 أيام'),
+      (2, '30 يوم'),
+      (3, 'الكل'),
+    ];
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cards,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+        ],
+      ),
+      padding: const EdgeInsets.all(6),
+      child: Row(
+        children: filters.map((f) {
+          final selected = _dateFilterIndex == f.$1;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() => _dateFilterIndex = f.$1);
+                _computeStats(_allProps, []);
+                _animController.forward(from: 0);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    f.$2,
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: selected ? Colors.white : AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 

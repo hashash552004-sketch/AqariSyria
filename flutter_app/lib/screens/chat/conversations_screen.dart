@@ -499,7 +499,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
     final hasUnread = conv.unreadCount > 0;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 8),
       child: GestureDetector(
         onTap: () {
           Navigator.push(
@@ -512,164 +512,111 @@ class _ConversationsScreenState extends State<ConversationsScreen>
             ),
           );
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: hasUnread
                 ? AppColors.primary.withValues(alpha: 0.04)
                 : AppColors.cards,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: hasUnread
-                  ? AppColors.primary.withValues(alpha: 0.15)
-                  : AppColors.border.withValues(alpha: 0.4),
+                  ? AppColors.primary.withValues(alpha: 0.2)
+                  : AppColors.border.withValues(alpha: 0.5),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: hasUnread ? 0.06 : 0.03),
-                blurRadius: hasUnread ? 10 : 6,
-                offset: const Offset(0, 3),
-              ),
-            ],
           ),
           child: Row(
             children: [
-              Stack(
-                children: [
-                  Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.secondary],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        otherName.isNotEmpty ? otherName[0].toUpperCase() : '?',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    otherName.isNotEmpty ? otherName[0].toUpperCase() : '?',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
                     ),
                   ),
-                  if (hasUnread)
-                    Positioned(
-                      top: -2,
-                      right: -2,
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: AppColors.error,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.cards, width: 2.5),
-                        ),
-                      ),
-                    ),
-                ],
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            conv.propertyTitle,
-                            style: AppTextStyles.titleSmall.copyWith(
-                              fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          timeStr,
-                          style: AppTextStyles.caption.copyWith(
-                            color: hasUnread ? AppColors.primary : AppColors.textSecondary,
-                            fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w400,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
                     Text(
                       otherName,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
+                      style: AppTextStyles.titleSmall.copyWith(
+                        fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w600,
+                        fontSize: 15,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            conv.lastMessage.isNotEmpty
-                                ? conv.lastMessage
-                                : 'انقر لبدء المحادثة',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: hasUnread
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary,
-                              fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w400,
-                              fontSize: 13,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (hasUnread) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [AppColors.primary, AppColors.secondary],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.3),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              '${conv.unreadCount}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+                    const SizedBox(height: 4),
+                    Text(
+                      conv.lastMessage.isNotEmpty
+                          ? conv.lastMessage
+                          : 'ابدأ المحادثة',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: hasUnread
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                        fontWeight: hasUnread ? FontWeight.w500 : FontWeight.w400,
+                        fontSize: 13,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    timeStr,
+                    style: AppTextStyles.caption.copyWith(
+                      color: hasUnread ? AppColors.primary : AppColors.textSecondary,
+                      fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w400,
+                      fontSize: 11,
+                    ),
+                  ),
+                  if (hasUnread) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.primary, AppColors.secondary],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${conv.unreadCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),

@@ -82,7 +82,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 const SizedBox(width: 8),
                 _filterChip('موظف', 3),
                 const SizedBox(width: 8),
-                _filterChip('محظورين', 4),
+                _filterChip('مستخدم', 4),
+                const SizedBox(width: 8),
+                _filterChip('محظورين', 5),
               ],
             ),
           ),
@@ -132,8 +134,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 } else if (_filterIndex == 2) {
                   users = users.where((u) => u.role == 'moderator').toList();
                 } else if (_filterIndex == 3) {
-                  users = users.where((u) => u.role == 'user').toList();
+                  users = users.where((u) => u.role == 'user' && u.permissions.isNotEmpty).toList();
                 } else if (_filterIndex == 4) {
+                  users = users.where((u) => u.role == 'user' && u.permissions.isEmpty).toList();
+                } else if (_filterIndex == 5) {
                   users = users.where((u) => u.banned).toList();
                 }
                 if (_searchQuery.isNotEmpty) {
@@ -282,7 +286,7 @@ class _UserTile extends StatelessWidget {
       case 'moderator':
         return 'مشرف';
       default:
-        return 'موظف';
+        return user.permissions.isNotEmpty ? 'موظف' : 'مستخدم';
     }
   }
 
@@ -293,7 +297,7 @@ class _UserTile extends StatelessWidget {
       case 'moderator':
         return AppColors.success;
       default:
-        return AppColors.primary;
+        return user.permissions.isNotEmpty ? AppColors.primary : AppColors.textSecondary;
     }
   }
 }
@@ -333,7 +337,7 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
     _permissions = Map<String, dynamic>.from(widget.user.permissions);
   }
 
-  bool get _isModerator => _currentRole == 'moderator';
+  bool get _isModerator => _currentRole == 'moderator' || _currentRole == 'admin';
 
   void _applyRolePermissions(String role) {
     setState(() {
@@ -346,11 +350,13 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
         for (final entry in _permissionDefs) {
           _permissions[entry.key] = true;
         }
-      } else {
+      } else if (role == 'employee') {
         _permissions['review_reports'] = true;
         _permissions['respond_customers'] = true;
         _permissions['review_properties'] = true;
         _permissions['feature_property'] = false;
+      } else {
+        _permissions.clear();
       }
     });
   }
@@ -479,8 +485,10 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
             message = 'تم تعيين كمدير';
           case 'moderator':
             message = 'تم تعيين كمشرف';
-          default:
+          case 'employee':
             message = 'تم تعيين كموظف';
+          default:
+            message = 'تم تعيين كمستخدم';
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
@@ -617,7 +625,7 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
                 Text('إدارة الدور', style: AppTextStyles.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  'مدير: جميع الصلاحيات\nمشرف: جميع الصلاحيات\nموظف: مراجعة العقارات، مراجعة البلاغات، الرد على العملاء',
+                  'مدير: جميع الصلاحيات\nمشرف: جميع الصلاحيات\nموظف: مراجعة العقارات، مراجعة البلاغات، الرد على العملاء\nمستخدم: بدون صلاحيات إدارية',
                   style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary, height: 1.5),
                 ),
                 const SizedBox(height: 12),
@@ -626,13 +634,21 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
                     Expanded(
                       child: _roleButton('مدير', const Color(0xFFD4AF37), () => _changeRole('admin')),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: _roleButton('مشرف', AppColors.success, () => _changeRole('moderator')),
                     ),
-                    const SizedBox(width: 8),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
                     Expanded(
-                      child: _roleButton('موظف', AppColors.primary, () => _changeRole('user')),
+                      child: _roleButton('موظف', AppColors.primary, () => _changeRole('employee')),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _roleButton('مستخدم', AppColors.textSecondary, () => _changeRole('user')),
                     ),
                   ],
                 ),
@@ -756,7 +772,8 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
   Widget _roleButton(String label, Color color, VoidCallback onTap) {
     final isActive = (label == 'مدير' && _currentRole == 'admin') ||
         (label == 'مشرف' && _currentRole == 'moderator') ||
-        (label == 'موظف' && _currentRole == 'user');
+        (label == 'موظف' && _currentRole == 'employee') ||
+        (label == 'مستخدم' && _currentRole == 'user');
     return SizedBox(
       height: 44,
       child: OutlinedButton(
@@ -789,7 +806,7 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
 
   Widget _buildPermissionTile(_PermissionEntry entry) {
     final isEnabled = _permissions[entry.key] == true;
-    final canToggle = _currentRole == 'user';
+    final canToggle = _currentRole == 'user' || _currentRole == 'employee';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -850,8 +867,10 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
         return 'مدير';
       case 'moderator':
         return 'مشرف';
-      default:
+      case 'employee':
         return 'موظف';
+      default:
+        return 'مستخدم';
     }
   }
 
@@ -861,8 +880,10 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
         return const Color(0xFFD4AF37);
       case 'moderator':
         return AppColors.success;
-      default:
+      case 'employee':
         return AppColors.primary;
+      default:
+        return AppColors.textSecondary;
     }
   }
 }

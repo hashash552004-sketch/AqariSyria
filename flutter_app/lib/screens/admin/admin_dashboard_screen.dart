@@ -14,8 +14,6 @@ import 'admin_reports_screen.dart';
 import 'admin_analytics_screen.dart';
 import 'admin_settings_screen.dart';
 
-enum _DateFilter { today, week, month, all }
-
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -26,14 +24,10 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     with TickerProviderStateMixin {
   bool _loading = true;
-  _DateFilter _dateFilter = _DateFilter.today;
 
   int _totalProps = 0;
-  int _todayProps = 0;
-  int _todaySold = 0;
   int _totalUsers = 0;
 
-  List<Property> _allProps = [];
   Map<String, dynamic> _permissions = {};
 
   late final AnimationController _staggerController;
@@ -81,63 +75,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
       if (!mounted) return;
       setState(() {
-        _allProps = props;
         _totalProps = props.length;
         _totalUsers = users.length;
         _permissions = currentUser?.permissions ?? {};
         _loading = false;
       });
-      _computeStats();
       _staggerController.forward(from: 0);
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  void _computeStats() {
-    final now = DateTime.now();
-    final todayStart = DateTime(now.year, now.month, now.day);
-
-    DateTime filterStart;
-    switch (_dateFilter) {
-      case _DateFilter.today:
-        filterStart = todayStart;
-        break;
-      case _DateFilter.week:
-        filterStart = todayStart.subtract(const Duration(days: 6));
-        break;
-      case _DateFilter.month:
-        filterStart = todayStart.subtract(const Duration(days: 29));
-        break;
-      case _DateFilter.all:
-        filterStart = DateTime(2000);
-        break;
-    }
-
-    int todayProps = 0;
-    int todaySold = 0;
-
-    for (final p in _allProps) {
-      final created = p.createdAt;
-      if (created == null) continue;
-      if (!created.isBefore(filterStart)) {
-        todayProps++;
-        if (p.isSold) todaySold++;
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _todayProps = todayProps;
-        _todaySold = todaySold;
-      });
-    }
-  }
-
-  void _onFilterChanged(_DateFilter filter) {
-    setState(() => _dateFilter = filter);
-    _computeStats();
-    _staggerController.forward(from: 0);
   }
 
   // ────────────────────── BUILD ──────────────────────
@@ -158,8 +104,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(),
-                    const SizedBox(height: 20),
-                    _buildDateFilter(),
                     const SizedBox(height: 20),
                     _buildStatsGrid(),
                     const SizedBox(height: 28),
@@ -205,81 +149,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
-  // ────────────────────── DATE FILTER ──────────────────────
-
-  Widget _buildDateFilter() {
-    final filters = [
-      (_DateFilter.today, 'اليوم'),
-      (_DateFilter.week, '7 أيام'),
-      (_DateFilter.month, '30 يوم'),
-      (_DateFilter.all, 'الكل'),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cards,
-        borderRadius: BorderRadius.circular(AppConstants.cardRadiusSmall),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(6),
-      child: Row(
-        children: filters.map((f) {
-          final selected = _dateFilter == f.$1;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => _onFilterChanged(f.$1),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.primary : Colors.transparent,
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.cardRadiusSmall - 4),
-                ),
-                child: Center(
-                  child: Text(
-                    f.$2,
-                    style: AppTextStyles.labelLarge.copyWith(
-                      color: selected ? Colors.white : AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
   // ────────────────────── STATS GRID ──────────────────────
 
   Widget _buildStatsGrid() {
     final stats = [
       _StatData(
-        label: 'عقارات اليوم',
-        value: '$_todayProps',
-        icon: Icons.home_work_rounded,
+        label: 'العقارات',
+        value: '$_totalProps',
+        icon: Icons.apartment_rounded,
         gradient: const LinearGradient(
           colors: [Color(0xFF1677FF), Color(0xFF4DA3FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      _StatData(
-        label: 'بيع اليوم',
-        value: '$_todaySold',
-        icon: Icons.payments_rounded,
-        gradient: const LinearGradient(
-          colors: [Color(0xFF12B76A), Color(0xFF6CE9A6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -290,16 +169,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         icon: Icons.groups_rounded,
         gradient: const LinearGradient(
           colors: [Color(0xFFF79009), Color(0xFFFFD666)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      _StatData(
-        label: 'العقارات',
-        value: '$_totalProps',
-        icon: Icons.apartment_rounded,
-        gradient: const LinearGradient(
-          colors: [Color(0xFF76C7FF), Color(0xFF1677FF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
