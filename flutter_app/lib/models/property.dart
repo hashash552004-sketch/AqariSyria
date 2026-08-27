@@ -15,6 +15,8 @@ class Property {
   final String region;
   final String neighborhood;
   final String detailedAddress;
+  final double? latitude;
+  final double? longitude;
   final List<String> images;
   final String ownerId;
   final String ownerName;
@@ -56,6 +58,8 @@ class Property {
     this.region = '',
     this.neighborhood = '',
     this.detailedAddress = '',
+    this.latitude,
+    this.longitude,
     this.images = const [],
     this.ownerId = '',
     this.ownerName = '',
@@ -99,6 +103,8 @@ class Property {
       region: data['region']?.toString() ?? '',
       neighborhood: data['neighborhood']?.toString() ?? '',
       detailedAddress: data['detailedAddress']?.toString() ?? '',
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble(),
       images:
           (data['images'] as List?)?.map((e) => e.toString()).toList() ??
           const [],
@@ -146,6 +152,8 @@ class Property {
       'region': region,
       'neighborhood': neighborhood,
       'detailedAddress': detailedAddress,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
       'images': images,
       'ownerId': ownerId,
       'ownerName': ownerName,

@@ -17,6 +17,7 @@ import '../../services/compare_service.dart';
 import '../../widgets/star_rating.dart';
 import 'full_gallery_screen.dart';
 import 'interactive_map_screen.dart';
+import '../../widgets/location_map_view.dart';
 import 'package:share_plus/share_plus.dart' as share_plus;
 import '../reviews/reviews_screen.dart';
 import '../visit/request_visit_screen.dart';
@@ -852,6 +853,20 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             ],
           ),
         ),
+        if (property.latitude != null && property.longitude != null) ...[
+          const SizedBox(height: 14),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => InteractiveMapScreen(property: property)),
+            ),
+            child: LocationMapView(
+              latitude: property.latitude!,
+              longitude: property.longitude!,
+              title: 'موقع العقار',
+            ),
+          ),
+        ],
       ],
     );
   }

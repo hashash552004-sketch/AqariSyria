@@ -15,6 +15,8 @@ import '../../services/imgbb_service.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_widgets.dart';
+import '../../widgets/location_picker_screen.dart';
+import 'package:latlong2/latlong.dart' as latlang;
 
 class AddPropertyScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -50,6 +52,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen>
   String _governorate = '';
   String _region = '';
   String _deedType = '';
+  double? _latitude;
+  double? _longitude;
 
   bool _hasElevator = false;
   bool _hasParking = false;
@@ -219,6 +223,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen>
             ? _regionController.text.trim()
             : _region,
         detailedAddress: _addressController.text.trim(),
+        latitude: _latitude,
+        longitude: _longitude,
         images: imageUrls,
         ownerId: auth.currentUser!.uid,
         ownerName: auth.currentUser!.displayName ?? 'مستخدم',
@@ -732,10 +738,110 @@ class _AddPropertyScreenState extends State<AddPropertyScreen>
                   prefixIcon: Icons.pin_drop_rounded,
                   maxLines: 2,
                 ),
+                const SizedBox(height: 16),
+                _buildMapPickerCard(),
               ],
             ),
           )),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMapPickerCard() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () async {
+          final result = await Navigator.push<latlang.LatLng>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => LocationPickerScreen(
+                initial: (_latitude != null && _longitude != null)
+                    ? latlang.LatLng(_latitude!, _longitude!)
+                    : null,
+              ),
+            ),
+          );
+          if (result != null && mounted) {
+            setState(() {
+              _latitude = result.latitude;
+              _longitude = result.longitude;
+            });
+          }
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.cards,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: (_latitude != null && _longitude != null)
+                  ? AppColors.primary.withValues(alpha: 0.5)
+                  : AppColors.border,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.map_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _latitude != null && _longitude != null
+                          ? 'تم تحديد الموقع على الخريطة'
+                          : 'تحديد الموقع على الخريطة',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: _latitude != null && _longitude != null
+                            ? AppColors.success
+                            : AppColors.textPrimary,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      _latitude != null && _longitude != null
+                          ? '${_latitude!.toStringAsFixed(6)}, ${_longitude!.toStringAsFixed(6)}'
+                          : 'اضغط لفتح الخريطة وتحديد إحداثيات العقار بدقة (اختياري)',
+                      style: AppTextStyles.caption,
+                      textDirection: _latitude != null && _longitude != null
+                          ? TextDirection.ltr
+                          : TextDirection.rtl,
+                      textAlign: TextAlign.left,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                _latitude != null && _longitude != null
+                    ? Icons.check_circle_rounded
+                    : Icons.chevron_left_rounded,
+                color: _latitude != null && _longitude != null
+                    ? AppColors.success
+                    : AppColors.textSecondary,
+                size: 24,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
