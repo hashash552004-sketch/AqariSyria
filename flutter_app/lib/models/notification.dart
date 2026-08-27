@@ -10,6 +10,7 @@ class AppNotification {
   final DateTime createdAt;
   final String? targetId;
   final String? senderId;
+  final String? subtype;
 
   AppNotification({
     this.id = '',
@@ -21,6 +22,7 @@ class AppNotification {
     DateTime? createdAt,
     this.targetId,
     this.senderId,
+    this.subtype,
   }) : createdAt = createdAt ?? DateTime.now();
 
   factory AppNotification.fromFirestore(Map<String, dynamic> data, String id) {
@@ -34,6 +36,7 @@ class AppNotification {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       targetId: data['targetId']?.toString(),
       senderId: data['senderId']?.toString(),
+      subtype: data['subtype']?.toString(),
     );
   }
 
@@ -47,6 +50,7 @@ class AppNotification {
       'createdAt': Timestamp.fromDate(createdAt),
       'targetId': targetId,
       'senderId': senderId,
+      'subtype': subtype,
     };
   }
 }

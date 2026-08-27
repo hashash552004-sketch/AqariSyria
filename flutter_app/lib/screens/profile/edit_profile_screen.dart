@@ -155,6 +155,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         username: username,
         favorites: existingUser?.favorites ?? [],
         role: existingUser?.role ?? 'user',
+        profileCompleted: existingUser?.profileCompleted ?? true,
       ));
 
       if (!mounted) return;

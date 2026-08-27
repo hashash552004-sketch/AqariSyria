@@ -26,6 +26,7 @@ import '../chat/chat_screen.dart';
 import 'edit_profile_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../auth/login_screen.dart';
+import '../auth/register_screen.dart';
 import '../home/home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -754,6 +755,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  static const _addAccountAction = '__ADD_ACCOUNT__';
+
   Future<void> _switchAccount(BuildContext context, AuthService auth) async {
     final currentEmail = auth.currentUser?.email ?? '';
     final prefs = await SharedPreferences.getInstance();
@@ -827,7 +830,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: const Icon(Icons.add_rounded, color: AppColors.primary),
               ),
               title: const Text('إضافة حساب جديد'),
-              onTap: () => Navigator.pop(ctx, null),
+              onTap: () => Navigator.pop(ctx, _addAccountAction),
             ),
             const SizedBox(height: 8),
           ],
@@ -837,13 +840,15 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     if (!context.mounted) return;
 
-    if (selected == null) {
-      await auth.signOut();
-      if (!context.mounted) return;
-      Navigator.pushAndRemoveUntil(
+    // Dismissing the sheet (tapping outside) should NOT log the user out.
+    if (selected == null) return;
+
+    if (selected == _addAccountAction) {
+      // Open the register screen to create a new account, keep the current
+      // account signed in so pressing back returns here.
+      await Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (_) => false,
+        MaterialPageRoute(builder: (_) => const RegisterScreen()),
       );
       return;
     }

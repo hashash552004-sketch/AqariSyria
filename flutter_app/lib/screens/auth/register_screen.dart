@@ -21,6 +21,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -36,13 +37,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _hasSpecialChar = false;
   bool _hasNumber = false;
 
+  bool _usernameTaken = false;
+  bool _checkingUsername = false;
+
   @override
   void initState() {
     super.initState();
+    for (final c in [
+      _nameController,
+      _emailController,
+      _phoneController,
+      _confirmPasswordController,
+    ]) {
+      c.addListener(_refreshButton);
+    }
     _passwordController.addListener(_validatePassword);
+    _usernameController.addListener(_validateUsername);
     _passwordFocus.addListener(() {
       setState(() => _passwordFocused = _passwordFocus.hasFocus);
     });
+  }
+
+  void _refreshButton() {
+    if (mounted) setState(() {});
   }
 
   void _validatePassword() {
@@ -56,12 +73,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
+  Future<void> _validateUsername() async {
+    final u = _usernameController.text.trim();
+    if (u.length < 3) {
+      if (mounted) setState(() => _usernameTaken = false);
+      return;
+    }
+    if (_checkingUsername) return;
+    _checkingUsername = true;
+    try {
+      final taken = await context.read<FirestoreService>().isUsernameTaken(u);
+      if (mounted) setState(() => _usernameTaken = taken);
+    } catch (_) {
+      if (mounted) setState(() => _usernameTaken = false);
+    } finally {
+      _checkingUsername = false;
+      if (mounted) setState(() {});
+    }
+  }
+
   bool get _isPasswordValid => _hasMinLength && _hasUppercase && _hasLowercase && _hasSpecialChar && _hasNumber;
+
+  bool get _isFormComplete {
+    return _nameController.text.trim().isNotEmpty &&
+        _usernameController.text.trim().length >= 3 &&
+        !_usernameTaken &&
+        _emailController.text.trim().isNotEmpty &&
+        _emailController.text.contains('@') &&
+        _phoneController.text.trim().isNotEmpty &&
+        _isPasswordValid &&
+        _confirmPasswordController.text.isNotEmpty &&
+        _confirmPasswordController.text == _passwordController.text;
+  }
+
+  bool get _isButtonEnabled => _isFormComplete && !_loading;
 
   @override
   void dispose() {
+    for (final c in [
+      _nameController,
+      _emailController,
+      _phoneController,
+      _confirmPasswordController,
+    ]) {
+      c.removeListener(_refreshButton);
+    }
     _passwordController.removeListener(_validatePassword);
+    _usernameController.removeListener(_validateUsername);
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -72,9 +132,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-    if (!_isPasswordValid) return;
+    if (!_isFormComplete) return;
     setState(() => _loading = true);
     try {
+      final username = _usernameController.text.trim();
+      final taken = await context.read<FirestoreService>().isUsernameTaken(username);
+      if (taken) {
+        if (mounted) {
+          setState(() => _usernameTaken = true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('اسم المستخدم مستخدم بالفعل'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+        setState(() => _loading = false);
+        return;
+      }
+
       final credential = await context.read<AuthService>().registerEmailPassword(
         _emailController.text.trim(),
         _passwordController.text,
@@ -82,13 +160,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       final firestore = context.read<FirestoreService>();
       final email = _emailController.text.trim();
-      final defaultUsername = email.split('@').first.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
       final user = AppUser(
         uid: credential.user!.uid,
         fullName: _nameController.text.trim(),
         email: email,
         phone: _phoneController.text.trim(),
-        username: defaultUsername,
+        username: username,
+        profileCompleted: true,
       );
       await firestore.saveUser(user);
       NotificationService().saveToken(credential.user!.uid);
@@ -233,6 +311,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 18),
                 FadeInSlide(
+                  delay: 330,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomTextField(
+                        controller: _usernameController,
+                        label: 'اسم المستخدم',
+                        hint: 'اسم فريد يظهر في ملفك (٣ أحرف على الأقل)',
+                        prefixIcon: Icons.alternate_email_rounded,
+                        validator: (v) {
+                          final val = v?.trim() ?? '';
+                          if (val.isEmpty) return 'أدخل اسم المستخدم';
+                          if (val.length < 3) return 'اسم المستخدم يجب أن يكون ٣ أحرف على الأقل';
+                          if (val.contains(' ')) return 'اسم المستخدم لا يمكن أن يحتوي على مسافات';
+                          if (_usernameTaken) return 'اسم المستخدم مستخدم بالفعل';
+                          return null;
+                        },
+                      ),
+                      if (_usernameController.text.trim().length >= 3)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6, right: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _usernameTaken ? Icons.cancel_rounded : Icons.check_circle_rounded,
+                                size: 14,
+                                color: _usernameTaken ? AppColors.error : AppColors.success,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _usernameTaken
+                                    ? 'اسم المستخدم مستخدم بالفعل'
+                                    : _checkingUsername
+                                        ? 'جاري التحقق من الاسم...'
+                                        : 'اسم المستخدم متاح',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: _usernameTaken ? AppColors.error : AppColors.success,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                FadeInSlide(
                   delay: 350,
                   child: CustomTextField(
                     controller: _emailController,
@@ -328,16 +454,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     width: double.infinity,
                     height: 56,
                     decoration: BoxDecoration(
-                      gradient: _isPasswordValid
+                      gradient: _isFormComplete
                           ? const LinearGradient(
                               colors: [AppColors.primary, AppColors.secondary],
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
                             )
                           : null,
-                      color: _isPasswordValid ? null : AppColors.textSecondary.withValues(alpha: 0.3),
+                      color: _isFormComplete ? null : AppColors.textSecondary.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: _isPasswordValid
+                      boxShadow: _isFormComplete
                           ? [
                               BoxShadow(
                                 color: AppColors.primary.withValues(alpha: 0.3),
@@ -351,7 +477,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       color: Colors.transparent,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
-                        onTap: _isPasswordValid ? _register : null,
+                        onTap: _isButtonEnabled ? _register : null,
                         child: Center(
                           child: _loading
                               ? const SizedBox(
@@ -362,7 +488,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               : Text(
                                   'إنشاء حساب',
                                   style: AppTextStyles.button.copyWith(
-                                    color: _isPasswordValid ? Colors.white : Colors.white.withValues(alpha: 0.7),
+                                    color: _isFormComplete ? Colors.white : Colors.white.withValues(alpha: 0.7),
                                   ),
                                 ),
                         ),

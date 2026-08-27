@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/property.dart';
@@ -138,6 +139,7 @@ class FirestoreService {
           message: 'تم إضافة عقار جديد: ${property.title} - بحاجة للموافقة',
           targetId: propertyId,
           senderId: property.ownerId,
+          subtype: 'new_property_review',
         );
       }
     } catch (_) {}
@@ -270,21 +272,35 @@ class FirestoreService {
   }
 
   Future<void> deleteUser(String uid) async {
-    final batch = _firestore.batch();
+    // Best-effort cleanup of collateral data. Never blocks the actual account
+    // deletion, so an admin (or any user) can always delete their own account
+    // even if a permission hiccup occurs on a secondary collection.
+    try {
+      final batch = _firestore.batch();
 
-    batch.delete(_firestore.collection('users').doc(uid));
+      final props = await _firestore
+          .collection('properties')
+          .where('ownerId', isEqualTo: uid)
+          .get();
+      for (final doc in props.docs) {
+        batch.delete(doc.reference);
+      }
 
-    final props = await _firestore.collection('properties').where('ownerId', isEqualTo: uid).get();
-    for (final doc in props.docs) {
-      batch.delete(doc.reference);
+      final notifications = await _firestore
+          .collection('notifications')
+          .where('userId', isEqualTo: uid)
+          .get();
+      for (final doc in notifications.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+    } catch (e) {
+      debugPrint('deleteUser collateral cleanup error: $e');
     }
 
-    final notifications = await _firestore.collection('notifications').where('userId', isEqualTo: uid).get();
-    for (final doc in notifications.docs) {
-      batch.delete(doc.reference);
-    }
-
-    await batch.commit();
+    // The essential part: remove the user document itself.
+    await _firestore.collection('users').doc(uid).delete();
   }
 
   Future<void> deleteUserProperties(String uid) async {
@@ -924,6 +940,7 @@ class FirestoreService {
     required String message,
     String? targetId,
     String? senderId,
+    String? subtype,
   }) async {
     await _firestore.collection('notifications').add({
       'userId': userId,
@@ -934,6 +951,7 @@ class FirestoreService {
       'createdAt': FieldValue.serverTimestamp(),
       'targetId': targetId,
       'senderId': senderId,
+      if (subtype != null) 'subtype': subtype,
     });
   }
 

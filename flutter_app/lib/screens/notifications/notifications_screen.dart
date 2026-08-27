@@ -10,6 +10,7 @@ import '../../models/notification.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/empty_state_widget.dart';
 import '../property/property_detail_screen.dart';
+import '../admin/admin_properties_screen.dart';
 import '../chat/chat_screen.dart';
 import '../visit/visit_requests_screen.dart';
 
@@ -345,6 +346,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         ));
         break;
       case 'property':
+        if (notification.subtype == 'new_property_review') {
+          nav.push(MaterialPageRoute(
+            builder: (_) => const AdminPropertiesScreen(),
+          ));
+          break;
+        }
         final firestore = context.read<FirestoreService>();
         final property = await firestore.getPropertyById(targetId);
         if (property != null && mounted) {
