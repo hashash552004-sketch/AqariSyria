@@ -118,7 +118,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (isParticipant() || isSupportConversation());
       allow create: if isAuthenticated() && isCreator();
       allow update: if isAuthenticated() && (isParticipant() || isSupportConversation());
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (isAuthenticated() && isParticipant());
 
       match /messages/{messageId} {
         function isConversationParticipant() {
@@ -132,7 +132,7 @@ service cloud.firestore {
           && request.resource.data.senderId == request.auth.uid;
         allow update: if isConversationParticipant()
           && changedKeys().hasOnly(['isRead']);
-      allow delete: if isAdmin() || isOwner(userId);
+        allow delete: if isAdmin() || isConversationParticipant();
       }
     }
 
