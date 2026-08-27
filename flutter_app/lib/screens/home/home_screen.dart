@@ -20,6 +20,7 @@ import '../profile/profile_screen.dart';
 import '../chat/conversations_screen.dart';
 import '../compare/compare_properties_screen.dart';
 import '../notifications/notifications_screen.dart';
+import '../profile/edit_profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -199,17 +200,30 @@ class _HomeTabState extends State<_HomeTab> {
   final List<String> _categories = ['الكل', 'شقة', 'فيلا', 'منزل', 'أرض'];
   Set<String> _favoriteIds = {};
   StreamSubscription? _favSubscription;
+  bool _profileCompleted = true;
 
   @override
   void initState() {
     super.initState();
     _loadFavorites();
+    _checkProfile();
   }
 
   @override
   void dispose() {
     _favSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _checkProfile() async {
+    final auth = context.read<AuthService>();
+    final fs = context.read<FirestoreService>();
+    final uid = auth.currentUser?.uid;
+    if (uid == null) return;
+    final user = await fs.getUser(uid);
+    if (mounted && user != null) {
+      setState(() => _profileCompleted = user.profileCompleted);
+    }
   }
 
   Future<void> _refreshData() async {
@@ -285,6 +299,10 @@ class _HomeTabState extends State<_HomeTab> {
                 child: _buildPremiumHeader(userName, user?.uid ?? ''),
               ),
             ),
+            if (!_profileCompleted)
+              SliverToBoxAdapter(
+                child: _buildProfileCompletionBanner(),
+              ),
             SliverToBoxAdapter(
               child: FadeInSlide(
                 delay: 150,
@@ -484,6 +502,72 @@ class _HomeTabState extends State<_HomeTab> {
     if (hour >= 12 && hour < 17) return 'مساء الخير 🌤️';
     if (hour >= 17 && hour < 21) return 'مساء الخير 🌙';
     return 'تصبح على خير 🌙';
+  }
+
+  Widget _buildProfileCompletionBanner() {
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+        );
+        _checkProfile();
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.warning.withValues(alpha: 0.12),
+              AppColors.warning.withValues(alpha: 0.06),
+            ],
+            begin: Alignment.centerRight,
+            end: Alignment.centerLeft,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.warning.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'أكمل ملفك الشخصي',
+                    style: AppTextStyles.titleSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.warning,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'أضف معلومات حسابك للمتابعة',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.warning, size: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildFeaturedSection(FirestoreService firestore) {
