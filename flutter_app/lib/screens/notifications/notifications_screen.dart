@@ -11,6 +11,7 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/empty_state_widget.dart';
 import '../property/property_detail_screen.dart';
 import '../chat/chat_screen.dart';
+import '../visit/visit_requests_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -24,7 +25,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   late TabController _tabController;
   int _selectedTab = 0;
 
-  static const _tabs = ['الكل', 'الرسائل', 'معاينة', 'نظام'];
+  static const _tabs = ['الكل', 'الرسائل', 'معاينة', 'بلاغات', 'نظام'];
 
   @override
   void initState() {
@@ -105,7 +106,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         unselectedLabelStyle: AppTextStyles.labelMedium,
         dividerHeight: 0,
         tabs: List.generate(_tabs.length, (i) {
-          final icons = [Icons.all_inclusive, Icons.chat_bubble_outline, Icons.calendar_today, Icons.settings];
+          final icons = [Icons.all_inclusive, Icons.chat_bubble_outline, Icons.calendar_today, Icons.flag_rounded, Icons.settings];
           return Tab(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -180,7 +181,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     switch (tab) {
       case 1: return 'message';
       case 2: return 'visit_request';
-      case 3: return 'system';
+      case 3: return 'report';
+      case 4: return 'system';
       default: return null;
     }
   }
@@ -333,6 +335,15 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         ));
         break;
       case 'visit_request':
+        nav.push(MaterialPageRoute(
+          builder: (_) => const VisitRequestsScreen(),
+        ));
+        break;
+      case 'report':
+        nav.push(MaterialPageRoute(
+          builder: (_) => const VisitRequestsScreen(),
+        ));
+        break;
       case 'property':
         final firestore = context.read<FirestoreService>();
         final property = await firestore.getPropertyById(targetId);

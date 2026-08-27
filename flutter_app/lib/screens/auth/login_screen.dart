@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../core/constants.dart';
@@ -8,8 +9,10 @@ import '../../widgets/gradient_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/animated_widgets.dart';
 import '../../services/auth_service.dart';
+import '../../services/firestore_service.dart';
 import '../../services/notification_service.dart';
 import '../home/home_screen.dart';
+import '../auth/profile_completion_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -39,15 +42,26 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
     try {
       final auth = context.read<AuthService>();
-      await auth.signInEmailPassword(
+      final result = await auth.signInEmailPassword(
         _emailController.text.trim(),
         _passwordController.text,
       );
       if (!mounted) return;
-      NotificationService().saveToken(auth.currentUser?.uid ?? '');
+      NotificationService().saveToken(result.user?.uid ?? '');
+
+      final fs = context.read<FirestoreService>();
+      final userData = await fs.getUser(result.user?.uid ?? '');
+      final needsProfile = userData != null && !userData.profileCompleted;
+
+      await _saveAccount(_emailController.text.trim(), _passwordController.text);
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (_) => needsProfile
+              ? const ProfileCompletionScreen()
+              : const HomeScreen(),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -86,6 +100,21 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _saveAccount(String email, String password) async {
+    final prefs = await SharedPreferences.getInstance();
+    final accounts = prefs.getStringList('saved_accounts') ?? <String>[];
+    final passwords = prefs.getStringList('saved_passwords') ?? <String>[];
+    final idx = accounts.indexOf(email);
+    if (idx >= 0) {
+      passwords[idx] = password;
+    } else {
+      accounts.add(email);
+      passwords.add(password);
+    }
+    await prefs.setStringList('saved_accounts', accounts);
+    await prefs.setStringList('saved_passwords', passwords);
   }
 
   Future<void> _googleSignIn() async {

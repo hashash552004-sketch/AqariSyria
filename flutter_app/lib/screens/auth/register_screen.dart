@@ -29,8 +29,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _loading = false;
 
+  bool _hasMinLength = false;
+  bool _hasUppercase = false;
+  bool _hasLowercase = false;
+  bool _hasSpecialChar = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_validatePassword);
+  }
+
+  void _validatePassword() {
+    final p = _passwordController.text;
+    setState(() {
+      _hasMinLength = p.length >= 8;
+      _hasUppercase = RegExp(r'[A-Z]').hasMatch(p);
+      _hasLowercase = RegExp(r'[a-z]').hasMatch(p);
+      _hasSpecialChar = RegExp(r'[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]').hasMatch(p);
+    });
+  }
+
+  bool get _isPasswordValid => _hasMinLength && _hasUppercase && _hasLowercase && _hasSpecialChar;
+
   @override
   void dispose() {
+    _passwordController.removeListener(_validatePassword);
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -41,6 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!_isPasswordValid) return;
     setState(() => _loading = true);
     try {
       final credential = await context.read<AuthService>().registerEmailPassword(
@@ -102,6 +127,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Widget _buildPasswordHint(IconData icon, String text, bool met) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: Icon(
+              met ? Icons.check_circle_rounded : Icons.cancel_rounded,
+              key: ValueKey(met),
+              size: 16,
+              color: met ? AppColors.success : AppColors.error.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: met ? AppColors.success : AppColors.textSecondary,
+              fontWeight: met ? FontWeight.w600 : FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -205,17 +258,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 18),
                 FadeInSlide(
                   delay: 450,
-                  child: CustomTextField(
-                    controller: _passwordController,
-                    label: 'كلمة المرور',
-                    hint: 'أدخل كلمة مرور قوية',
-                    prefixIcon: Icons.lock_outline_rounded,
-                    obscureText: true,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'أدخل كلمة المرور';
-                      if (v.length < 6) return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-                      return null;
-                    },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomTextField(
+                        controller: _passwordController,
+                        label: 'كلمة المرور',
+                        hint: 'أدخل كلمة مرور قوية',
+                        prefixIcon: Icons.lock_outline_rounded,
+                        obscureText: true,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'أدخل كلمة المرور';
+                          if (!_isPasswordValid) return 'كلمة المرور لا تلبي المعايير المطلوبة';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      _buildPasswordHint(Icons.text_fields_rounded, '٨ أحرف على الأقل', _hasMinLength),
+                      _buildPasswordHint(Icons.abc, 'حرف كبير (A-Z)', _hasUppercase),
+                      _buildPasswordHint(Icons.abc, 'حرف صغير (a-z)', _hasLowercase),
+                      _buildPasswordHint(Icons.tag_rounded, 'علامة خاصة (!@#\$%^&*)', _hasSpecialChar),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -241,7 +304,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     text: 'إنشاء حساب',
                     width: double.infinity,
                     loading: _loading,
-                    onPressed: _register,
+                    onPressed: _isPasswordValid ? _register : null,
                   ),
                 ),
                 const SizedBox(height: 24),

@@ -29,6 +29,18 @@ class AuthService {
     );
   }
 
+  Future<void> deleteFirebaseUser() async {
+    await _auth.currentUser?.delete();
+  }
+
+  Future<void> reAuthenticate(String email, String password) async {
+    final credential = firebase_auth.EmailAuthProvider.credential(
+      email: email,
+      password: password,
+    );
+    await _auth.currentUser?.reauthenticateWithCredential(credential);
+  }
+
   Future<void> signOut() async {
     await _auth.signOut();
   }

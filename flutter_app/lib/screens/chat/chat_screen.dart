@@ -179,6 +179,35 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
+  Future<void> _deleteConversation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف المحادثة'),
+        content: const Text('هل أنت متأكد من حذف هذه المحادثة؟ لن تتمكن من استعادتها.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('حذف', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await context.read<FirestoreService>().deleteConversation(widget.conversationId);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        showSnackBar(context, 'فشل حذف المحادثة', backgroundColor: AppColors.error);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.read<AuthService>();
@@ -289,6 +318,26 @@ class _ChatScreenState extends State<ChatScreen>
         ],
       ),
       centerTitle: true,
+      actions: [
+        PopupMenuButton<String>(
+          icon: Icon(Icons.more_vert_rounded, color: AppColors.textPrimary),
+          onSelected: (value) {
+            if (value == 'delete') _deleteConversation();
+          },
+          itemBuilder: (_) => [
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete_rounded, color: Colors.red, size: 20),
+                  SizedBox(width: 10),
+                  Text('حذف المحادثة', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

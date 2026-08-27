@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/chat/chat_screen.dart';
 import '../screens/property/property_detail_screen.dart';
+import '../screens/visit/visit_requests_screen.dart';
 import 'firestore_service.dart';
 
 @pragma('vm:entry-point')
@@ -171,8 +172,12 @@ class NotificationService {
           builder: (_) => ChatScreen(conversationId: targetId),
         ));
         break;
-      case 'property':
       case 'visit_request':
+        nav.push(MaterialPageRoute(
+          builder: (_) => const VisitRequestsScreen(),
+        ));
+        break;
+      case 'property':
         _openProperty(nav, targetId);
         break;
       default:

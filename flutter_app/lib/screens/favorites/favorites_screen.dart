@@ -9,7 +9,6 @@ import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/property_card.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/loading_skeleton.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -19,9 +18,9 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  List<String> _favoriteIds = [];
   List<Property> _properties = [];
   bool _isLoading = true;
+  String _lastFavKey = '';
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +41,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return StreamBuilder<DocumentSnapshot>(
       stream: firestore.streamUserFavorites(uid),
       builder: (context, userSnapshot) {
-        if (userSnapshot.connectionState == ConnectionState.waiting && _favoriteIds.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+        if (userSnapshot.connectionState == ConnectionState.waiting && _properties.isEmpty) {
+          return _buildSkeletonGrid();
         }
 
         final data = userSnapshot.data?.data() as Map<String, dynamic>?;
@@ -52,40 +51,33 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 <String>[];
 
         if (favoriteIds.isEmpty) {
-          if (_favoriteIds.isNotEmpty) {
-            setState(() {
-              _favoriteIds = [];
-              _properties = [];
+          if (_properties.isNotEmpty || _lastFavKey.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() { _properties = []; _lastFavKey = ''; });
             });
           }
           return const _EmptyFavorites();
         }
 
-        if (favoriteIds != _favoriteIds) {
-          _favoriteIds = favoriteIds;
+        final newKey = favoriteIds.join(',');
+        if (newKey != _lastFavKey) {
+          _lastFavKey = newKey;
           _fetchProperties(context, firestore, favoriteIds);
         }
 
-        if (_isLoading) {
-          return GridView.builder(
-            padding: AppConstants.screenPadding,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: 4,
-            itemBuilder: (_, __) => const PropertyCardSkeleton(),
-          );
+        if (_isLoading && _properties.isEmpty) {
+          return _buildSkeletonGrid();
         }
 
-        if (_properties.isEmpty) {
+        if (_properties.isEmpty && !_isLoading) {
           return const _EmptyFavorites();
         }
 
         return RefreshIndicator(
-          onRefresh: () => _fetchProperties(context, firestore, _favoriteIds),
+          onRefresh: () async {
+            _lastFavKey = '';
+            await _fetchProperties(context, firestore, favoriteIds);
+          },
           child: GridView.builder(
             padding: AppConstants.screenPadding,
             physics: const AlwaysScrollableScrollPhysics(),
@@ -112,6 +104,55 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSkeletonGrid() {
+    return GridView.builder(
+      padding: AppConstants.screenPadding,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: 4,
+      itemBuilder: (_, __) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.cards,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.shimmerBase,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(height: 14, width: 160, color: AppColors.shimmerBase),
+                    const SizedBox(height: 8),
+                    Container(height: 10, width: 120, color: AppColors.shimmerBase),
+                    const SizedBox(height: 8),
+                    Container(height: 10, width: 200, color: AppColors.shimmerBase),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

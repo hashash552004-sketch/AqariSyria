@@ -9,6 +9,7 @@ import '../../services/notification_service.dart';
 import '../../widgets/animated_widgets.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../home/home_screen.dart';
+import '../auth/profile_completion_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -72,9 +73,18 @@ class _SplashScreenState extends State<SplashScreen>
       }
       context.read<FirestoreService>().ensureDefaultAdmin(user.uid, user.email ?? '');
       NotificationService().saveToken(user.uid);
+
+      final userData = await context.read<FirestoreService>().getUser(user.uid);
+      final needsProfile = userData != null && !userData.profileCompleted;
+
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (_) => needsProfile
+              ? const ProfileCompletionScreen()
+              : const HomeScreen(),
+        ),
       );
     } else {
       Navigator.pushReplacement(

@@ -246,6 +246,20 @@ class FirestoreService {
     await _firestore.collection('users').doc(uid).update({'profileImage': imageUrl});
   }
 
+  Future<void> updateUserProfile(String uid, {
+    String? fullName,
+    String? phone,
+    bool? profileCompleted,
+  }) async {
+    final data = <String, dynamic>{};
+    if (fullName != null) data['fullName'] = fullName;
+    if (phone != null) data['phone'] = phone;
+    if (profileCompleted != null) data['profileCompleted'] = profileCompleted;
+    if (data.isNotEmpty) {
+      await _firestore.collection('users').doc(uid).update(data);
+    }
+  }
+
   Future<bool> isUserBanned(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
@@ -590,6 +604,20 @@ class FirestoreService {
         }
       }
     }
+  }
+
+  Future<void> deleteConversation(String conversationId) async {
+    final messages = await _firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .get();
+    final batch = _firestore.batch();
+    for (final doc in messages.docs) {
+      batch.delete(doc.reference);
+    }
+    batch.delete(_firestore.collection('conversations').doc(conversationId));
+    await batch.commit();
   }
 
   Stream<List<ChatMessage>> streamMessages(String conversationId, {int limit = 200}) {
@@ -1120,13 +1148,24 @@ class FirestoreService {
   Future<List<Property>> getPropertiesByIds(List<String> ids) async {
     if (ids.isEmpty) return [];
     try {
-      final results = await Future.wait(
-        ids.map((id) => _firestore.collection('properties').doc(id).get()),
-      );
-      return results
-          .where((doc) => doc.exists)
-          .map((doc) => Property.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
-          .toList();
+      if (ids.length <= 10) {
+        final results = await Future.wait(
+          ids.map((id) => _firestore.collection('properties').doc(id).get()),
+        );
+        return results
+            .where((doc) => doc.exists)
+            .map((doc) => Property.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+            .toList();
+      }
+      final allProps = <Property>[];
+      for (var i = 0; i < ids.length; i += 10) {
+        final chunk = ids.sublist(i, (i + 10 > ids.length) ? ids.length : i + 10);
+        final snap = await _firestore.collection('properties')
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+        allProps.addAll(snap.docs.map((doc) => Property.fromFirestore(doc.data(), doc.id)));
+      }
+      return allProps;
     } catch (_) {
       return [];
     }

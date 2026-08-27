@@ -346,7 +346,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
             final conv = conversations[index];
             String otherName;
             if (conv.isSupport) {
-              otherName = 'خدمة العملاء';
+              otherName = _isStaff ? conv.interestedUserName : 'خدمة العملاء';
             } else {
               final isOwner = conv.ownerId == userId;
               otherName = isOwner ? conv.interestedUserName : conv.ownerName;

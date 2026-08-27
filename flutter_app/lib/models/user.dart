@@ -11,6 +11,7 @@ class AppUser {
   final String username;
   final bool banned;
   final Map<String, dynamic> permissions;
+  final bool profileCompleted;
 
   AppUser({
     required this.uid,
@@ -25,6 +26,7 @@ class AppUser {
     this.username = '',
     this.banned = false,
     this.permissions = const {},
+    this.profileCompleted = false,
   });
 
   factory AppUser.fromFirestore(Map<String, dynamic> data, String uid) {
@@ -43,6 +45,7 @@ class AppUser {
       username: data['username']?.toString() ?? '',
       banned: data['banned'] ?? false,
       permissions: (data['permissions'] as Map<String, dynamic>?) ?? {},
+      profileCompleted: data['profileCompleted'] ?? false,
     );
   }
 
@@ -59,6 +62,7 @@ class AppUser {
       'username': username,
       'banned': banned,
       'permissions': permissions,
+      'profileCompleted': profileCompleted,
     };
   }
 }
