@@ -1232,9 +1232,16 @@ class FirestoreService {
     return _firestore
         .collection('visit_requests')
         .where('ownerId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList());
+        .map((snap) {
+      final list = snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+      list.sort((a, b) {
+        final aTime = (a['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        final bTime = (b['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        return bTime.compareTo(aTime);
+      });
+      return list;
+    });
   }
 
   /// Owner accepts/rejects an incoming visit request.
@@ -1276,9 +1283,16 @@ class FirestoreService {
     return _firestore
         .collection('visit_requests')
         .where('requesterId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList());
+        .map((snap) {
+      final list = snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+      list.sort((a, b) {
+        final aTime = (a['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        final bTime = (b['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        return bTime.compareTo(aTime);
+      });
+      return list;
+    });
   }
 
   // ---- Saved Searches ----

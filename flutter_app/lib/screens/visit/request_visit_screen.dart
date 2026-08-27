@@ -46,7 +46,6 @@ class _RequestVisitScreenState extends State<RequestVisitScreen> {
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 30)),
-      locale: const Locale('ar', 'SA'),
     );
     if (date != null) setState(() => _selectedDate = date);
   }

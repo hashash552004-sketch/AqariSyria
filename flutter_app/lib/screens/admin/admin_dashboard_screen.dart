@@ -111,8 +111,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     const SizedBox(height: 28),
                     _buildAdminActions(context),
                     const SizedBox(height: 28),
-                    _buildResetSection(context),
-                    const SizedBox(height: 32),
+                    if (_role == 'admin') ...[
+                      _buildResetSection(context),
+                      const SizedBox(height: 32),
+                    ],
                   ],
                 ),
               ),
@@ -308,13 +310,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       ));
     }
 
-    actions.add(_AdminAction(
-      'إعدادات التطبيق',
-      Icons.settings_rounded,
-      AppColors.accent,
-      () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const AdminSettingsScreen())),
-    ));
+    if (_role == 'admin') {
+      actions.add(_AdminAction(
+        'إعدادات التطبيق',
+        Icons.settings_rounded,
+        AppColors.accent,
+        () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AdminSettingsScreen())),
+      ));
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
