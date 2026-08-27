@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
 import '../../services/auth_service.dart';
@@ -25,6 +26,7 @@ import '../chat/chat_screen.dart';
 import 'edit_profile_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../auth/login_screen.dart';
+import '../home/home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onNavigateToFavorites;
@@ -195,6 +197,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                   FadeInSlide(delay: 450, child: _buildMenuSection(context)),
                   const SizedBox(height: 24),
                   FadeInSlide(delay: 600, child: _buildLogoutButton(context, auth)),
+                  const SizedBox(height: 10),
+                  FadeInSlide(delay: 650, child: _buildSwitchAccountButton(context, auth)),
+                  const SizedBox(height: 10),
+                  FadeInSlide(delay: 700, child: _buildDeleteAccountButton(context, auth)),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -710,6 +716,284 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       ),
     );
+  }
+
+  Widget _buildSwitchAccountButton(BuildContext context, AuthService auth) {
+    return ScaleIn(
+      delay: 750,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _switchAccount(context, auth),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.switch_account_rounded, color: AppColors.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'تبديل الحساب',
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _switchAccount(BuildContext context, AuthService auth) async {
+    final currentEmail = auth.currentUser?.email ?? '';
+    final prefs = await SharedPreferences.getInstance();
+    final savedAccounts = prefs.getStringList('saved_accounts') ?? <String>[];
+    final savedPasswords = prefs.getStringList('saved_passwords') ?? <String>[];
+
+    if (!context.mounted) return;
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.textSecondary.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('تبديل الحساب', style: AppTextStyles.titleLarge),
+            const SizedBox(height: 16),
+            if (currentEmail.isNotEmpty)
+              ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.check_circle_rounded, color: AppColors.primary),
+                ),
+                title: Text(currentEmail),
+                subtitle: const Text('الحساب الحالي'),
+              ),
+            ...List.generate(savedAccounts.length, (i) {
+              final email = savedAccounts[i];
+              if (email == currentEmail) return const SizedBox.shrink();
+              return ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.person_rounded, color: AppColors.textSecondary),
+                ),
+                title: Text(email),
+                trailing: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: AppColors.textSecondary, size: 14),
+                onTap: () => Navigator.pop(ctx, email),
+              );
+            }),
+            const Divider(indent: 16, endIndent: 16),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.add_rounded, color: AppColors.primary),
+              ),
+              title: const Text('إضافة حساب جديد'),
+              onTap: () => Navigator.pop(ctx, null),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (!context.mounted) return;
+
+    if (selected == null) {
+      await auth.signOut();
+      if (!context.mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (_) => false,
+      );
+      return;
+    }
+
+    final idx = savedAccounts.indexOf(selected);
+    if (idx == -1 || idx >= savedPasswords.length) return;
+    final password = savedPasswords[idx];
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('جاري التبديل...'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      await auth.signInEmailPassword(selected, password);
+      if (!context.mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (_) => false,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('فشل تسجيل الدخول: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Widget _buildDeleteAccountButton(BuildContext context, AuthService auth) {
+    return ScaleIn(
+      delay: 800,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _deleteAccount(context, auth),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.15)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.delete_forever_rounded, color: AppColors.error, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'حذف الحساب',
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteAccount(BuildContext context, AuthService auth) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف الحساب'),
+        content: const Text('هل أنت متأكد من حذف حسابك نهائياً؟ لا يمكن التراجع عن هذا الإجراء.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('حذف', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final passwordController = TextEditingController();
+    final reAuthConfirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد الهوية'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('أدخل كلمة المرور للتأكيد'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                hintText: 'كلمة المرور',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('تأكيد', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (reAuthConfirmed != true || !context.mounted) return;
+
+    try {
+      final fs = context.read<FirestoreService>();
+      final uid = auth.currentUser?.uid ?? '';
+      final email = auth.currentUser?.email ?? '';
+
+      await auth.reAuthenticate(email, passwordController.text);
+      passwordController.dispose();
+
+      await fs.deleteUser(uid);
+      await auth.deleteFirebaseUser();
+      await auth.signOut();
+
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (_) => false,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('حدث خطأ: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
   }
 }
 

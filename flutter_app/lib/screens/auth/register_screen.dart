@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text_styles.dart';
-import '../../widgets/gradient_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/animated_widgets.dart';
 import '../../services/auth_service.dart';
@@ -27,17 +26,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _passwordFocus = FocusNode();
   bool _loading = false;
+  bool _passwordFocused = false;
 
   bool _hasMinLength = false;
   bool _hasUppercase = false;
   bool _hasLowercase = false;
   bool _hasSpecialChar = false;
+  bool _hasNumber = false;
 
   @override
   void initState() {
     super.initState();
     _passwordController.addListener(_validatePassword);
+    _passwordFocus.addListener(() {
+      setState(() => _passwordFocused = _passwordFocus.hasFocus);
+    });
   }
 
   void _validatePassword() {
@@ -47,10 +52,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _hasUppercase = RegExp(r'[A-Z]').hasMatch(p);
       _hasLowercase = RegExp(r'[a-z]').hasMatch(p);
       _hasSpecialChar = RegExp(r'[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]').hasMatch(p);
+      _hasNumber = RegExp(r'[0-9]').hasMatch(p);
     });
   }
 
-  bool get _isPasswordValid => _hasMinLength && _hasUppercase && _hasLowercase && _hasSpecialChar;
+  bool get _isPasswordValid => _hasMinLength && _hasUppercase && _hasLowercase && _hasSpecialChar && _hasNumber;
 
   @override
   void dispose() {
@@ -60,6 +66,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -263,6 +270,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       CustomTextField(
                         controller: _passwordController,
+                        focusNode: _passwordFocus,
                         label: 'كلمة المرور',
                         hint: 'أدخل كلمة مرور قوية',
                         prefixIcon: Icons.lock_outline_rounded,
@@ -273,11 +281,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 8),
-                      _buildPasswordHint(Icons.text_fields_rounded, '٨ أحرف على الأقل', _hasMinLength),
-                      _buildPasswordHint(Icons.abc, 'حرف كبير (A-Z)', _hasUppercase),
-                      _buildPasswordHint(Icons.abc, 'حرف صغير (a-z)', _hasLowercase),
-                      _buildPasswordHint(Icons.tag_rounded, 'علامة خاصة (!@#\$%^&*)', _hasSpecialChar),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutCubic,
+                        child: _passwordFocused && _passwordController.text.isNotEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildPasswordHint(Icons.tag_rounded, '٨ أحرف على الأقل', _hasMinLength),
+                                    _buildPasswordHint(Icons.abc, 'حرف كبير (A-Z)', _hasUppercase),
+                                    _buildPasswordHint(Icons.abc, 'حرف صغير (a-z)', _hasLowercase),
+                                    _buildPasswordHint(Icons.numbers_rounded, 'رقم (0-9)', _hasNumber),
+                                    _buildPasswordHint(Icons.tag_rounded, 'علامة خاصة (!@#\$%^&*)', _hasSpecialChar),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                     ],
                   ),
                 ),
@@ -300,11 +322,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 32),
                 FadeInSlide(
                   delay: 550,
-                  child: GradientButton(
-                    text: 'إنشاء حساب',
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutCubic,
                     width: double.infinity,
-                    loading: _loading,
-                    onPressed: _isPasswordValid ? _register : null,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: _isPasswordValid
+                          ? const LinearGradient(
+                              colors: [AppColors.primary, AppColors.secondary],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            )
+                          : null,
+                      color: _isPasswordValid ? null : AppColors.textSecondary.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: _isPasswordValid
+                          ? [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: _isPasswordValid ? _register : null,
+                        child: Center(
+                          child: _loading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                                )
+                              : Text(
+                                  'إنشاء حساب',
+                                  style: AppTextStyles.button.copyWith(
+                                    color: _isPasswordValid ? Colors.white : Colors.white.withValues(alpha: 0.7),
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
