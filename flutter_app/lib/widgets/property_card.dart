@@ -70,12 +70,8 @@ class PropertyCard extends StatelessWidget {
 
   Widget _buildImage() {
     final opType = property.operationType;
-    final opLabel = opType == 'rent'
-        ? 'إيجار'
-        : opType == 'invest'
-        ? 'استثمار'
-        : 'بيع';
-    final opColor = opType == 'rent' ? AppColors.success : opType == 'invest' ? AppColors.warning : AppColors.primary;
+    final opLabel = opType.isEmpty ? 'بيع' : opType;
+    final opColor = opType == 'إيجار' ? AppColors.success : opType == 'استثمار' ? AppColors.warning : AppColors.primary;
 
     return Stack(
       children: [

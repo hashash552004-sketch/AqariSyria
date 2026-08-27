@@ -44,6 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   String _phone = '';
   String _whatsapp = '';
   String? _profileImage;
+  bool _isTrusted = false;
   bool _loadingRole = true;
   Map<String, dynamic> _permissions = {};
   late AnimationController _headerAnimController;
@@ -97,6 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _username = userData?.username ?? '';
           _phone = userData?.phone ?? '';
           _whatsapp = userData?.whatsapp ?? '';
+          _isTrusted = userData?.isTrusted ?? false;
           _permissions = Map<String, dynamic>.from(userData?.permissions ?? {});
           final img = userData?.profileImage;
           _profileImage = (img != null && img.isNotEmpty) ? img : auth.currentUser?.photoURL;
@@ -366,12 +368,24 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(height: 16),
               FadeInSlide(
                 delay: 400,
-                child: Text(
-                  user?.displayName ?? 'مستخدم',
-                  style: AppTextStyles.headlineSmall.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        user?.displayName ?? 'مستخدم',
+                        style: AppTextStyles.headlineSmall.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    if (_isTrusted) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Icons.verified_rounded, size: 20, color: AppColors.success),
+                    ],
+                  ],
                 ),
               ),
               const SizedBox(height: 4),

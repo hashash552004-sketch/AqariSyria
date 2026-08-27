@@ -139,6 +139,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   users = users.where((u) => u.role == 'user' && u.permissions.isEmpty).toList();
                 } else if (_filterIndex == 5) {
                   users = users.where((u) => u.banned).toList();
+                } else if (_filterIndex == 6) {
+                  users = users.where((u) => u.isTrusted).toList();
                 }
                 if (_searchQuery.isNotEmpty) {
                   users = users.where((u) =>
@@ -256,6 +258,22 @@ class _UserTile extends StatelessWidget {
                           ),
                           child: Text('محظور', style: AppTextStyles.caption.copyWith(color: AppColors.error, fontSize: 10)),
                         ),
+                      if (user.isTrusted)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.verified_rounded, size: 12, color: AppColors.success),
+                              const SizedBox(width: 3),
+                              Text('موثوق', style: AppTextStyles.caption.copyWith(color: AppColors.success, fontSize: 10)),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -317,6 +335,7 @@ class _UserDetailScreen extends StatefulWidget {
 class _UserDetailScreenState extends State<_UserDetailScreen> {
   final FirestoreService _firestore = FirestoreService();
   late bool _banned;
+  late bool _trusted;
   late String _currentRole;
   late Map<String, dynamic> _permissions;
   bool _saving = false;
@@ -327,12 +346,14 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
     _PermissionEntry('review_properties', 'مراجعة العقارات', Icons.approval_outlined),
     _PermissionEntry('feature_property', 'تمييز العقار كمميز', Icons.star_outline_rounded),
     _PermissionEntry('view_reports', 'عرض التقارير', Icons.analytics_outlined),
+    _PermissionEntry('mark_trusted', 'توثيق المستخدمين', Icons.verified_outlined),
   ];
 
   @override
   void initState() {
     super.initState();
     _banned = widget.user.banned;
+    _trusted = widget.user.isTrusted;
     _currentRole = widget.user.role;
     _permissions = Map<String, dynamic>.from(widget.user.permissions);
   }
@@ -419,6 +440,30 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_banned ? 'تم حظر المستخدم' : 'تم إلغاء حظر المستخدم'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), behavior: SnackBarBehavior.floating),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _toggleTrusted() async {
+    setState(() => _saving = true);
+    try {
+      await _firestore.setUserTrusted(widget.user.uid, !_trusted);
+      if (mounted) {
+        setState(() => _trusted = !_trusted);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_trusted ? 'تم توثيق المستخدم' : 'تم إلغاء توثيق المستخدم'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -697,6 +742,28 @@ class _UserDetailScreenState extends State<_UserDetailScreen> {
             ),
           ),
           const SizedBox(height: 16),
+
+          // ---- Trusted toggle ----
+          SizedBox(
+            height: 48,
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _saving ? null : _toggleTrusted,
+              icon: Icon(_trusted ? Icons.verified_rounded : Icons.verified_outlined, size: 18),
+              label: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(_trusted ? 'إلغاء التوثيق' : 'توثيق المستخدم'),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _trusted ? AppColors.success : AppColors.primary,
+                side: BorderSide(
+                  color: (_trusted ? AppColors.success : AppColors.primary).withValues(alpha: 0.3),
+                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
 
           // ---- Action Buttons ----
           Row(

@@ -12,7 +12,6 @@ import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../services/notification_service.dart';
 import '../home/home_screen.dart';
-import '../auth/profile_completion_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -51,17 +50,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final fs = context.read<FirestoreService>();
       final userData = await fs.getUser(result.user?.uid ?? '');
-      final needsProfile = userData != null && !userData.profileCompleted;
+      if (userData != null && !userData.profileCompleted) {
+        // Send an in-app notification instead of forcing a blocking
+        // "complete your profile" screen.
+        await fs.sendProfileCompletionReminder(result.user?.uid ?? '');
+      }
 
       await _saveAccount(_emailController.text.trim(), _passwordController.text);
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => needsProfile
-              ? const ProfileCompletionScreen()
-              : const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } catch (e) {
       if (!mounted) return;

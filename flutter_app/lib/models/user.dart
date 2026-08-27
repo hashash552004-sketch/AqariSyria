@@ -10,6 +10,7 @@ class AppUser {
   final String role;
   final String username;
   final bool banned;
+  final bool isTrusted;
   final Map<String, dynamic> permissions;
   final bool profileCompleted;
 
@@ -25,6 +26,7 @@ class AppUser {
     this.role = 'user',
     this.username = '',
     this.banned = false,
+    this.isTrusted = false,
     this.permissions = const {},
     this.profileCompleted = false,
   });
@@ -44,6 +46,7 @@ class AppUser {
       role: data['role']?.toString() ?? 'user',
       username: data['username']?.toString() ?? '',
       banned: data['banned'] ?? false,
+      isTrusted: data['isTrusted'] ?? false,
       permissions: (data['permissions'] as Map<String, dynamic>?) ?? {},
       profileCompleted: data['profileCompleted'] ?? false,
     );
@@ -61,6 +64,7 @@ class AppUser {
       'role': role,
       'username': username,
       'banned': banned,
+      'isTrusted': isTrusted,
       'permissions': permissions,
       'profileCompleted': profileCompleted,
     };

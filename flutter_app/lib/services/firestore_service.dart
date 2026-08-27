@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/property.dart';
@@ -242,6 +243,10 @@ class FirestoreService {
 
   Future<void> updateUserPermissions(String uid, Map<String, dynamic> permissions) async {
     await _firestore.collection('users').doc(uid).update({'permissions': permissions});
+  }
+
+  Future<void> setUserTrusted(String uid, bool value) async {
+    await _firestore.collection('users').doc(uid).update({'isTrusted': value});
   }
 
   Future<void> updateUserProfileImage(String uid, String imageUrl) async {
@@ -962,6 +967,24 @@ class FirestoreService {
         .where('isRead', isEqualTo: false)
         .get();
     return snapshot.docs.length;
+  }
+
+  /// Sends an in-app "complete your profile" notification to the user, at most
+  /// once (guarded by SharedPreferences) so it never spams on every login.
+  Future<void> sendProfileCompletionReminder(String uid) async {
+    if (uid.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'profile_reminder_$uid';
+    if (prefs.getBool(key) ?? false) return;
+    await prefs.setBool(key, true);
+    try {
+      await createNotification(
+        userId: uid,
+        type: 'system',
+        title: 'أكمل ملفك الشخصي',
+        message: 'أضف معلومات إضافية إلى ملفك الشخصي من قسم تعديل الملف',
+      );
+    } catch (_) {}
   }
 
   Stream<int> streamUnreadNotificationCount(String userId) {

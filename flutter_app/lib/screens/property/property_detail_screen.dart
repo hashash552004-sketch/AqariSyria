@@ -484,11 +484,14 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Widget _buildBadges(Property property) {
-    final opLabel = property.operationType == 'rent'
-        ? 'إيجار'
-        : property.operationType == 'invest'
-        ? 'استثمار'
-        : 'بيع';
+    final opLabel = property.operationType.isEmpty
+        ? 'بيع'
+        : property.operationType;
+    final opColor = property.operationType == 'إيجار'
+        ? AppColors.success
+        : property.operationType == 'استثمار'
+        ? AppColors.warning
+        : AppColors.primary;
     final auth = context.read<AuthService>();
     final isOwner = auth.currentUser?.uid == property.ownerId;
     return Wrap(
@@ -497,7 +500,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         _badge(property.type, AppColors.primary),
-        _badge(opLabel, property.operationType == 'rent' ? AppColors.success : AppColors.primary),
+        _badge(opLabel, opColor),
         if (property.isSold) _badge('تم البيع', AppColors.error),
         if (property.isFeatured) _badge('مميز', AppColors.featuredBadge),
         if (isOwner)
@@ -942,8 +945,30 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(property.ownerName.isNotEmpty ? property.ownerName : 'مالك العقار',
-                        style: AppTextStyles.titleMedium),
+                    FutureBuilder<DocumentSnapshot?>(
+                      future: _ownerDocFuture,
+                      builder: (context, snap) {
+                        final ownerData = snap.data?.data();
+                        final trusted = ownerData is Map<String, dynamic> &&
+                            ownerData['isTrusted'] == true;
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                property.ownerName.isNotEmpty ? property.ownerName : 'مالك العقار',
+                                style: AppTextStyles.titleMedium,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (trusted) ...[
+                              const SizedBox(width: 5),
+                              const Icon(Icons.verified_rounded, size: 16, color: AppColors.success),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
                     if (property.ownerPhone.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Row(

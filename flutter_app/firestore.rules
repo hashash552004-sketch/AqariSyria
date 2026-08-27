@@ -51,7 +51,13 @@ service cloud.firestore {
     }
 
     function isSafeUserProfileUpdate() {
-      return !changedKeys().hasAny(['role', 'banned']);
+      return !changedKeys().hasAny(['role', 'banned', 'isTrusted']);
+    }
+
+    function hasPermission(permission) {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions[permission] == true;
     }
 
     // ==================== Users ====================
@@ -63,6 +69,7 @@ service cloud.firestore {
         && request.resource.data.banned == false;
       allow update: if isAdmin()
         || (isOwner(userId) && isSafeUserProfileUpdate())
+        || (isAuthenticated() && hasPermission('mark_trusted') && changedKeys().hasOnly(['isTrusted']))
         || isSelfAdminBootstrap(userId);
       allow delete: if isAdmin() || isOwner(userId);
 

@@ -9,7 +9,6 @@ import '../../services/notification_service.dart';
 import '../../widgets/animated_widgets.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../home/home_screen.dart';
-import '../auth/profile_completion_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -75,16 +74,16 @@ class _SplashScreenState extends State<SplashScreen>
       NotificationService().saveToken(user.uid);
 
       final userData = await context.read<FirestoreService>().getUser(user.uid);
-      final needsProfile = userData != null && !userData.profileCompleted;
+      if (userData != null && !userData.profileCompleted) {
+        // Instead of forcing a blocking "complete profile" screen, send an
+        // in-app notification and let the user proceed to the home screen.
+        await context.read<FirestoreService>().sendProfileCompletionReminder(user.uid);
+      }
 
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => needsProfile
-              ? const ProfileCompletionScreen()
-              : const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
       Navigator.pushReplacement(

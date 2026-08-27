@@ -169,7 +169,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         profileCompleted: true,
       );
       await firestore.saveUser(user);
-      NotificationService().saveToken(credential.user!.uid);
+      // Remind the user (via an in-app notification, not a blocking screen)
+      // that their profile can be completed with additional info.
+      await firestore.sendProfileCompletionReminder(credential.user!.uid);
+      // FCM token saving is non-essential: a failure here (e.g. FCM not
+      // initialised yet on a fresh install) must never abort registration.
+      try {
+        await NotificationService().saveToken(credential.user!.uid);
+      } catch (tokenError) {
+        debugPrint('Register: FCM token save failed (non-fatal): $tokenError');
+      }
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -196,10 +205,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             message = 'محاولات كثيرة جداً. حاول لاحقاً.';
             break;
           default:
-            message = 'فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.';
+            message = 'فشل إنشاء الحساب (${e.code}). حاول مرة أخرى.';
         }
       } else {
-        message = 'فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.';
+        debugPrint('Register: unexpected error $e');
+        message = 'فشل إنشاء الحساب. حاول مرة أخرى أو تأكد من اتصالك بالإنترنت.';
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
