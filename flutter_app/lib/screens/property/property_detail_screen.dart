@@ -1149,7 +1149,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   ),
                 ),
               if (isOwner) const SizedBox(height: 8),
-              Row(
+              if (!isOwner)
+                Row(
                 children: [
                   Expanded(
                     child: GestureDetector(
@@ -1320,8 +1321,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     );
   }
 
-  void _shareProperty(BuildContext context, Property p) {
-    final text =
+  void _shareProperty(BuildContext context, Property p) {    final text =
         '${p.title}\n${p.price.toStringAsFixed(0)} ${AppConstants.currency}\n\nللتسعير والتفاصيل: https://baitalomr.app/property/${p.id}';
     share_plus.Share.share(text);
   }
