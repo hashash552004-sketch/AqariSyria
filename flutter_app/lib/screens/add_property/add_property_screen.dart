@@ -653,15 +653,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen>
                 const SizedBox(height: 20),
                 Text('عدد الغرف والتفاصيل', style: AppTextStyles.labelLarge),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _buildCounterField('غرف', _roomsController, Icons.king_bed_rounded)),
-                    const SizedBox(width: 8),
-                    Expanded(child: _buildCounterField('حمامات', _bathroomsController, Icons.bathtub_rounded)),
-                    const SizedBox(width: 8),
-                    Expanded(child: _buildCounterField('طابق', _floorController, Icons.layers_rounded)),
-                  ],
-                ),
+                _buildCounterField('غرف', _roomsController, Icons.king_bed_rounded),
+                const SizedBox(height: 10),
+                _buildCounterField('حمامات', _bathroomsController, Icons.bathtub_rounded),
+                const SizedBox(height: 10),
+                _buildCounterField('طابق', _floorController, Icons.layers_rounded),
               ],
             ),
           )),
@@ -933,81 +929,81 @@ class _AddPropertyScreenState extends State<AddPropertyScreen>
   }
 
   Widget _buildCounterField(String label, TextEditingController controller, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 18, color: AppColors.textSecondary),
-          const SizedBox(height: 4),
-          Text(label, style: AppTextStyles.caption),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  final current = int.tryParse(controller.text) ?? 0;
-                  if (current > 0) {
-                    controller.text = (current - 1).toString();
-                  }
-                },
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
-                  ),
-                  child: const Icon(Icons.remove_rounded, size: 16, color: AppColors.error),
-                ),
-              ),
-              const SizedBox(width: 6),
-              SizedBox(
-                width: 30,
-                child: TextField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  textDirection: TextDirection.ltr,
-                  style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700, fontSize: 15),
-                  decoration: InputDecoration(
-                    hintText: '0',
-                    isDense: true,
-                    hintStyle: TextStyle(color: AppColors.textSecondary),
-                    contentPadding: EdgeInsets.zero,
-                    border: InputBorder.none,
-                    counterText: '',
+    return Center(
+      child: Container(
+        width: 240,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(icon, size: 20, color: AppColors.textSecondary),
+            Text(label, style: AppTextStyles.labelLarge),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    final current = int.tryParse(controller.text) ?? 0;
+                    controller.text = (current + 1).toString();
+                  },
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+                    ),
+                    child: const Icon(Icons.add_rounded, size: 18, color: AppColors.success),
                   ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              GestureDetector(
-                onTap: () {
-                  final current = int.tryParse(controller.text) ?? 0;
-                  controller.text = (current + 1).toString();
-                },
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 32,
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    textDirection: TextDirection.ltr,
+                    style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700, fontSize: 16),
+                    decoration: InputDecoration(
+                      hintText: '0',
+                      isDense: true,
+                      hintStyle: TextStyle(color: AppColors.textSecondary),
+                      contentPadding: EdgeInsets.zero,
+                      border: InputBorder.none,
+                      counterText: '',
+                    ),
                   ),
-                  child: const Icon(Icons.add_rounded, size: 16, color: AppColors.success),
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    final current = int.tryParse(controller.text) ?? 0;
+                    if (current > 0) {
+                      controller.text = (current - 1).toString();
+                    }
+                  },
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                    ),
+                    child: const Icon(Icons.remove_rounded, size: 18, color: AppColors.error),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

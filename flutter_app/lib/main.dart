@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
 import 'providers/theme_provider.dart';
@@ -20,6 +21,7 @@ Future<void> main() async {
     return true;
   };
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ar');
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent),

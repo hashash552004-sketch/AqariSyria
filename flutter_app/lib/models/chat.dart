@@ -66,6 +66,9 @@ class Conversation {
   final String lastMessage;
   final DateTime lastMessageTime;
   final int unreadCount;
+  final String type;
+
+  bool get isSupport => type == 'customer_service';
 
   Conversation({
     this.id = '',
@@ -78,6 +81,7 @@ class Conversation {
     this.lastMessage = '',
     DateTime? lastMessageTime,
     this.unreadCount = 0,
+    this.type = '',
   }) : lastMessageTime = lastMessageTime ?? DateTime.now();
 
   factory Conversation.fromFirestore(Map<String, dynamic> data, String id, {int? unreadForViewer}) {
@@ -92,6 +96,7 @@ class Conversation {
       lastMessage: data['lastMessage']?.toString() ?? '',
       lastMessageTime: (data['lastMessageTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
       unreadCount: unreadForViewer ?? (data['unreadCount'] as num?)?.toInt() ?? 0,
+      type: data['type']?.toString() ?? '',
     );
   }
 
@@ -106,6 +111,7 @@ class Conversation {
       'lastMessage': lastMessage,
       'lastMessageTime': Timestamp.fromDate(lastMessageTime),
       'unreadCount': unreadCount,
+      'type': type,
     };
   }
 }

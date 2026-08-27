@@ -29,6 +29,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   int _totalUsers = 0;
 
   Map<String, dynamic> _permissions = {};
+  String _role = 'user';
 
   late final AnimationController _staggerController;
   late final AnimationController _headerController;
@@ -78,6 +79,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         _totalProps = props.length;
         _totalUsers = users.length;
         _permissions = currentUser?.permissions ?? {};
+        _role = currentUser?.role ?? 'user';
         _loading = false;
       });
       _staggerController.forward(from: 0);
@@ -276,13 +278,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       ));
     }
 
-    actions.add(_AdminAction(
-      'إدارة المستخدمين',
-      Icons.people_rounded,
-      AppColors.success,
-      () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const AdminUsersScreen())),
-    ));
+    if (_role == 'admin') {
+      actions.add(_AdminAction(
+        'إدارة المستخدمين',
+        Icons.people_rounded,
+        AppColors.success,
+        () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AdminUsersScreen())),
+      ));
+    }
 
     if (_permissions['review_reports'] == true) {
       actions.add(_AdminAction(

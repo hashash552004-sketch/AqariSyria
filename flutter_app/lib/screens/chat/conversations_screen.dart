@@ -29,6 +29,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
   bool _showSearch = false;
   late AnimationController _headerController;
   late AnimationController _listController;
+  bool _isStaff = false;
 
   @override
   void initState() {
@@ -41,6 +42,20 @@ class _ConversationsScreenState extends State<ConversationsScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..forward();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final auth = context.read<AuthService>();
+    final fs = context.read<FirestoreService>();
+    final uid = auth.currentUser?.uid;
+    if (uid == null) return;
+    final user = await fs.getUser(uid);
+    if (mounted) {
+      setState(() {
+        _isStaff = user?.permissions['respond_customers'] == true;
+      });
+    }
   }
 
   @override
@@ -314,7 +329,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
 
   Widget _buildConversationsList(FirestoreService firestore, String userId) {
     return StreamBuilder<List<Conversation>>(
-      stream: firestore.streamConversations(userId),
+      stream: firestore.streamConversations(userId, isStaff: _isStaff),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoading();
@@ -329,8 +344,13 @@ class _ConversationsScreenState extends State<ConversationsScreen>
           itemCount: conversations.length,
           itemBuilder: (context, index) {
             final conv = conversations[index];
-            final isOwner = conv.ownerId == userId;
-            final otherName = isOwner ? conv.interestedUserName : conv.ownerName;
+            String otherName;
+            if (conv.isSupport) {
+              otherName = 'خدمة العملاء';
+            } else {
+              final isOwner = conv.ownerId == userId;
+              otherName = isOwner ? conv.interestedUserName : conv.ownerName;
+            }
             return FadeTransition(
               opacity: CurvedAnimation(
                 parent: _listController,
@@ -532,21 +552,25 @@ class _ConversationsScreenState extends State<ConversationsScreen>
                 height: 48,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary],
+                    colors: conv.isSupport
+                        ? [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)]
+                        : [AppColors.primary, AppColors.secondary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
-                  child: Text(
-                    otherName.isNotEmpty ? otherName[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: conv.isSupport
+                      ? const Icon(Icons.support_agent_rounded, color: Colors.white, size: 22)
+                      : Text(
+                          otherName.isNotEmpty ? otherName[0].toUpperCase() : '?',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(width: 14),

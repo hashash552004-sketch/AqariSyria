@@ -57,6 +57,7 @@ class RecentlyViewedScreen extends StatelessWidget {
         final viewedIds = viewedRaw
             .map((e) => e is Map ? e['propertyId']?.toString() ?? '' : e.toString())
             .where((id) => id.isNotEmpty)
+            .take(3)
             .toList();
 
         if (viewedIds.isEmpty) {

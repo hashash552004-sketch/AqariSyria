@@ -410,7 +410,32 @@ class FirestoreService {
       'lastMessage': '',
       'lastMessageTime': FieldValue.serverTimestamp(),
       'unreadCount': 0,
+      'type': '',
     });
+  }
+
+  Future<String> createSupportConversation(
+    String userId,
+    String userName,
+  ) async {
+    final convId = 'support_$userId';
+    final docRef = _firestore.collection('conversations').doc(convId);
+    final existing = await docRef.get();
+    if (existing.exists) return convId;
+
+    await docRef.set({
+      'propertyId': '',
+      'propertyTitle': 'خدمة العملاء',
+      'ownerId': '_service_',
+      'ownerName': 'خدمة العملاء',
+      'interestedUserId': userId,
+      'interestedUserName': userName,
+      'lastMessage': '',
+      'lastMessageTime': FieldValue.serverTimestamp(),
+      'unreadCount': 0,
+      'type': 'customer_service',
+    });
+    return convId;
   }
 
   Future<void> sendMessage(
@@ -444,23 +469,61 @@ class FirestoreService {
     final convDoc = await _firestore.collection('conversations').doc(conversationId).get();
     final convData = convDoc.data();
     if (convData != null) {
+      final convType = convData['type']?.toString() ?? '';
       final ownerId = convData['ownerId']?.toString() ?? '';
       final interestedUserId = convData['interestedUserId']?.toString() ?? '';
-      final senderIsOwner = senderId == ownerId;
-      final recipientId = senderIsOwner ? interestedUserId : ownerId;
-      if (recipientId.isNotEmpty && recipientId != senderId) {
-        await _firestore.collection('conversations').doc(conversationId).update({
-          senderIsOwner ? 'interestedUnreadCount' : 'ownerUnreadCount':
-              FieldValue.increment(1),
-        });
-        await createNotification(
-          userId: recipientId,
-          type: 'message',
-          title: 'رسالة جديدة',
-          message: 'لديك رسالة جديدة من $senderName',
-          targetId: conversationId,
-          senderId: senderId,
-        );
+
+      if (convType == 'customer_service') {
+        if (senderId == interestedUserId) {
+          final staffIds = await _getStaffWithPermission('respond_customers');
+          for (final staffId in staffIds) {
+            if (staffId != senderId) {
+              await _firestore.collection('conversations').doc(conversationId).update({
+                'ownerUnreadCount': FieldValue.increment(1),
+              });
+              await createNotification(
+                userId: staffId,
+                type: 'message',
+                title: 'رسالة جديدة من العميل',
+                message: '$senderName: $message',
+                targetId: conversationId,
+                senderId: senderId,
+              );
+              break;
+            }
+          }
+        } else {
+          await _firestore.collection('conversations').doc(conversationId).update({
+            'interestedUnreadCount': FieldValue.increment(1),
+          });
+          if (interestedUserId.isNotEmpty && interestedUserId != senderId) {
+            await createNotification(
+              userId: interestedUserId,
+              type: 'message',
+              title: 'رد من الدعم الفني',
+              message: '$senderName: $message',
+              targetId: conversationId,
+              senderId: senderId,
+            );
+          }
+        }
+      } else {
+        final senderIsOwner = senderId == ownerId;
+        final recipientId = senderIsOwner ? interestedUserId : ownerId;
+        if (recipientId.isNotEmpty && recipientId != senderId) {
+          await _firestore.collection('conversations').doc(conversationId).update({
+            senderIsOwner ? 'interestedUnreadCount' : 'ownerUnreadCount':
+                FieldValue.increment(1),
+          });
+          await createNotification(
+            userId: recipientId,
+            type: 'message',
+            title: 'رسالة جديدة',
+            message: 'لديك رسالة جديدة من $senderName',
+            targetId: conversationId,
+            senderId: senderId,
+          );
+        }
       }
     }
   }
@@ -496,23 +559,61 @@ class FirestoreService {
     final convDoc = await _firestore.collection('conversations').doc(conversationId).get();
     final convData = convDoc.data();
     if (convData != null) {
+      final convType = convData['type']?.toString() ?? '';
       final ownerId = convData['ownerId']?.toString() ?? '';
       final interestedUserId = convData['interestedUserId']?.toString() ?? '';
-      final senderIsOwner = senderId == ownerId;
-      final recipientId = senderIsOwner ? interestedUserId : ownerId;
-      if (recipientId.isNotEmpty && recipientId != senderId) {
-        await _firestore.collection('conversations').doc(conversationId).update({
-          senderIsOwner ? 'interestedUnreadCount' : 'ownerUnreadCount':
-              FieldValue.increment(1),
-        });
-        await createNotification(
-          userId: recipientId,
-          type: 'message',
-          title: 'صورة جديدة',
-          message: 'أرسل لك $senderName صورة',
-          targetId: conversationId,
-          senderId: senderId,
-        );
+
+      if (convType == 'customer_service') {
+        if (senderId == interestedUserId) {
+          final staffIds = await _getStaffWithPermission('respond_customers');
+          for (final staffId in staffIds) {
+            if (staffId != senderId) {
+              await _firestore.collection('conversations').doc(conversationId).update({
+                'ownerUnreadCount': FieldValue.increment(1),
+              });
+              await createNotification(
+                userId: staffId,
+                type: 'message',
+                title: 'صورة من العميل',
+                message: 'أرسل لك $senderName صورة',
+                targetId: conversationId,
+                senderId: senderId,
+              );
+              break;
+            }
+          }
+        } else {
+          await _firestore.collection('conversations').doc(conversationId).update({
+            'interestedUnreadCount': FieldValue.increment(1),
+          });
+          if (interestedUserId.isNotEmpty && interestedUserId != senderId) {
+            await createNotification(
+              userId: interestedUserId,
+              type: 'message',
+              title: 'صورة من الدعم الفني',
+              message: 'أرسل لك $senderName صورة',
+              targetId: conversationId,
+              senderId: senderId,
+            );
+          }
+        }
+      } else {
+        final senderIsOwner = senderId == ownerId;
+        final recipientId = senderIsOwner ? interestedUserId : ownerId;
+        if (recipientId.isNotEmpty && recipientId != senderId) {
+          await _firestore.collection('conversations').doc(conversationId).update({
+            senderIsOwner ? 'interestedUnreadCount' : 'ownerUnreadCount':
+                FieldValue.increment(1),
+          });
+          await createNotification(
+            userId: recipientId,
+            type: 'message',
+            title: 'صورة جديدة',
+            message: 'أرسل لك $senderName صورة',
+            targetId: conversationId,
+            senderId: senderId,
+          );
+        }
       }
     }
   }
@@ -616,11 +717,20 @@ class FirestoreService {
       final doc = await docRef.get();
       final data = doc.data();
       if (data == null) return;
-      final isOwner = data['ownerId']?.toString() == userId;
-      await docRef.update({
-        'unreadCount': 0,
-        isOwner ? 'ownerUnreadCount' : 'interestedUnreadCount': 0,
-      });
+      final convType = data['type']?.toString() ?? '';
+      if (convType == 'customer_service') {
+        final interestedUserId = data['interestedUserId']?.toString() ?? '';
+        await docRef.update({
+          'unreadCount': 0,
+          userId == interestedUserId ? 'interestedUnreadCount' : 'ownerUnreadCount': 0,
+        });
+      } else {
+        final isOwner = data['ownerId']?.toString() == userId;
+        await docRef.update({
+          'unreadCount': 0,
+          isOwner ? 'ownerUnreadCount' : 'interestedUnreadCount': 0,
+        });
+      }
     } catch (_) {}
   }
 
@@ -636,14 +746,16 @@ class FirestoreService {
     return (data[asOwner ? 'ownerUnreadCount' : 'interestedUnreadCount'] as num?)?.toInt() ?? legacy;
   }
 
-  Stream<List<Conversation>> streamConversations(String userId) {
+  Stream<List<Conversation>> streamConversations(String userId, {bool isStaff = false}) {
     final controller = StreamController<List<Conversation>>.broadcast();
 
     QuerySnapshot? lastInterested;
     QuerySnapshot? lastOwner;
+    QuerySnapshot? lastSupport;
 
     void emitCombined() {
       if (lastInterested == null || lastOwner == null) return;
+      if (isStaff && lastSupport == null) return;
       final all = <Conversation>[];
       final seen = <String>{};
       for (final doc in lastInterested!.docs) {
@@ -668,6 +780,17 @@ class FirestoreService {
               asOwner: true,
             ),
           ));
+        }
+      }
+      if (isStaff && lastSupport != null) {
+        for (final doc in lastSupport!.docs) {
+          if (seen.add(doc.id)) {
+            all.add(Conversation.fromFirestore(
+              Map<String, dynamic>.from(doc.data() as Map<dynamic, dynamic>),
+              doc.id,
+              unreadForViewer: (doc.data() as Map<dynamic, dynamic>)['unreadCount'] as int? ?? 0,
+            ));
+          }
         }
       }
       all.sort((a, b) {
@@ -696,9 +819,22 @@ class FirestoreService {
       emitCombined();
     });
 
+    StreamSubscription<QuerySnapshot>? sub3;
+    if (isStaff) {
+      sub3 = _firestore
+          .collection('conversations')
+          .where('type', isEqualTo: 'customer_service')
+          .snapshots()
+          .listen((s) {
+        lastSupport = s;
+        emitCombined();
+      });
+    }
+
     controller.onCancel = () {
       sub1.cancel();
       sub2.cancel();
+      sub3?.cancel();
     };
 
     return controller.stream;
@@ -762,6 +898,22 @@ class FirestoreService {
   }
 
   // ---- Notification Methods ----
+
+  Future<List<String>> _getStaffWithPermission(String permission) async {
+    try {
+      final snap = await _firestore.collection('users').get();
+      return snap.docs
+          .where((doc) {
+            final data = doc.data();
+            final perms = data['permissions'] as Map<String, dynamic>?;
+            return perms?[permission] == true;
+          })
+          .map((doc) => doc.id)
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
 
   Future<void> createNotification({
     required String userId,

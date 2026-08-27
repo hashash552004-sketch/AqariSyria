@@ -20,7 +20,6 @@ import '../recently_viewed/recently_viewed_screen.dart';
 import '../notifications/notifications_screen.dart';
 import 'my_stats_screen.dart';
 import 'settings_screen.dart';
-import 'contact_us_screen.dart';
 import 'about_screen.dart';
 import '../chat/chat_screen.dart';
 import 'edit_profile_screen.dart';
@@ -153,24 +152,11 @@ class _ProfileScreenState extends State<ProfileScreen>
       }
       return;
     }
-    final convId = 'support_${user.uid}';
     try {
-      final convDoc = await firestore.getConversationDoc(convId);
-      if (convDoc == null || !convDoc.exists) {
-        final adminId = await firestore.getAdminId();
-        if (adminId == null) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('لا يوجد مشرفون متاحون'), behavior: SnackBarBehavior.floating),
-            );
-          }
-          return;
-        }
-        final adminName = await firestore.getUserName(adminId) ?? 'الدعم الفني';
-        await firestore.createDirectConversation(
-          convId, user.uid, user.displayName ?? 'مستخدم', adminId, adminName,
-        );
-      }
+      final convId = await firestore.createSupportConversation(
+        user.uid,
+        user.displayName ?? user.email ?? 'مستخدم',
+      );
       if (context.mounted) {
         Navigator.push(
           context,
@@ -570,7 +556,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       if (_permissions.isNotEmpty || _userRole == 'admin')
         _MenuItem('الإحصائيات', Icons.bar_chart_rounded, const Color(0xFF06B6D4), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyStatsScreen()))),
       _MenuItem('الإعدادات', Icons.settings_rounded, AppColors.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
-      _MenuItem('تواصل معنا', Icons.headset_mic_rounded, const Color(0xFF10B981), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactUsScreen()))),
       _MenuItem('خدمة العملاء', Icons.support_agent_rounded, const Color(0xFF3B82F6), () => _startCustomerChat(context)),
       _MenuItem('حول التطبيق', Icons.info_rounded, AppColors.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen()))),
     ];
