@@ -132,7 +132,7 @@ service cloud.firestore {
           && request.resource.data.senderId == request.auth.uid;
         allow update: if isConversationParticipant()
           && changedKeys().hasOnly(['isRead']);
-        allow delete: if isAdmin();
+      allow delete: if isAdmin() || isOwner(userId);
       }
     }
 

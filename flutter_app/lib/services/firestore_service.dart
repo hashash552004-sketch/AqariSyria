@@ -257,6 +257,7 @@ class FirestoreService {
 
   Future<void> deleteUser(String uid) async {
     final batch = _firestore.batch();
+
     batch.delete(_firestore.collection('users').doc(uid));
 
     final props = await _firestore.collection('properties').where('ownerId', isEqualTo: uid).get();
@@ -264,38 +265,9 @@ class FirestoreService {
       batch.delete(doc.reference);
     }
 
-    final convs = await _firestore.collection('conversations')
-      .where('ownerId', isEqualTo: uid).get();
-    final convs2 = await _firestore.collection('conversations')
-      .where('interestedUserId', isEqualTo: uid).get();
-    final allConvIds = {...convs.docs.map((d) => d.id), ...convs2.docs.map((d) => d.id)};
-    for (final convId in allConvIds) {
-      final msgs = await _firestore.collection('conversations').doc(convId).collection('messages').get();
-      for (final msg in msgs.docs) {
-        batch.delete(msg.reference);
-      }
-      batch.delete(_firestore.collection('conversations').doc(convId));
-    }
-
-    final reports = await _firestore.collection('reports').where('reportedBy', isEqualTo: uid).get();
-    for (final doc in reports.docs) {
-      batch.delete(doc.reference);
-    }
-
     final notifications = await _firestore.collection('notifications').where('userId', isEqualTo: uid).get();
     for (final doc in notifications.docs) {
       batch.delete(doc.reference);
-    }
-
-    final users = await _firestore.collection('users').get();
-    for (final doc in users.docs) {
-      final favs = (doc.data()['favorites'] as List?)?.map((e) => e.toString()).toList() ?? <String>[];
-      final propsOwned = props.docs.map((d) => d.id).toList();
-      final toRemove = favs.where((f) => propsOwned.contains(f)).toList();
-      if (toRemove.isNotEmpty) {
-        final updated = favs.where((f) => !toRemove.contains(f)).toList();
-        batch.update(doc.reference, {'favorites': updated});
-      }
     }
 
     await batch.commit();
@@ -376,9 +348,6 @@ class FirestoreService {
     final convId = '${propertyId}_$interestedUserId';
     final docRef = _firestore.collection('conversations').doc(convId);
 
-    final existing = await docRef.get();
-    if (existing.exists) return convId;
-
     await docRef.set({
       'propertyId': propertyId,
       'propertyTitle': propertyTitle,
@@ -389,7 +358,10 @@ class FirestoreService {
       'lastMessage': '',
       'lastMessageTime': FieldValue.serverTimestamp(),
       'unreadCount': 0,
-    });
+      'ownerUnreadCount': 0,
+      'interestedUnreadCount': 0,
+      'type': '',
+    }, SetOptions(merge: true));
     return convId;
   }
 
@@ -410,8 +382,10 @@ class FirestoreService {
       'lastMessage': '',
       'lastMessageTime': FieldValue.serverTimestamp(),
       'unreadCount': 0,
+      'ownerUnreadCount': 0,
+      'interestedUnreadCount': 0,
       'type': '',
-    });
+    }, SetOptions(merge: true));
   }
 
   Future<String> createSupportConversation(
@@ -420,8 +394,6 @@ class FirestoreService {
   ) async {
     final convId = 'support_$userId';
     final docRef = _firestore.collection('conversations').doc(convId);
-    final existing = await docRef.get();
-    if (existing.exists) return convId;
 
     await docRef.set({
       'propertyId': '',
@@ -433,8 +405,10 @@ class FirestoreService {
       'lastMessage': '',
       'lastMessageTime': FieldValue.serverTimestamp(),
       'unreadCount': 0,
+      'ownerUnreadCount': 0,
+      'interestedUnreadCount': 0,
       'type': 'customer_service',
-    });
+    }, SetOptions(merge: true));
     return convId;
   }
 
