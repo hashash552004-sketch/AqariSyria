@@ -134,34 +134,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (!_isFormComplete) return;
     setState(() => _loading = true);
+    String? createdUid;
     try {
       final username = _usernameController.text.trim();
-      final taken = await context.read<FirestoreService>().isUsernameTaken(username);
-      if (taken) {
-        if (mounted) {
-          setState(() => _usernameTaken = true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('اسم المستخدم مستخدم بالفعل'),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+      final email = _emailController.text.trim();
+
+      // Create the Firebase Auth account FIRST, so the user becomes
+      // authenticated. Username uniqueness is then checked against the
+      // 'users' collection, which the security rules only allow authenticated
+      // clients to read (an unauthenticated check would be denied and cause a
+      // spurious "failed to create account" error).
+      final credential = await context.read<AuthService>().registerEmailPassword(
+            email,
+            _passwordController.text,
           );
-        }
+      if (!mounted) return;
+      final uid = credential.user!.uid;
+      createdUid = uid;
+
+      final firestore = context.read<FirestoreService>();
+      final taken = await firestore.isUsernameTaken(username);
+      if (taken) {
+        // Roll back the just-created Auth account so the user can retry.
+        try {
+          await context.read<AuthService>().deleteFirebaseUser();
+        } catch (_) {}
+        if (!mounted) return;
+        setState(() => _usernameTaken = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('اسم المستخدم مستخدم بالفعل'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
         setState(() => _loading = false);
         return;
       }
 
-      final credential = await context.read<AuthService>().registerEmailPassword(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-      if (!mounted) return;
-      final firestore = context.read<FirestoreService>();
-      final email = _emailController.text.trim();
       final user = AppUser(
-        uid: credential.user!.uid,
+        uid: uid,
         fullName: _nameController.text.trim(),
         email: email,
         phone: _phoneController.text.trim(),
@@ -171,11 +184,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await firestore.saveUser(user);
       // Remind the user (via an in-app notification, not a blocking screen)
       // that their profile can be completed with additional info.
-      await firestore.sendProfileCompletionReminder(credential.user!.uid);
+      await firestore.sendProfileCompletionReminder(uid);
       // FCM token saving is non-essential: a failure here (e.g. FCM not
       // initialised yet on a fresh install) must never abort registration.
       try {
-        await NotificationService().saveToken(credential.user!.uid);
+        await NotificationService().saveToken(uid);
       } catch (tokenError) {
         debugPrint('Register: FCM token save failed (non-fatal): $tokenError');
       }
@@ -209,6 +222,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       } else {
         debugPrint('Register: unexpected error $e');
+        // If the Auth account was created but a later step failed (e.g. the
+        // Firestore user-doc write), clean it up so the user can retry with
+        // the same email instead of hitting "email already in use".
+        if (createdUid != null) {
+          try {
+            await context.read<AuthService>().deleteFirebaseUser();
+          } catch (_) {}
+        }
         message = 'فشل إنشاء الحساب. حاول مرة أخرى أو تأكد من اتصالك بالإنترنت.';
       }
       ScaffoldMessenger.of(context).showSnackBar(
